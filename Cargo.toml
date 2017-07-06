@@ -1,7 +1,13 @@
 [package]
 name = "priority-queue"
 version = "0.1.0"
-authors = ["Gianmarco Garrisi"]
+authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
+description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
+repository = "https://github.com/garro95/priority-queue"
+readme = "README.md"
+keywords = ["priority", "queue", "heap"]
+categories = ["data-structures", "algorithms"]
+license = "LGPL-3.0"
 
 [dependencies]
 ordermap = "0.2.*"
