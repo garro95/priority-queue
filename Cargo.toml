@@ -1,0 +1,7 @@
+[package]
+name = "priority-queue"
+version = "0.1.0"
+authors = ["Gianmarco Garrisi"]
+
+[dependencies]
+ordermap = "0.2.*"
