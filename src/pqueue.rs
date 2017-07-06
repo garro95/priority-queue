@@ -19,6 +19,7 @@
 
 use std::cmp::{Ord, Eq};
 use std::hash::Hash;
+use std::borrow::Borrow;
 
 use ordermap::OrderMap;
 
@@ -32,10 +33,10 @@ use ordermap::OrderMap;
 #[derive(Clone, Debug)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq{
-    map: OrderMap<I, P>, // Stores the items and assign them an index
+    map: OrderMap<I, Option<P>>, // Stores the items and assign them an index
     heap: Vec<usize>,    // Implements the heap of indexes
     qp: Vec<usize>,      // Performs the translation from the index
-                         // of the map to the index of the heap
+    // of the map to the index of the heap
     size: usize          // The size of the heap
 }
 
@@ -67,13 +68,41 @@ impl<I, P> PriorityQueue<I, P>
         }
     }
 
-    /// Returns the number of elements the internal map can hold without reallocating.
+    //iter
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek(&self) -> Option<(&I, &P)>{
+        self.map.get_index(self.heap[0]).map(|(k, v)| (k, v.as_ref().unwrap()))
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use ...
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
+        self.map.get_index_mut(self.heap[0])
+            .map(|(k, v)| (k, v.as_ref().unwrap()))
+    }
+
+    /// Returns the number of elements the internal map can hold without
+    ///reallocating.
     ///
     /// This number is a lower bound; the map might be able to hold more,
     /// but is guaranteed to be able to hold at least this many.
     pub fn capacity(&self)->usize {
         self.map.capacity()
     }
+
+    // reserve_exact, reserve
 
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
@@ -82,25 +111,61 @@ impl<I, P> PriorityQueue<I, P>
         self.qp.shrink_to_fit();
     }
 
-    /// Returns the number of elements in the priority queue.
-    pub fn len(&self) -> usize {
-        self.size
+    /// Removes the item with the greatest priority from
+    /// the priority queue and returns the pair (item, priority),
+    /// or None if it is empty.
+    pub fn pop(&mut self) -> Option<(I, P)> {
+        if self.size == 0 {
+            return None;
+        }
+        let result = self.swap_remove();
+        if self.size > 0 {
+            self.heapify(0);
+        }
+        result
     }
 
-    /// Returns true if the priority queue contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.size==0
-    }
-
-    /// Insert they item-priority pair into the queue.
+    /// Insert the item-priority pair into the queue.
     ///
-    /// If `item` was already into the queue, the old value of its priority
-    /// is returned in `Some`; otherwise, return `None`.
+    /// If an element equals to `item` was already into the queue,
+    /// it is updated and the old value of its priority returned in `Some`;
+    /// otherwise, return `None`.
+    ///
+    /// Due to compiler problems, I'm not able to implement the update.
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
+        let mut aux = false;
+        let mut pos = 0;
+        let mut oldp = None;
+        if self.map.contains_key(&item){
+            if let Some((index, old_item, p)) = self.map.get_pair_index_mut(&item){
+                aux = true;
+                *old_item = item;
+                oldp = p.take();
+                *p = Some(priority);
+                pos = self.qp[index];
+            }
+            if aux == true {
+                let tmp = self.heap[pos];
+                while (pos > 0) &&
+                    (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
+                     self.map.get_index(self.heap[pos]).unwrap().1)
+                {
+                    self.heap[pos] = self.heap[parent(pos)];
+                    self.qp[self.heap[pos]] = pos;
+                    pos = parent(pos);
+                }
+                self.heap[pos] = tmp;
+                self.qp[tmp] = pos;
+                self.heapify(pos);
+                return oldp;
+            } else {
+                unreachable!();
+            }
+        }
         // insert the item, priority into the OrderMap
-        let r = self.map.insert(item, priority);
+        self.map.insert(item, Some(priority)).map(|o| o.unwrap());
         // ... and get a reference to the priority
         let priority = self.map.get_index(self.size).unwrap().1;
         // copy the actual size of the heap
@@ -121,42 +186,64 @@ impl<I, P> PriorityQueue<I, P>
         self.heap[i] = k;
         self.qp[k] = i;
         self.size += 1;
+        None
+        //}
+    }
+
+    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
+                                      -> Option<P>
+        where I: Borrow<Q>,
+              Q:Eq + Hash
+    {
+        let mut pos = 0;
+        let r =
+            if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
+                let oldp = p.take();
+                *p = Some(new_priority);
+                pos = index;
+                oldp
+            } else {
+                None
+            };
+        if r.is_some() {
+            let tmp = self.heap[pos];
+            while (pos > 0) &&
+                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
+                 self.map.get_index(self.heap[pos]).unwrap().1)
+            {
+                self.heap[pos] = self.heap[parent(pos)];
+                self.qp[self.heap[pos]] = pos;
+                pos = parent(pos);
+            }
+            self.heap[pos] = tmp;
+            self.qp[tmp] = pos;
+            self.heapify(pos);
+        }
         r
     }
 
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek(&self) -> Option<(&I, &P)>{
-        self.map.get_index(self.heap[0])
+    // into_vec, into_sorted_vec
+
+    /// Returns the number of elements in the priority queue.
+    pub fn len(&self) -> usize {
+        self.size
     }
 
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use ...
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
-        self.map.get_index_mut(self.heap[0])
-            .map(|pair| (pair.0, &(*pair.1)))
+    /// Returns true if the priority queue contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.size==0
+    }
+    pub fn clear(&mut self){
+        self.heap.clear();
+        self.qp.clear();
+        self.map.clear();
+        self.size=0;
     }
 
-    pub fn pop(&mut self) -> Option<(I, P)> {
-        if self.size == 0 {
-            return None;
-        }
-        let result = self.swap_remove();
-        if self.size > 0 {
-            self.heapify(0);
-        }
-        result
-    }
+    //append
+    /**************************************************************************/
+    /*                            internal functions                          */
+
 
     /// Remove and return the element with the max priority
     /// and swap it with the last element keeping a consistent
@@ -169,7 +256,8 @@ impl<I, P> PriorityQueue<I, P>
         // swap remove the old heap from the qp
         if self.size == 0 {
             self.qp.pop();
-            return self.map.swap_remove_index(head);
+            return self.map.swap_remove_index(head)
+                .map(|(i, o)| (i, o.unwrap()));
         }
         self.qp[self.heap[0]] = 0;
         self.qp.swap_remove(head);
@@ -178,17 +266,18 @@ impl<I, P> PriorityQueue<I, P>
         }
         // swap remove from the map and return to the client
         self.map.swap_remove_index(head)
+            .map(|(i, o)| (i, o.unwrap()))
     }
 
-    /// swap two elements keeping a consistent
-    /// state.
+    /// Swap two elements keeping a consistent state.
+    ///
     /// Computes in **O(1)** time (average)
     fn swap(&mut self, a: usize, b:usize) {
         let (i, j) = (self.heap[a], self.heap[b]);
         self.heap.swap(a, b);
         self.qp.swap(i, j);
     }
-
+    /// Internal function that restore the functional property of the heap
     fn heapify(&mut self, i: usize) {
         let (mut l, mut r) = (left(i), right(i));
         let mut i = i;
