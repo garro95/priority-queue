@@ -1,6 +1,6 @@
 [package]
 name = "priority-queue"
-version = "0.1.0"
+version = "0.1.5"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"

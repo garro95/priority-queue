@@ -20,6 +20,7 @@
 use std::cmp::{Ord, Eq};
 use std::hash::Hash;
 use std::borrow::Borrow;
+use std::iter::Iterator;
 
 use ordermap::OrderMap;
 
@@ -131,15 +132,17 @@ impl<I, P> PriorityQueue<I, P>
     /// it is updated and the old value of its priority returned in `Some`;
     /// otherwise, return `None`.
     ///
-    /// Due to compiler problems, I'm not able to implement the update.
-    ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
-        let mut aux = false;
-        let mut pos = 0;
-        let mut oldp = None;
+        let aux;
+        let mut pos;
+        let oldp;
         if self.map.contains_key(&item){
-            if let Some((index, old_item, p)) = self.map.get_pair_index_mut(&item){
+            // FIXME: When the compiler get fixed,
+            // write this part in a more efficient fashon
+            {
+                let (index, old_item, p) =
+                    self.map.get_pair_index_mut(&item).unwrap();
                 aux = true;
                 *old_item = item;
                 oldp = p.take();
@@ -222,7 +225,19 @@ impl<I, P> PriorityQueue<I, P>
         r
     }
 
-    // into_vec, into_sorted_vec
+    /// Returns the items not ordered
+    pub fn into_vec(self) -> Vec<I> {
+        self.map.into_iter().map(|(i, _)| i).collect()
+    }
+
+    /// Implements an HeapSort
+    pub fn into_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.size);
+        while let Some((i, _)) = self.pop() {
+            res.push(i);
+        }
+        res
+    }
 
     /// Returns the number of elements in the priority queue.
     pub fn len(&self) -> usize {
@@ -318,6 +333,59 @@ impl<I, P> PriorityQueue<I, P>
                 largest = r;
             }
         }
+    }
+
+    fn heap_build(&mut self){
+        for i in (0..parent(self.size)).rev(){
+            self.heapify(i);
+        }
+    }
+}
+
+
+
+impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
+    where I: Hash+Eq,
+          P: Ord {
+    fn from(vec: Vec<(I, P)>) -> PriorityQueue<I, P>{
+        let mut pq = PriorityQueue::with_capacity(vec.len());
+        let mut i=0;
+        pq.size = vec.len();
+        for (item, priority) in vec {
+            pq.map.insert(item, Some(priority));
+            pq.qp.push(i);
+            pq.heap.push(i);
+            i+=1;
+        }
+        pq.heap_build();
+        pq
+    }
+}
+
+impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
+    where I: Hash+Eq,
+          P: Ord {
+    fn from_iter<IT>(iter: IT) -> PriorityQueue<I, P>
+        where IT: IntoIterator<Item = (I, P)>{
+        let iter = iter.into_iter();
+        let (min, max) = iter.size_hint();
+        let mut pq = 
+            if let Some(max) = max {
+                PriorityQueue::with_capacity(max)
+            } else if min != 0 {
+                PriorityQueue::with_capacity(min)
+            } else {
+                PriorityQueue::new()
+            };
+        for (item, priority) in iter {
+            pq.map.insert(item, Some(priority));
+            pq.qp.push(pq.size);
+            pq.heap.push(pq.size);
+            pq.size+=1;
+            
+        }
+        pq.heap_build();
+        pq
     }
 }
 
