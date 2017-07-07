@@ -81,4 +81,11 @@ mod tests {
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
+
+    #[test]
+    fn heap_sort() {
+        let v = vec!(("a", 2), ("b", 7), ("f", 1));
+        let sorted = (PriorityQueue::from(v)).into_sorted_vec();
+        assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
+    }
 }

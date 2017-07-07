@@ -193,6 +193,8 @@ impl<I, P> PriorityQueue<I, P>
         //}
     }
 
+    /// Change the priority of an Item. The item is found in **O(1)** thanks to the hash table.
+    /// The operation is performed in **O(lon(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
                                       -> Option<P>
         where I: Borrow<Q>,
@@ -248,6 +250,8 @@ impl<I, P> PriorityQueue<I, P>
     pub fn is_empty(&self) -> bool {
         self.size==0
     }
+
+    /// Drops all items from the priority queue
     pub fn clear(&mut self){
         self.heap.clear();
         self.qp.clear();
@@ -335,6 +339,7 @@ impl<I, P> PriorityQueue<I, P>
         }
     }
 
+    /// Internal function that transform the `heap` vector in a heap with its properties
     fn heap_build(&mut self){
         for i in (0..parent(self.size)).rev(){
             self.heapify(i);
@@ -343,7 +348,7 @@ impl<I, P> PriorityQueue<I, P>
 }
 
 
-
+//FIXME: fails when the vector contains repeated elements
 impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -362,6 +367,7 @@ impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
     }
 }
 
+//FIXME: fails when the iterator contains repeated elements
 impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -390,14 +396,17 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
 }
 
 #[inline]
+/// Compute the index of the left child of an item from its index
 fn left(i:usize) -> usize {
     (i*2) +1
 }
 #[inline]
+/// Compute the index of the right child of an item from its index
 fn right(i:usize) -> usize {
     (i*2) +2
 }
 #[inline]
+/// Compute the index of the parent element in the heap from its index
 fn parent(i:usize) -> usize{
     (i-1) /2
 }
