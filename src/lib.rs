@@ -88,4 +88,15 @@ mod tests {
         let sorted = (PriorityQueue::from(v)).into_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
     }
+
+    #[test]
+    fn change_priority_by() {
+        use std::iter::FromIterator;
+        
+        let v = vec!(("a", 1), ("b", 2), ("f", 7));
+        let mut pq = PriorityQueue::from_iter(v.into_iter());
+
+        pq.change_priority_by("a", |a| a+2);
+        assert_eq!(pq.into_sorted_vec().as_slice(), &["f", "a", "b"]);
+    }
 }

@@ -227,6 +227,42 @@ impl<I, P> PriorityQueue<I, P>
         r
     }
 
+    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F)
+        where I: Borrow<Q>,
+              Q: Eq + Hash,
+              F: FnOnce(P) -> P
+    {
+        let mut pos = 0;
+        let mut found = false;
+        if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
+            let oldp = p.take().unwrap();
+            *p = Some(priority_setter(oldp));
+            pos = index;
+            found = true;
+        }
+        if found {
+            let tmp = self.heap[pos];
+            while (pos > 0) &&
+                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
+                 self.map.get_index(self.heap[pos]).unwrap().1)
+            {
+                self.heap[pos] = self.heap[parent(pos)];
+                self.qp[self.heap[pos]] = pos;
+                pos = parent(pos);
+            }
+            self.heap[pos] = tmp;
+            self.qp[tmp] = pos;
+            self.heapify(pos);
+        }
+    }
+
+    pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
+        where I: Borrow<Q>,
+              Q: Eq + Hash
+    {
+        self.map.get(item).map(|o| o.as_ref().unwrap())
+    }
+
     /// Returns the items not ordered
     pub fn into_vec(self) -> Vec<I> {
         self.map.into_iter().map(|(i, _)| i).collect()
@@ -348,7 +384,7 @@ impl<I, P> PriorityQueue<I, P>
 }
 
 
-//FIXME: fails when the vector contains repeated elements
+//FIXME: fails when the vector contains repeated items
 impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -367,7 +403,7 @@ impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
     }
 }
 
-//FIXME: fails when the iterator contains repeated elements
+//FIXME: fails when the iterator contains repeated items
 impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
