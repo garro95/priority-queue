@@ -11,6 +11,8 @@ __ https://docs.rs/priority-queue/
 
 |build_status|_ |crates|_
 
+.. |crates| image:: https://img.shields.io/crates/v/ordermap.svg
+.. _crates: https://crates.io/crates/ordermap
 
 Contributing
 ------------
