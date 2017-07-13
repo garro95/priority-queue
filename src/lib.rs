@@ -1,3 +1,22 @@
+/*
+ *  Copyright 2017 Gianmarco Garrisi
+ *
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 extern crate ordermap;
 
 mod pqueue;
@@ -64,13 +83,13 @@ mod tests {
         assert_eq!(pq.len(), 2);
     }
     
-    //#[test]
-    //fn from_vec_fails() {
-    //    let v = vec!(("a", 1), ("b", 2), ("f", 7), ("a", 2));
-    //    let mut pq = PriorityQueue::from(v);
-    //    assert_eq!(pq.pop(), Some(("f", 7)));
-    //    assert_eq!(pq.len(), 2);
-    //}
+    #[test]
+    fn from_vec_fails() {
+        let v = vec!(("a", 1), ("b", 2), ("f", 7), ("a", 2));
+        let mut pq = PriorityQueue::from(v);
+        assert_eq!(pq.pop(), Some(("f", 7)));
+        assert_eq!(pq.len(), 2);
+    }
 
     #[test]
     fn from_iter() {

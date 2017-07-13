@@ -28,7 +28,7 @@ use ordermap::OrderMap;
 /// element.
 ///
 /// The priority is of type P, that must implement `std::cmp::Ord`.
-/// The item is of typer I, that must implement `Hash` and `Eq`
+/// The item is of type I, that must implement `Hash` and `Eq`
 /// Implemented as an heap of indexes, stores the items inside an `OrderMap`
 /// to be able to retrieve them quickly.
 #[derive(Clone, Debug)]
@@ -59,17 +59,21 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// The internal collections will be able to hold at least `capacity`
     /// elements without reallocating.
-    /// If `capacity` is 0, there will no allocation.
+    /// If `capacity` is 0, there will be no allocation.
     pub fn with_capacity(capacity: usize) -> PriorityQueue<I, P> {
         PriorityQueue{
             map: OrderMap::with_capacity(capacity),
-            heap: Vec::with_capacity(capacity),
-            qp: Vec::with_capacity(capacity),
+            heap:     Vec::with_capacity(capacity),
+            qp:       Vec::with_capacity(capacity),
             size: 0
         }
     }
 
-    //iter
+    /// Returns an iterator in arbitrary order over the
+    /// (item, priority) elements in the queue
+    pub fn iter(&self) /*-> ::pqueue::Iter<I, P> */ {
+    //    ::pqueue::Iter{iter: self.map.iter().map(|(i, p)| (i, p.unwrap()))}
+    }
 
     /// Returns the couple (item, priority) with the greatest
     /// priority in the queue, or None if it is empty.
@@ -86,7 +90,8 @@ impl<I, P> PriorityQueue<I, P>
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use ...
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
     ///
     /// Computes in **O(1)** time
     pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
@@ -103,7 +108,13 @@ impl<I, P> PriorityQueue<I, P>
         self.map.capacity()
     }
 
-    // reserve_exact, reserve
+    // reserve_exact -> OrderMap does not implement reserve_exact
+
+    pub fn reserve(&mut self, additional: usize){
+        self.map.reserve(additional);
+        self.heap.reserve(additional);
+        self.qp.reserve(additional);
+    }
 
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
@@ -114,7 +125,7 @@ impl<I, P> PriorityQueue<I, P>
 
     /// Removes the item with the greatest priority from
     /// the priority queue and returns the pair (item, priority),
-    /// or None if it is empty.
+    /// or None if the queue is empty.
     pub fn pop(&mut self) -> Option<(I, P)> {
         if self.size == 0 {
             return None;
@@ -134,7 +145,6 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
-        let aux;
         let mut pos;
         let oldp;
         if self.map.contains_key(&item){
@@ -143,29 +153,24 @@ impl<I, P> PriorityQueue<I, P>
             {
                 let (index, old_item, p) =
                     self.map.get_pair_index_mut(&item).unwrap();
-                aux = true;
                 *old_item = item;
                 oldp = p.take();
                 *p = Some(priority);
                 pos = self.qp[index];
             }
-            if aux == true {
-                let tmp = self.heap[pos];
-                while (pos > 0) &&
-                    (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
-                     self.map.get_index(self.heap[pos]).unwrap().1)
-                {
-                    self.heap[pos] = self.heap[parent(pos)];
-                    self.qp[self.heap[pos]] = pos;
-                    pos = parent(pos);
-                }
-                self.heap[pos] = tmp;
-                self.qp[tmp] = pos;
-                self.heapify(pos);
-                return oldp;
-            } else {
-                unreachable!();
+            let tmp = self.heap[pos];
+            while (pos > 0) &&
+                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
+                 self.map.get_index(self.heap[pos]).unwrap().1)
+            {
+                self.heap[pos] = self.heap[parent(pos)];
+                self.qp[self.heap[pos]] = pos;
+                pos = parent(pos);
             }
+            self.heap[pos] = tmp;
+            self.qp[tmp] = pos;
+            self.heapify(pos);
+            return oldp;
         }
         // insert the item, priority into the OrderMap
         self.map.insert(item, Some(priority)).map(|o| o.unwrap());
@@ -185,7 +190,8 @@ impl<I, P> PriorityQueue<I, P>
                 self.qp[self.heap[i]] = i;
                 i = parent(i);
             }
-        // put the new element into the heap and update the qp translation table and the size
+        // put the new element into the heap and
+        // update the qp translation table and the size
         self.heap[i] = k;
         self.qp[k] = i;
         self.size += 1;
@@ -193,8 +199,11 @@ impl<I, P> PriorityQueue<I, P>
         //}
     }
 
-    /// Change the priority of an Item. The item is found in **O(1)** thanks to the hash table.
-    /// The operation is performed in **O(lon(N))** time.
+    /// Change the priority of an Item returning the old value of priority,
+    /// or `None` if the item wasn't in the queue
+    ///.
+    /// The item is found in **O(1)** thanks to the hash table.
+    /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
                                       -> Option<P>
         where I: Borrow<Q>,
@@ -227,7 +236,11 @@ impl<I, P> PriorityQueue<I, P>
         r
     }
 
-    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F)
+    /// Change the priority of an Item using the provided function.
+    /// The item is found in **O(1)** thanks to the hash table.
+    /// The operation is performed in **O(log(N))** time (worst case).
+    pub fn change_priority_by<Q: ?Sized, F>
+        (&mut self, item: &Q, priority_setter: F)
         where I: Borrow<Q>,
               Q: Eq + Hash,
               F: FnOnce(P) -> P
@@ -256,11 +269,37 @@ impl<I, P> PriorityQueue<I, P>
         }
     }
 
+    /// Get the priority of an item, or `None`, if the item is not in the queue
     pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
         where I: Borrow<Q>,
               Q: Eq + Hash
     {
         self.map.get(item).map(|o| o.as_ref().unwrap())
+    }
+
+    /// Get the couple (item, priority) of an arbitrary element, as reference
+    /// or `None` if the item is not in the queue.
+    pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
+        where I: Borrow<Q>,
+              Q: Eq + Hash
+    {
+        self.map.get_pair(item).map(|(k, v)| (k, v.as_ref().unwrap()))
+    }
+
+    /// Get the couple (item, priority) of an arbitrary element, or `None`
+    /// if the item was not in the queue.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
+        where I: Borrow<Q>,
+              Q: Eq + Hash
+    {
+        self.map.get_pair_mut(item).map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Returns the items not ordered
@@ -295,7 +334,36 @@ impl<I, P> PriorityQueue<I, P>
         self.size=0;
     }
 
-    //append
+    /// Move all items of the `other` queue to `self`
+    /// ignoring the items Eq to elements already in `self`
+    /// At the end, `other` will be empty.
+    ///
+    /// **Note** that at the end, the priority of the duplicated elements
+    /// inside self may be the one of the elements in other,
+    /// if other is longer than self
+    pub fn append(&mut self, other: &mut Self) {
+        if other.size > self.size {
+            ::std::mem::swap(self, other);
+        }
+        if other.size == 0 {
+            return;
+        }
+        let drain = other.map.drain(..);
+        // what should we do for duplicated keys?
+        // ignore
+        for (k, v) in drain {
+            if !self.map.contains_key(&k) {
+                let i = self.size;
+                self.map.insert(k, v);
+                self.heap.push(i);
+                self.qp.push(i);
+                self.size += 1;
+            }
+        }
+        other.heap.clear();
+        other.qp.clear();
+        self.heap_build();
+    }
     /**************************************************************************/
     /*                            internal functions                          */
 
@@ -332,6 +400,7 @@ impl<I, P> PriorityQueue<I, P>
         self.heap.swap(a, b);
         self.qp.swap(i, j);
     }
+
     /// Internal function that restore the functional property of the heap
     fn heapify(&mut self, i: usize) {
         let (mut l, mut r) = (left(i), right(i));
@@ -375,7 +444,8 @@ impl<I, P> PriorityQueue<I, P>
         }
     }
 
-    /// Internal function that transform the `heap` vector in a heap with its properties
+    /// Internal function that transform the `heap`
+    /// vector in a heap with its properties
     fn heap_build(&mut self){
         for i in (0..parent(self.size)).rev(){
             self.heapify(i);
@@ -385,25 +455,30 @@ impl<I, P> PriorityQueue<I, P>
 
 
 //FIXME: fails when the vector contains repeated items
+// FIXED: repeated items ignored
 impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
     fn from(vec: Vec<(I, P)>) -> PriorityQueue<I, P>{
         let mut pq = PriorityQueue::with_capacity(vec.len());
         let mut i=0;
-        pq.size = vec.len();
         for (item, priority) in vec {
-            pq.map.insert(item, Some(priority));
-            pq.qp.push(i);
-            pq.heap.push(i);
-            i+=1;
+            if !pq.map.contains_key(&item) {
+                pq.map.insert(item, Some(priority));
+                pq.qp.push(i);
+                pq.heap.push(i);
+                i+=1;
+            }
         }
+        pq.size=i;
         pq.heap_build();
         pq
     }
 }
 
 //FIXME: fails when the iterator contains repeated items
+// FIXED: the item inside the pq is updated
+// so there are two functions with different behaviours.
 impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -411,7 +486,7 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
         where IT: IntoIterator<Item = (I, P)>{
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
-        let mut pq = 
+        let mut pq =
             if let Some(max) = max {
                 PriorityQueue::with_capacity(max)
             } else if min != 0 {
@@ -420,11 +495,17 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
                 PriorityQueue::new()
             };
         for (item, priority) in iter {
-            pq.map.insert(item, Some(priority));
-            pq.qp.push(pq.size);
-            pq.heap.push(pq.size);
-            pq.size+=1;
-            
+            if !pq.map.contains_key(&item){
+                pq.map.insert(item, Some(priority));
+                pq.qp.push(pq.size);
+                pq.heap.push(pq.size);
+                pq.size+=1;
+            } else {
+                let (old_item, old_priority) =
+                    pq.map.get_pair_mut(&item).unwrap();
+                *old_item = item;
+                *old_priority = Some(priority);
+            }
         }
         pq.heap_build();
         pq
@@ -446,3 +527,8 @@ fn right(i:usize) -> usize {
 fn parent(i:usize) -> usize{
     (i-1) /2
 }
+
+// use std::iter::*;
+// pub struct Iter<'a, I, P> {
+//     iter: Map<::ordermap::Iter<'a, I, P>>
+// }
