@@ -118,4 +118,18 @@ mod tests {
         pq.change_priority_by("a", |a| a+2);
         assert_eq!(pq.into_sorted_vec().as_slice(), &["f", "a", "b"]);
     }
+
+    #[test]
+    fn extend() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        let v = vec!(("c", 4), ("d", 6), ("e", 3));
+        pq.extend(v);
+        assert_eq!(pq.len(), 6);
+        assert_eq!(pq.into_sorted_vec().as_slice(),
+                   &["f", "d", "c", "e", "b", "a"]);
+    }
 }

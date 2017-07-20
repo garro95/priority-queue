@@ -33,7 +33,8 @@ use ordermap::OrderMap;
 /// to be able to retrieve them quickly.
 #[derive(Clone, Debug)]
 pub struct PriorityQueue<I, P>
-    where I: Hash+Eq{
+    where I: Hash+Eq,
+          P: Ord {
     map: OrderMap<I, Option<P>>, // Stores the items and assign them an index
     heap: Vec<usize>,    // Implements the heap of indexes
     qp: Vec<usize>,      // Performs the translation from the index
@@ -512,22 +513,74 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
     }
 }
 
-#[inline]
+impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
+    where I: Hash+Eq,
+          P: Ord {
+    fn extend <T: IntoIterator<Item=(I, P)>> (&mut self, iter: T) {
+        let iter = iter.into_iter();
+        let (min, max) = iter.size_hint();
+        let mut rebuild = false;
+        if let Some(max) = max {
+            self.reserve(max);
+            rebuild = better_to_rebuild(self.size, max);
+        } else if min != 0 {
+            self.reserve(min);
+            rebuild = better_to_rebuild(self.size, min);
+        }
+        if rebuild {
+            for (item, priority) in iter {
+                if !self.map.contains_key(&item){
+                    self.map.insert(item, Some(priority));
+                    self.qp.push(self.size);
+                    self.heap.push(self.size);
+                    self.size+=1;
+                } else {
+                    let (old_item, old_priority) =
+                        self.map.get_pair_mut(&item).unwrap();
+                    *old_item = item;
+                    *old_priority = Some(priority);
+                }
+            }
+            self.heap_build();
+        } else {
+            for (item, priority) in iter {
+                self.push(item, priority);
+            }
+        }
+    }
+}
+
+#[inline(always)]
 /// Compute the index of the left child of an item from its index
 fn left(i:usize) -> usize {
     (i*2) +1
 }
-#[inline]
+#[inline(always)]
 /// Compute the index of the right child of an item from its index
 fn right(i:usize) -> usize {
     (i*2) +2
 }
-#[inline]
+#[inline(always)]
 /// Compute the index of the parent element in the heap from its index
 fn parent(i:usize) -> usize{
     (i-1) /2
 }
 
+#[inline(always)]
+fn log2_fast(x: usize) -> usize {
+    use std::mem::size_of;
+    8 * size_of::<usize>() - (x.leading_zeros() as usize) - 1
+}
+
+// `rebuild` takes O(len1 + len2) operations
+// and about 2 * (len1 + len2) comparisons in the worst case
+// while `extend` takes O(len2 * log_2(len1)) operations
+// and about 1 * len2 * log_2(len1) comparisons in the worst case,
+// assuming len1 >= len2.
+#[inline]
+fn better_to_rebuild(len1: usize, len2: usize) -> bool {
+    2 * (len1 + len2) < len2 * log2_fast(len1)
+}
 // use std::iter::*;
 // pub struct Iter<'a, I, P> {
 //     iter: Map<::ordermap::Iter<'a, I, P>>
