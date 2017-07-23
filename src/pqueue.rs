@@ -17,6 +17,10 @@
  *
  */
 
+// an improvement in terms of complexity would be to use a bare HashMap
+// as vec instead of the OrderMap
+use ::iterators::*;
+
 use std::cmp::{Ord, Eq};
 use std::hash::Hash;
 use std::borrow::Borrow;
@@ -31,7 +35,7 @@ use ordermap::OrderMap;
 /// The item is of type I, that must implement `Hash` and `Eq`
 /// Implemented as an heap of indexes, stores the items inside an `OrderMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -72,8 +76,8 @@ impl<I, P> PriorityQueue<I, P>
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter(&self) /*-> ::pqueue::Iter<I, P> */ {
-    //    ::pqueue::Iter{iter: self.map.iter().map(|(i, p)| (i, p.unwrap()))}
+    pub fn iter<'a>(&'a self) -> ::pqueue::Iter<'a, I, P>  {
+        ::pqueue::Iter{iter: self.map.iter()}
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -365,6 +369,10 @@ impl<I, P> PriorityQueue<I, P>
         other.qp.clear();
         self.heap_build();
     }
+
+    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P> {
+        IntoSortedIter{pq: self}
+    }
     /**************************************************************************/
     /*                            internal functions                          */
 
@@ -513,6 +521,16 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
     }
 }
 
+impl<I, P> ::std::iter::IntoIterator for PriorityQueue<I, P>
+    where I: Hash+Eq,
+          P: Ord {
+    type Item = (I, P);
+    type IntoIter = ::pqueue::IntoIter<I, P>;
+    fn into_iter(self) -> ::pqueue::IntoIter<I, P> {
+        ::pqueue::IntoIter{ iter: self.map.into_iter() }
+    }
+}
+
 impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -550,6 +568,19 @@ impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
     }
 }
 
+use std::fmt;
+impl<I, P> fmt::Debug for PriorityQueue<I, P>
+    where I: fmt::Debug + Hash + Eq,
+          P: fmt::Debug + Ord {
+    fn  fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_map()
+            .entries(self.heap.iter()
+                     .map(|&i| self.map.get_index(i).unwrap())
+                     .map(|(i, op)| (i, op.as_ref().unwrap())))
+            .finish()
+    }
+}
+
 #[inline(always)]
 /// Compute the index of the left child of an item from its index
 fn left(i:usize) -> usize {
@@ -581,7 +612,3 @@ fn log2_fast(x: usize) -> usize {
 fn better_to_rebuild(len1: usize, len2: usize) -> bool {
     2 * (len1 + len2) < len2 * log2_fast(len1)
 }
-// use std::iter::*;
-// pub struct Iter<'a, I, P> {
-//     iter: Map<::ordermap::Iter<'a, I, P>>
-// }

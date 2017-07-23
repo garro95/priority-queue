@@ -20,6 +20,7 @@
 extern crate ordermap;
 
 mod pqueue;
+mod iterators;
 pub use pqueue::PriorityQueue;
 
 #[cfg(test)]
@@ -84,7 +85,7 @@ mod tests {
     }
     
     #[test]
-    fn from_vec_fails() {
+    fn from_vec_with_repeated() {
         let v = vec!(("a", 1), ("b", 2), ("f", 7), ("a", 2));
         let mut pq = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
@@ -131,5 +132,26 @@ mod tests {
         assert_eq!(pq.len(), 6);
         assert_eq!(pq.into_sorted_vec().as_slice(),
                    &["f", "d", "c", "e", "b", "a"]);
+    }
+
+    #[test]
+    fn iter() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        assert_eq!(pq.iter().count(), 3);
+    }
+
+    #[test]
+    fn into_sorted_iter(){
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        assert_eq!(pq.into_sorted_iter().collect::<Vec<_>>(),
+                   vec!(("f", 7), ("b", 2), ("a", 1)));
     }
 }

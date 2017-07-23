@@ -1,10 +1,10 @@
 [package]
 name = "priority-queue"
-version = "0.1.8"
+version = "0.2.0"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"
-readme = "README.md"
+readme = "README.rst"
 keywords = ["priority", "queue", "heap"]
 categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0"
