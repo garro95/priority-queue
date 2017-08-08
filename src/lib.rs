@@ -157,8 +157,8 @@ mod tests {
         let v = vec!(("a", 1), ("b", 2), ("f", 7));
         let mut pq = PriorityQueue::from_iter(v.into_iter());
 
-        pq.change_priority_by("a", |a| a+2);
-        assert_eq!(pq.into_sorted_vec().as_slice(), &["f", "a", "b"]);
+        pq.change_priority_by("b", |b| b+8);
+        assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "a"]);
     }
 
     #[test]
