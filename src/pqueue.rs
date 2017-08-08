@@ -209,7 +209,6 @@ impl<I, P> PriorityQueue<I, P>
     ///.
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    /// TODO: Fix the bug
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
                                       -> Option<P>
         where I: Borrow<Q>,
@@ -256,7 +255,7 @@ impl<I, P> PriorityQueue<I, P>
         if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
             let oldp = p.take().unwrap();
             *p = Some(priority_setter(oldp));
-            pos = index;
+            pos = self.qp[index];
             found = true;
         }
         if found {
