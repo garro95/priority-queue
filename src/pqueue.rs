@@ -33,9 +33,9 @@ use ordermap::OrderMap;
 ///
 /// The priority is of type P, that must implement `std::cmp::Ord`.
 /// The item is of type I, that must implement `Hash` and `Eq`
-/// Implemented as an heap of indexes, stores the items inside an `OrderMap`
+/// Implemented as a heap of indexes, stores the items inside an `OrderMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -209,6 +209,7 @@ impl<I, P> PriorityQueue<I, P>
     ///.
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
+    /// TODO: Fix the bug
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
                                       -> Option<P>
         where I: Borrow<Q>,
@@ -219,7 +220,7 @@ impl<I, P> PriorityQueue<I, P>
             if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
                 let oldp = p.take();
                 *p = Some(new_priority);
-                pos = index;
+                pos = self.qp[index];
                 oldp
             } else {
                 None
@@ -370,6 +371,9 @@ impl<I, P> PriorityQueue<I, P>
         self.heap_build();
     }
 
+    /// Generates a new iterator from self that
+    /// will extract the elements from the one with the highest priority
+    /// to the lowest one.
     pub fn into_sorted_iter(self) -> IntoSortedIter<I, P> {
         IntoSortedIter{pq: self}
     }
