@@ -17,6 +17,43 @@
  *
  */
 
+//!This crate provide a priority queue backed by an hashmap
+//!with some efficient methods to change the priority of an element in
+//!**O(log(N))** time (worst case).
+//!
+//!The elements(called `Item`s) must implement [`Hash`]
+//!(https://doc.rust-lang.org/std/hash/trait.Hash.html)
+//!and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
+//!
+//!The priority may be any type that implements [`Ord`]
+//!(https://doc.rust-lang.org/std/cmp/trait.Ord.html).
+//!
+//!
+//!#Example
+//!```rust
+//!extern crate priority_queue;
+//!
+//!use priority_queue::PriorityQueue;
+//!      
+//!fn main() {
+//!    let mut pq = PriorityQueue::new();
+//!
+//!    assert!(pq.is_empty());
+//!    pq.push("Apples", 5);
+//!    pq.push("Bananas", 8);
+//!    pq.push("Strawberries", 23);
+//!
+//!    assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+//!    
+//!    pq.change_priority("Bananas", 25);
+//!    assert_eq!(pq.peek(), Some((&"Bananas", &25)));
+//!
+//!    for (item, _) in pq.into_sorted_iter() {
+//!        println!("{}", item);
+//!    }
+//!}
+//!```
+
 extern crate ordermap;
 
 mod pqueue;
@@ -70,10 +107,14 @@ mod tests {
     #[test]
     fn change_priority() {
         let mut pq = PriorityQueue::new();
-        pq.push("a", 1);
-        pq.push("b", 2);
-        pq.change_priority("a", 3);
-        assert_eq!(pq.peek(), Some((&"a", &3)));
+        pq.push("Processor", 1);
+        pq.push("Mainboard", 2);
+        pq.push("Ram", 5);
+        pq.change_priority("Processor", 10);
+        assert_eq!(pq.peek(), Some((&"Processor", &10)));
+
+        pq.change_priority("Ram", 11);
+        assert_eq!(pq.peek(), Some((&"Ram", &11)));
     }
 
     #[test]
