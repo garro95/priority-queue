@@ -107,7 +107,7 @@ impl<I, P> PriorityQueue<I, P>
     }
 
     /// Returns the number of elements the internal map can hold without
-    ///reallocating.
+    /// reallocating.
     ///
     /// This number is a lower bound; the map might be able to hold more,
     /// but is guaranteed to be able to hold at least this many.
@@ -117,6 +117,15 @@ impl<I, P> PriorityQueue<I, P>
 
     // reserve_exact -> OrderMap does not implement reserve_exact
 
+    /// Reserves capacity for at least `additional` more elements to be inserted
+    /// in the given `PriorityQueue`. The collection may reserve more space to avoid
+    /// frequent reallocations. After calling `reserve`, capacity will be
+    /// greater than or equal to `self.len() + additional`. Does nothing if
+    /// capacity is already sufficient.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
     pub fn reserve(&mut self, additional: usize){
         self.map.reserve(additional);
         self.heap.reserve(additional);
@@ -207,8 +216,8 @@ impl<I, P> PriorityQueue<I, P>
     }
 
     /// Change the priority of an Item returning the old value of priority,
-    /// or `None` if the item wasn't in the queue
-    ///.
+    /// or `None` if the item wasn't in the queue.
+    ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
