@@ -12,7 +12,7 @@ __ https://docs.rs/priority-queue/
 Example
 -------
 .. code:: rust
-	  extern crate priority-queue;
+..	  extern crate priority-queue;
 
 	  use priority-queue::PriorityQueue;
 	  
