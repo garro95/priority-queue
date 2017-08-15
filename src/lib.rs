@@ -17,42 +17,43 @@
  *
  */
 
-//!This crate provide a priority queue backed by an hashmap
-//!with some efficient methods to change the priority of an element in
-//!**O(log(N))** time (worst case).
-//!
-//!The elements(called `Item`s) must implement [`Hash`]
-//!(https://doc.rust-lang.org/std/hash/trait.Hash.html)
-//!and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
-//!
-//!The priority may be any type that implements [`Ord`]
-//!(https://doc.rust-lang.org/std/cmp/trait.Ord.html).
-//!
-//!
-//!#Example
-//!```rust
-//!extern crate priority_queue;
-//!
-//!use priority_queue::PriorityQueue;
-//!      
-//!fn main() {
-//!    let mut pq = PriorityQueue::new();
-//!
-//!    assert!(pq.is_empty());
-//!    pq.push("Apples", 5);
-//!    pq.push("Bananas", 8);
-//!    pq.push("Strawberries", 23);
-//!
-//!    assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
-//!    
-//!    pq.change_priority("Bananas", 25);
-//!    assert_eq!(pq.peek(), Some((&"Bananas", &25)));
-//!
-//!    for (item, _) in pq.into_sorted_iter() {
-//!        println!("{}", item);
-//!    }
-//!}
-//!```
+//! This crate provide a priority queue backed by an hashmap
+//! with some efficient methods to change the priority of an element in
+//! **O(log(N))** time (worst case).
+//! 
+//! The elements(called `Item`s, of type `I`) must implement [`Hash`]
+//! (https://doc.rust-lang.org/std/hash/trait.Hash.html)
+//! and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
+//! 
+//! The priority `P` may be any type that implements [`Ord`]
+//! (https://doc.rust-lang.org/std/cmp/trait.Ord.html).
+//! For reverse order remember the standard wrapper [`Reverse<T>`]
+//! (https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
+//! 
+//! #Example
+//! ```rust
+//! extern crate priority_queue;
+//! 
+//! use priority_queue::PriorityQueue;
+//!       
+//! fn main() {
+//!     let mut pq = PriorityQueue::new();
+//! 
+//!     assert!(pq.is_empty());
+//!     pq.push("Apples", 5);
+//!     pq.push("Bananas", 8);
+//!     pq.push("Strawberries", 23);
+//! 
+//!     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+//!     
+//!     pq.change_priority("Bananas", 25);
+//!     assert_eq!(pq.peek(), Some((&"Bananas", &25)));
+//! 
+//!     for (item, _) in pq.into_sorted_iter() {
+//!         println!("{}", item);
+//!     }
+//! }
+//! ```
 
 extern crate ordermap;
 
@@ -194,5 +195,30 @@ mod tests {
 
         assert_eq!(pq.into_sorted_iter().collect::<Vec<_>>(),
                    vec!(("f", 7), ("b", 2), ("a", 1)));
+    }
+
+    #[test]
+    fn eq(){
+        let mut a = PriorityQueue::new();
+        let mut b = PriorityQueue::new();
+        assert_eq!(a, b);
+
+        a.push("a", 1);
+        b.push("a", 1);
+        assert_eq!(a, b);
+
+        a.push("b", 2);
+        assert_ne!(a, b);
+
+        b.push("f", 7);
+        b.push("g", 4);
+        b.push("h", 3);
+        b.push("b", 2);
+
+        a.push("g", 4);
+        a.push("f", 7);
+        a.push("h", 3);
+        assert_eq!(a, b);
+        assert_eq!(b, a);
     }
 }

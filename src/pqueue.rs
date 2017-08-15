@@ -32,10 +32,12 @@ use ordermap::OrderMap;
 /// element.
 ///
 /// The priority is of type P, that must implement `std::cmp::Ord`.
-/// The item is of type I, that must implement `Hash` and `Eq`
+///
+/// The item is of type I, that must implement `Hash` and `Eq`.
+///
 /// Implemented as a heap of indexes, stores the items inside an `OrderMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Default)]
+#[derive(Clone, Default/*, Hash*/, Eq)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
@@ -581,6 +583,19 @@ impl<I, P> fmt::Debug for PriorityQueue<I, P>
                      .map(|&i| self.map.get_index(i).unwrap())
                      .map(|(i, op)| (i, op.as_ref().unwrap())))
             .finish()
+    }
+}
+
+use std::cmp::PartialEq;
+impl<I, P1, P2> PartialEq<PriorityQueue<I, P2>> for PriorityQueue<I, P1> 
+    where I: Hash+Eq,
+          P1: Ord,
+          P1: PartialEq<P2>,
+Option<P1>: PartialEq<Option<P2>>,
+          P2: Ord {
+    
+    fn eq(&self, other: &PriorityQueue<I, P2>) -> bool {
+        self.map == other.map
     }
 }
 
