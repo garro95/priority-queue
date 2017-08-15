@@ -37,7 +37,7 @@ use ordermap::OrderMap;
 ///
 /// Implemented as a heap of indexes, stores the items inside an `OrderMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Default/*, Hash*/, Eq)]
+#[derive(Clone, Default, Eq)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
