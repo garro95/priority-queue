@@ -20,7 +20,7 @@ Example
 	  
 	  extern crate priority-queue;
 
-	  use priority-queue::PriorityQueue;
+	  use priority_queue::PriorityQueue;
 	  
 	  fn main {
 	      let mut pq = PriorityQueue::new();
