@@ -18,7 +18,7 @@ Example
 -------
 .. code:: rust
 	  
-	  extern crate priority-queue;
+	  extern crate priority_queue;
 
 	  use priority_queue::PriorityQueue;
 	  
