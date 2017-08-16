@@ -83,6 +83,7 @@ mod tests {
     #[test]
     fn push_pop() {
         let mut pq = PriorityQueue::new();
+        assert_eq!(pq.peek(), None);
         pq.push("a", 1);
         pq.push("b", 2);
         pq.push("f", 7);

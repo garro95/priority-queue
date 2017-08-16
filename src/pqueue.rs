@@ -87,6 +87,7 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)>{
+        if self.size == 0 { return None }
         self.map.get_index(self.heap[0]).map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
@@ -102,6 +103,7 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(1)** time
     pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
+        if self.size == 0 { return None }
         self.map.get_index_mut(self.heap[0])
             .map(|(k, v)| (k, v.as_ref().unwrap()))
     }
