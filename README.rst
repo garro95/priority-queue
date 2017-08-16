@@ -1,4 +1,5 @@
-PriorityQueue
+=============
+PriorityQueue ..image::https://img.shields.io/crates/v/priority-queue.svg
 =============
 
 This crate implements a Priority Queue with a function to change the priority of an object.
@@ -12,7 +13,8 @@ __ https://docs.rs/priority-queue/
 Example
 -------
 .. code:: rust
-..	  extern crate priority-queue;
+	  
+	  extern crate priority-queue;
 
 	  use priority-queue::PriorityQueue;
 	  
@@ -30,7 +32,7 @@ Example
 	          println!("{}", item);
 	      }
 	  }
-..
+
 	  
 Contributing
 ------------
