@@ -42,3 +42,9 @@ Contributing
 ------------
 
 Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL.
+
+Changes
+-------
+
+* 0.3.1 Fix #3
+* 0.3.0 Implement PartialEq and Eq traits
