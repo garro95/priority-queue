@@ -1,8 +1,9 @@
 =============
-PriorityQueue .. image:: https://img.shields.io/crates/v/priority-queue.svg :target: https://crates.io/crates/priority-queue
-.. image:: https://travis-ci.org/garro95/priority-queue.svg?branch=master :target: https://travis-ci.org/garro95/priority-queue
+PriorityQueue
 ============= 
-
+.. image:: https://img.shields.io/crates/v/priority-queue.svg :target: https://crates.io/crates/priority-queue
+.. image:: https://travis-ci.org/garro95/priority-queue.svg?branch=master :target: https://travis-ci.org/garro95/priority-queue
+	   
 This crate implements a Priority Queue with a function to change the priority of an object.
 Priority and items are stored in an `OrderMap` and the queue is implemented as a Heap of indexes.
 
