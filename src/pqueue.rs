@@ -649,8 +649,8 @@ mod serde {
     impl<I, P> Serialize for PriorityQueue<I, P>
         where I: Hash + Eq + Serialize,
               P: Ord + Serialize {
-        fn serialize<T> (&self, serializer: T) -> Result<T::Ok, T::Error>
-            where T:Serializer {
+        fn serialize<T> (&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S:Serializer {
             let mut map_serializer = serializer.serialize_map(Some(self.size))?;
             for (k, v) in self.map {
                 map_serializer.serialize_key(k)?;
@@ -660,5 +660,15 @@ mod serde {
         }
     }
 
-    use serde::de::{Deserialize, Deserializer};
+    use serde::de::{Deserialize, Deserializer, Visitor};
+    impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
+        where I: Hash + Eq + Deserialize<'de>,
+              P: Ord + Deserialize<'de> {
+        fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
+            where D: Deserializer<'de> {
+            let pq = deserializer.deserialize_map(/*visitor*/)?;
+            pq.heap_build();
+            Ok(pq)
+        }
+    }
 }
