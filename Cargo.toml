@@ -14,3 +14,4 @@ travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 
 [dependencies]
 ordermap = "0.2.*"
+serde = "1"

@@ -641,3 +641,24 @@ fn log2_fast(x: usize) -> usize {
 fn better_to_rebuild(len1: usize, len2: usize) -> bool {
     2 * (len1 + len2) < len2 * log2_fast(len1)
 }
+
+#[cfg(serde)]
+mod serde {
+    extern crate serde;
+    use serde::ser::{Serialize, Serializer, SerializeMap};
+    impl<I, P> Serialize for PriorityQueue<I, P>
+        where I: Hash + Eq + Serialize,
+              P: Ord + Serialize {
+        fn serialize<T> (&self, serializer: T) -> Result<T::Ok, T::Error>
+            where T:Serializer {
+            let mut map_serializer = serializer.serialize_map(Some(self.size))?;
+            for (k, v) in self.map {
+                map_serializer.serialize_key(k)?;
+                map_serializer.serialize_value(v)?;
+            }
+            map_serializer.end()
+        }
+    }
+
+    use serde::de::{Deserialize, Deserializer};
+}
