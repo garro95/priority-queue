@@ -660,15 +660,50 @@ mod serde {
         }
     }
 
-    use serde::de::{Deserialize, Deserializer, Visitor};
+    use serde::de::{Deserialize, Deserializer, Visitor, Error};
     impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
         where I: Hash + Eq + Deserialize<'de>,
               P: Ord + Deserialize<'de> {
         fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
             where D: Deserializer<'de> {
-            let pq = deserializer.deserialize_map(/*visitor*/)?;
+            let pq = deserializer.deserialize_map(PQVisitor<K, V>{})?;
             pq.heap_build();
             Ok(pq)
+        }
+    }
+
+    struct PQVisitor<I, P>;
+    impl<'de, I, P> Visitor<'de> for PQVisitor<I, P>
+        where I: Hash + Eq + Deserialize<'de>,
+              P: Ord + Deserialize<'de> {
+        type Value = PriorityQueue<I, P>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(formatter, "A priority queue")
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E> {
+            Ok(PriorityQueue::new())
+        }
+
+        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where A: MapAccess<'de>{
+            let mut pq: PriorityQueue<I, P> = 
+                if let Some(size) = map.size_hint() {
+                    PriorityQueue::with_capacity(size);
+                } else {
+                    PriorityQueue::new();
+                };
+
+            while let Some((item, priority)) = map.next_entry()? {
+                pq.map.insert(item, Some(priority));
+                pq.qp.push(self.size);
+                pq.heap.push(self.size);
+                pq.size+=1;
+            }
+            pq.heap_build();
+            // if it is guaranteed that deserialization follow the same order of
+            // serialization, heap_build is useless, but anyway should be O(n)
         }
     }
 }
