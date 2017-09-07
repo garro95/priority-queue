@@ -238,4 +238,34 @@ mod serde_tests{
             Token::MapEnd
         ]);
     }
+
+    #[test]
+    fn serde(){
+        let mut pq = PriorityQueue::new();
+        
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 4);
+        pq.push("h", 3);
+
+        assert_tokens(&pq, &[
+            Token::Map{len: Some(5)},
+            Token::BorrowedStr("a"),
+            Token::I32(1),
+
+            Token::BorrowedStr("b"),
+            Token::I32(2),
+
+            Token::BorrowedStr("f"),
+            Token::I32(7),
+
+            Token::BorrowedStr("g"),
+            Token::I32(4),
+
+            Token::BorrowedStr("h"),
+            Token::I32(3),
+            Token::MapEnd
+        ]);
+    }
 }

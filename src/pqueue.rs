@@ -661,7 +661,7 @@ mod serde {
             let mut map_serializer = serializer.serialize_map(Some(self.size))?;
             for (k, v) in &self.map {
                 map_serializer.serialize_key(k)?;
-                map_serializer.serialize_value(v)?;
+                map_serializer.serialize_value(v.as_ref().unwrap())?;
             }
             map_serializer.end()
         }
