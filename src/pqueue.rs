@@ -472,6 +472,7 @@ impl<I, P> PriorityQueue<I, P>
     /// Internal function that transform the `heap`
     /// vector in a heap with its properties
     fn heap_build(&mut self){
+        if self.size == 0 {return;}
         for i in (0..parent(self.size)).rev(){
             self.heapify(i);
         }
@@ -644,15 +645,21 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(serde)]
 mod serde {
+    use pqueue::PriorityQueue;
+
+    use std::hash::Hash;
+    use std::cmp::{Ord, Eq};
+    use std::marker::PhantomData;
+
     extern crate serde;
-    use serde::ser::{Serialize, Serializer, SerializeMap};
+    use self::serde::ser::{Serialize, Serializer, SerializeMap};
     impl<I, P> Serialize for PriorityQueue<I, P>
         where I: Hash + Eq + Serialize,
               P: Ord + Serialize {
-        fn serialize<T> (&self, serializer: S) -> Result<S::Ok, S::Error>
+        fn serialize<S> (&self, serializer: S) -> Result<S::Ok, S::Error>
             where S:Serializer {
             let mut map_serializer = serializer.serialize_map(Some(self.size))?;
-            for (k, v) in self.map {
+            for (k, v) in &self.map {
                 map_serializer.serialize_key(k)?;
                 map_serializer.serialize_value(v)?;
             }
@@ -660,25 +667,27 @@ mod serde {
         }
     }
 
-    use serde::de::{Deserialize, Deserializer, Visitor, Error};
+    use self::serde::de::{Deserialize, Deserializer, Visitor, MapAccess};
     impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
         where I: Hash + Eq + Deserialize<'de>,
               P: Ord + Deserialize<'de> {
         fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
             where D: Deserializer<'de> {
-            let pq = deserializer.deserialize_map(PQVisitor<K, V>{})?;
-            pq.heap_build();
-            Ok(pq)
+            deserializer.deserialize_map(PQVisitor{marker: PhantomData})
         }
     }
 
-    struct PQVisitor<I, P>;
+    struct PQVisitor<I, P>
+        where I: Hash + Eq,
+              P: Ord {
+        marker: PhantomData<PriorityQueue<I, P>>
+    }
     impl<'de, I, P> Visitor<'de> for PQVisitor<I, P>
         where I: Hash + Eq + Deserialize<'de>,
               P: Ord + Deserialize<'de> {
         type Value = PriorityQueue<I, P>;
 
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             write!(formatter, "A priority queue")
         }
 
@@ -686,24 +695,25 @@ mod serde {
             Ok(PriorityQueue::new())
         }
 
-        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
             where A: MapAccess<'de>{
             let mut pq: PriorityQueue<I, P> = 
                 if let Some(size) = map.size_hint() {
-                    PriorityQueue::with_capacity(size);
+                    PriorityQueue::with_capacity(size)
                 } else {
-                    PriorityQueue::new();
+                    PriorityQueue::new()
                 };
 
             while let Some((item, priority)) = map.next_entry()? {
                 pq.map.insert(item, Some(priority));
-                pq.qp.push(self.size);
-                pq.heap.push(self.size);
+                pq.qp.push(pq.size);
+                pq.heap.push(pq.size);
                 pq.size+=1;
             }
             pq.heap_build();
             // if it is guaranteed that deserialization follow the same order of
             // serialization, heap_build is useless, but anyway should be O(n)
+            Ok(pq)
         }
     }
 }

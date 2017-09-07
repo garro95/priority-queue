@@ -223,3 +223,19 @@ mod tests {
         assert_eq!(b, a);
     }
 }
+
+#[cfg(all(serde, test))]
+mod serde_tests{
+    extern crate serde_test;
+    use self::serde_test::{Token, assert_tokens};
+    use ::PriorityQueue;
+    #[test]
+    fn serde_empty(){
+        let pq: PriorityQueue<String, i32> = PriorityQueue::new();
+        
+        assert_tokens(&pq, &[
+            Token::Map{len: Some(0)},
+            Token::MapEnd
+        ]);
+    }
+}
