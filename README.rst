@@ -46,5 +46,6 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.4.0 Support for serde when compiled with cfg(serde)
 * 0.3.1 Fix #3
 * 0.3.0 Implement PartialEq and Eq traits

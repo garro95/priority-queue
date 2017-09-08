@@ -6,3 +6,8 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - RUSTFLAGS="--cfg serde" cargo build --verbose
+  - RUSTFLAGS="--cfg serde" cargo test --verbose
