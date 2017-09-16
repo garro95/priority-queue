@@ -9,5 +9,5 @@ matrix:
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - RUSTFLAGS="--cfg serde" cargo build --verbose
-  - RUSTFLAGS="--cfg serde" cargo test --verbose
+  - cargo build --verbose --features serde
+  - cargo test --verbose --features serde
