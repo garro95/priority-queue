@@ -16,8 +16,7 @@ __ https://docs.rs/priority-queue/
 
 Usage
 -----
-To use this crate, simply add the following string to your `Cargo.toml`
-.. code:: toml
+To use this crate, simply add the following string to your `Cargo.toml`:
 
 	  priority-queue = "0.4"
 
