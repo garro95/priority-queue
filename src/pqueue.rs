@@ -149,7 +149,7 @@ impl<I, P> PriorityQueue<I, P>
             0 => None,
             1 => self.swap_remove(),
             _ => { let r = self.swap_remove();
-                   self.heapify();
+                   self.heapify(0);
                    r
             }
         }
