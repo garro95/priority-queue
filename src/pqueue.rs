@@ -145,14 +145,14 @@ impl<I, P> PriorityQueue<I, P>
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop(&mut self) -> Option<(I, P)> {
-        if self.size == 0 {
-            return None;
+        match self.size {
+            0 => None,
+            1 => self.swap_remove(),
+            _ => { let r = self.swap_remove();
+                   self.heapify();
+                   r
+            }
         }
-        let result = self.swap_remove();
-        if self.size > 0 {
-            self.heapify(0);
-        }
-        result
     }
 
     /// Insert the item-priority pair into the queue.
