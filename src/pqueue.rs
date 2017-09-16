@@ -643,7 +643,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
     2 * (len1 + len2) < len2 * log2_fast(len1)
 }
 
-#[cfg(serde)]
+#[cfg(feature = "serde")]
 mod serde {
     use pqueue::PriorityQueue;
 

@@ -1,6 +1,6 @@
 [package]
 name = "priority-queue"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"
@@ -14,5 +14,7 @@ travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 
 [dependencies]
 ordermap = "0.2.*"
-serde = "1"
+serde = {version = "1", optional = true}
+
+[dev-dependencies]
 serde_test = "1"

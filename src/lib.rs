@@ -224,7 +224,7 @@ mod tests {
     }
 }
 
-#[cfg(all(serde, test))]
+#[cfg(all(feature = "serde", test))]
 mod serde_tests{
     extern crate serde_test;
     use self::serde_test::{Token, assert_tokens};
