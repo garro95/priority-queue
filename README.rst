@@ -14,6 +14,26 @@ Please read the `API documentation here`__
 
 __ https://docs.rs/priority-queue/
 
+Usage
+-----
+To use this crate, simply add the following string to your `Cargo.toml`
+.. code:: toml
+
+	  priority-queue = "0.4"
+
+Notice that a change in the last digit (patch number) means that the interface is
+backward and forward compatible and contains other type of fixes, like bug fixes or
+documentation updates.
+A change in the middle digit (minor) means that the interface is backward compatible
+but includes something new, so that the previous version may be not forward compatible.
+A change in the first, left digit may means a breacking change in the interface, that
+will not be backward compatible anymore. Version 1.0.0 may be an exception to this and
+may means just that the API is stable and is considered production ready.
+
+Then use the data structure inside your Rust source code as in the following Example.
+
+Remember that, if you need serde support, you should compile using `--features serde`.
+
 Example
 -------
 .. code:: rust
