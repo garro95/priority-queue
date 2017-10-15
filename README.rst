@@ -65,6 +65,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.4.2 Improved performance using some unsafe code in the implementation.
 * 0.4.1 Support for serde when compiled with `--features serde`.
   serde marked as optional and serde-test as dev-dipendency.
   Now compiling the crate won't download and compile also serde-test, neither serde if not needed.
