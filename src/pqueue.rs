@@ -26,7 +26,7 @@ use std::hash::Hash;
 use std::borrow::Borrow;
 use std::iter::Iterator;
 
-use ordermap::OrderMap;
+use ordermap::{OrderMap, MutableKeys};
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -163,36 +163,40 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
-        let mut pos;
+        use ordermap::Entry::*;
+        let mut pos = 0;
         let oldp;
-        if self.map.contains_key(&item){
-            // FIXME: When the compiler get fixed,
-            // write this part in a more efficient fashon
-            {
-                let (index, old_item, p) =
-                    self.map.get_pair_index_mut(&item).unwrap();
-                *old_item = item;
-                oldp = p.take();
-                *p = Some(priority);
-                pos = self.qp[index];
+
+        match self.map.entry(item){
+            Occupied(mut e) => {
+                oldp = e.get_mut().take();
+                *e.get_mut() = Some(priority);
+                pos = unsafe {*self.qp.get_unchecked(e.index())};
             }
-            let tmp = self.heap[pos];
-            while (pos > 0) &&
-                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
-                 self.map.get_index(self.heap[pos]).unwrap().1)
-            {
-                self.heap[pos] = self.heap[parent(pos)];
-                self.qp[self.heap[pos]] = pos;
-                pos = parent(pos);
+            Vacant(e) => {
+                e.insert(Some(priority));
+                oldp = None;
             }
-            self.heap[pos] = tmp;
-            self.qp[tmp] = pos;
+        }
+
+        if oldp.is_some() {
+            unsafe {
+                let tmp = *self.heap.get_unchecked(pos);
+                while (pos > 0) &&
+                    (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
+                     self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
+                {
+                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
+                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
+                    pos = parent(pos);
+                }
+                *self.heap.get_unchecked_mut(pos) = tmp;
+                *self.qp.get_unchecked_mut(tmp) = pos;
+            }
             self.heapify(pos);
             return oldp;
         }
-        // insert the item, priority into the OrderMap
-        self.map.insert(item, Some(priority)).map(|o| o.unwrap());
-        // ... and get a reference to the priority
+        // get a reference to the priority
         let priority = self.map.get_index(self.size).unwrap().1;
         // copy the actual size of the heap
         let mut i = self.size;
@@ -202,16 +206,19 @@ impl<I, P> PriorityQueue<I, P>
         self.heap.push(0);
         // from the leaf go up to root or until an element with priority greater
         // than the new element is found
-        while (i > 0) &&
-            ( self.map.get_index(self.heap[parent(i)]).unwrap().1 < &priority ){
-                self.heap[i] = self.heap[parent(i)];
-                self.qp[self.heap[i]] = i;
+        unsafe {
+            while (i > 0) &&
+                ( self.map.get_index(*self.heap.get_unchecked(parent(i))).unwrap().1 < &priority )
+            {
+                *self.heap.get_unchecked_mut(i) = *self.heap.get_unchecked(parent(i));
+                *self.qp.get_unchecked_mut(*self.heap.get_unchecked(i)) = i;
                 i = parent(i);
             }
-        // put the new element into the heap and
-        // update the qp translation table and the size
-        self.heap[i] = k;
-        self.qp[k] = i;
+            // put the new element into the heap and
+            // update the qp translation table and the size
+            *self.heap.get_unchecked_mut(i) = k;
+            *self.qp.get_unchecked_mut(k) = i;
+        }
         self.size += 1;
         None
         //}
@@ -229,26 +236,28 @@ impl<I, P> PriorityQueue<I, P>
     {
         let mut pos = 0;
         let r =
-            if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
+            if let Some((index, _, p))= self.map.get_full_mut(item) {
                 let oldp = p.take();
                 *p = Some(new_priority);
-                pos = self.qp[index];
+                pos = unsafe{*self.qp.get_unchecked(index)};
                 oldp
             } else {
-                None
+                return None
             };
         if r.is_some() {
-            let tmp = self.heap[pos];
-            while (pos > 0) &&
-                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
-                 self.map.get_index(self.heap[pos]).unwrap().1)
-            {
-                self.heap[pos] = self.heap[parent(pos)];
-                self.qp[self.heap[pos]] = pos;
-                pos = parent(pos);
+            unsafe {
+                let tmp = self.heap.get_unchecked(pos);
+                while (pos > 0) &&
+                    (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
+                     self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
+                {
+                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
+                    *self.qp.get_unchecked_mut(self.heap.get_unchecked(pos)) = pos;
+                    pos = parent(pos);
+                }
+                *self.heap.get_unchecked_mut(pos) = tmp;
+                *self.qp.get_unchecked_mut(tmp) = pos;
             }
-            self.heap[pos] = tmp;
-            self.qp[tmp] = pos;
             self.heapify(pos);
         }
         r
@@ -265,7 +274,7 @@ impl<I, P> PriorityQueue<I, P>
     {
         let mut pos = 0;
         let mut found = false;
-        if let Some((index, _, p))= self.map.get_pair_index_mut(item) {
+        if let Some((index, _, p))= self.map.get_full_mut(item) {
             let oldp = p.take().unwrap();
             *p = Some(priority_setter(oldp));
             pos = self.qp[index];
@@ -301,7 +310,7 @@ impl<I, P> PriorityQueue<I, P>
         where I: Borrow<Q>,
               Q: Eq + Hash
     {
-        self.map.get_pair(item).map(|(k, v)| (k, v.as_ref().unwrap()))
+        self.map.get_full(item).map(|(_, k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Get the couple (item, priority) of an arbitrary element, or `None`
@@ -317,7 +326,7 @@ impl<I, P> PriorityQueue<I, P>
         where I: Borrow<Q>,
               Q: Eq + Hash
     {
-        self.map.get_pair_mut(item).map(|(k, v)| (k, v.as_ref().unwrap()))
+        self.map.get_full_mut2(item).map(|(_, k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Returns the items not ordered
@@ -527,8 +536,8 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
                 pq.heap.push(pq.size);
                 pq.size+=1;
             } else {
-                let (old_item, old_priority) =
-                    pq.map.get_pair_mut(&item).unwrap();
+                let (_, old_item, old_priority) =
+                    pq.map.get_full_mut2(&item).unwrap();
                 *old_item = item;
                 *old_priority = Some(priority);
             }
@@ -570,8 +579,8 @@ impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
                     self.heap.push(self.size);
                     self.size+=1;
                 } else {
-                    let (old_item, old_priority) =
-                        self.map.get_pair_mut(&item).unwrap();
+                    let (_, old_item, old_priority) =
+                        self.map.get_full_mut2(&item).unwrap();
                     *old_item = item;
                     *old_priority = Some(priority);
                 }
