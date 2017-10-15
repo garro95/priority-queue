@@ -88,7 +88,7 @@ impl<I, P> PriorityQueue<I, P>
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)>{
         if self.size == 0 { return None }
-        self.map.get_index(self.heap[0]).map(|(k, v)| (k, v.as_ref().unwrap()))
+        self.map.get_index(unsafe{ *self.heap.get_unchecked(0) }).map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -104,7 +104,7 @@ impl<I, P> PriorityQueue<I, P>
     /// Computes in **O(1)** time
     pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
         if self.size == 0 { return None }
-        self.map.get_index_mut(self.heap[0])
+        self.map.get_index_mut(unsafe{ *self.heap.get_unchecked(0) })
             .map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
@@ -234,7 +234,7 @@ impl<I, P> PriorityQueue<I, P>
         where I: Borrow<Q>,
               Q:Eq + Hash
     {
-        let mut pos = 0;
+        let mut pos;
         let r =
             if let Some((index, _, p))= self.map.get_full_mut(item) {
                 let oldp = p.take();
@@ -246,13 +246,13 @@ impl<I, P> PriorityQueue<I, P>
             };
         if r.is_some() {
             unsafe {
-                let tmp = self.heap.get_unchecked(pos);
+                let tmp = *self.heap.get_unchecked(pos);
                 while (pos > 0) &&
                     (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
                      self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
                 {
                     *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                    *self.qp.get_unchecked_mut(self.heap.get_unchecked(pos)) = pos;
+                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
                     pos = parent(pos);
                 }
                 *self.heap.get_unchecked_mut(pos) = tmp;
@@ -277,21 +277,23 @@ impl<I, P> PriorityQueue<I, P>
         if let Some((index, _, p))= self.map.get_full_mut(item) {
             let oldp = p.take().unwrap();
             *p = Some(priority_setter(oldp));
-            pos = self.qp[index];
+            pos = unsafe{ *self.qp.get_unchecked(index) };
             found = true;
         }
         if found {
-            let tmp = self.heap[pos];
-            while (pos > 0) &&
-                (self.map.get_index(self.heap[parent(pos)]).unwrap().1 <
-                 self.map.get_index(self.heap[pos]).unwrap().1)
-            {
-                self.heap[pos] = self.heap[parent(pos)];
-                self.qp[self.heap[pos]] = pos;
-                pos = parent(pos);
+            unsafe {
+                let tmp = *self.heap.get_unchecked(pos);
+                while (pos > 0) &&
+                    (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
+                     self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
+                {
+                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
+                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
+                    pos = parent(pos);
+                }
+                *self.heap.get_unchecked_mut(pos) = tmp;
+                *self.qp.get_unchecked_mut(tmp) = pos;
             }
-            self.heap[pos] = tmp;
-            self.qp[tmp] = pos;
             self.heapify(pos);
         }
     }
@@ -416,10 +418,12 @@ impl<I, P> PriorityQueue<I, P>
             return self.map.swap_remove_index(head)
                 .map(|(i, o)| (i, o.unwrap()));
         }
-        self.qp[self.heap[0]] = 0;
+        unsafe {
+            *self.qp.get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
+        }
         self.qp.swap_remove(head);
         if head < self.size {
-            self.heap[self.qp[head]] = head;
+            unsafe{ *self.heap.get_unchecked_mut(*self.qp.get_unchecked(head)) = head; }
         }
         // swap remove from the map and return to the client
         self.map.swap_remove_index(head)
@@ -430,7 +434,7 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(1)** time (average)
     fn swap(&mut self, a: usize, b:usize) {
-        let (i, j) = (self.heap[a], self.heap[b]);
+        let (i, j) = unsafe{ (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
         self.heap.swap(a, b);
         self.qp.swap(i, j);
     }
@@ -439,18 +443,18 @@ impl<I, P> PriorityQueue<I, P>
     fn heapify(&mut self, i: usize) {
         let (mut l, mut r) = (left(i), right(i));
         let mut i = i;
-        let mut largest;
+        let mut largest; 
         if l < self.size &&
-            self.map.get_index(self.heap[l]).unwrap().1 >
-            self.map.get_index(self.heap[i]).unwrap().1
+            unsafe {self.map.get_index(*self.heap.get_unchecked(l)).unwrap().1 >
+                    self.map.get_index(*self.heap.get_unchecked(i)).unwrap().1}
         {
             largest = l;
         } else {
             largest = i;
         }
         if r < self.size &&
-            self.map.get_index(self.heap[r]).unwrap().1 >
-            self.map.get_index(self.heap[largest]).unwrap().1
+            unsafe {self.map.get_index(*self.heap.get_unchecked(r)).unwrap().1 >
+                    self.map.get_index(*self.heap.get_unchecked(largest)).unwrap().1}
         {
             largest = r;
         }
@@ -461,8 +465,8 @@ impl<I, P> PriorityQueue<I, P>
             l = left(i);
             r = right(i);
             if l < self.size &&
-                self.map.get_index(self.heap[l]).unwrap().1 >
-                self.map.get_index(self.heap[i]).unwrap().1
+                unsafe {self.map.get_index(*self.heap.get_unchecked(l)).unwrap().1 >
+                        self.map.get_index(*self.heap.get_unchecked(i)).unwrap().1}
             {
                 largest = l;
             }
@@ -470,8 +474,8 @@ impl<I, P> PriorityQueue<I, P>
                 largest = i;
             }
             if r < self.size &&
-                self.map.get_index(self.heap[r]).unwrap().1 >
-                self.map.get_index(self.heap[largest]).unwrap().1
+                unsafe {self.map.get_index(*self.heap.get_unchecked(r)).unwrap().1 >
+                        self.map.get_index(*self.heap.get_unchecked(largest)).unwrap().1}
             {
                 largest = r;
             }
