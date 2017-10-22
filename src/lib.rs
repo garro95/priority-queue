@@ -56,7 +56,9 @@
 //! ```
 
 extern crate ordermap;
-
+#[cfg(all(feature = "serde", test))]
+#[macro_use]
+extern crate serde_derive;
 mod pqueue;
 mod iterators;
 pub use pqueue::PriorityQueue;
@@ -225,7 +227,7 @@ mod tests {
 }
 
 #[cfg(all(feature = "serde", test))]
-mod serde_tests{
+mod serde_tests_basics{
     extern crate serde_test;
     use self::serde_test::{Token, assert_tokens};
     use ::PriorityQueue;
@@ -234,8 +236,8 @@ mod serde_tests{
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
         
         assert_tokens(&pq, &[
-            Token::Map{len: Some(0)},
-            Token::MapEnd
+            Token::Seq{len: Some(0)},
+            Token::SeqEnd
         ]);
     }
 
@@ -250,22 +252,233 @@ mod serde_tests{
         pq.push("h", 3);
 
         assert_tokens(&pq, &[
-            Token::Map{len: Some(5)},
+            Token::Seq{len: Some(5)},
+            Token::Tuple{len:2},
             Token::BorrowedStr("a"),
             Token::I32(1),
+            Token::TupleEnd,
 
+            Token::Tuple{len:2},
             Token::BorrowedStr("b"),
             Token::I32(2),
+            Token::TupleEnd,
 
+            Token::Tuple{len:2},
             Token::BorrowedStr("f"),
             Token::I32(7),
+            Token::TupleEnd,
 
+            Token::Tuple{len:2},
             Token::BorrowedStr("g"),
             Token::I32(4),
+            Token::TupleEnd,
 
+            Token::Tuple{len:2},
             Token::BorrowedStr("h"),
             Token::I32(3),
-            Token::MapEnd
+            Token::TupleEnd,
+            Token::SeqEnd
         ]);
+    }
+}
+//more complex tests
+#[cfg(all(feature = "serde", test))]
+mod serde_tests_custom_structs{
+    extern crate serde_json;
+    extern crate uuid;
+    extern crate serde;
+
+    use ::PriorityQueue;
+    use std::cmp::{Ord, PartialOrd, Ordering};
+    use std::default::Default;
+    use std::time::Duration;
+    use self::uuid::Uuid;
+
+    // Abusing Duration as a mutable std::time::Instant
+    type ActivationDate = Duration;
+
+    /// Events are compared by EventComparables instances.
+    ///
+    /// EventComparables instances are similar to instances of time, but with the
+    /// extra wrinkle of having a Uuid instance.  When EventComparables instances
+    /// are compared, they are first compared by their activation date, with the
+    /// date that occurs earlier being greater than a date that occurs later. This
+    /// ordering exists because of how priority_queue::PriorityQueue works; it is
+    /// naturally a max priority queue; using this ordering makes it a min
+    /// priority queue. EventComparables go one step beyond using time as the key
+    /// though; they  also have uuid::Uuid instances which are used to guarantee
+    /// that every EventComparables is unique.  This ensures that if a set of
+    /// events all  occur at the same time, they will still be executed in a
+    /// deterministic order, every single time the queue's contents are executed.
+    /// This is  critical for deterministic simulators.
+    #[serde(default)]
+    #[serde(deny_unknown_fields)]
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
+    struct EventComparables {
+        /// This is when the event will be fired.
+        activation_date: ActivationDate,
+
+        /// This is a unique ID.  Except for ensuring that different events are
+        /// guaranteed to compare as being different, it has no purpose.
+        id: Uuid
+    }
+
+    /// Default events activate at time (0, 0)
+    ///
+    /// All default events first at time (0, 0), but every single one has a unique
+    /// id.  This ensures that regardless of the number of default events you
+    /// create, they will always execute in the same order.
+    impl Default for EventComparables {
+        fn default() -> Self {
+            EventComparables {activation_date: ActivationDate::new(0,0), id: Uuid::new_v4()}
+        }
+    }
+
+    /// The priority queue depends on `Ord`. Explicitly implement the trait so the
+    /// queue becomes a min-heap instead of a max-heap.
+    impl Ord for EventComparables {
+        fn cmp(&self, other: &Self) -> Ordering {
+
+            // Notice that the we flip the ordering on costs. In case of a tie we
+            // compare by id - this step is necessary to make implementations of
+            // `PartialEq` and `Ord` consistent.
+
+            other.activation_date.cmp(&self.activation_date)
+                .then_with(|| self.id.cmp(&other.id))
+        }
+    }
+
+    // `PartialOrd` needs to be implemented as well.
+    impl PartialOrd for EventComparables {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    /// A fake event to fire on some date.
+    ///
+    /// This is a fake event that I'll fire when the corresponding
+    /// EventComparables instance comes up.  The contents are immaterial; I'm just
+    /// using it for testing
+    #[serde(default)]
+    #[serde(deny_unknown_fields)]
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
+    struct ConcreteEvent1 {
+        a: i32,
+        b: i64
+    }
+
+    impl Default for ConcreteEvent1 {
+        fn default() -> Self {
+            ConcreteEvent1 {a: 0, b: 0}
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Test 1
+    //////////////////////////////////////////////////////////////////////////////
+    #[test]
+    fn test1() {
+        println!("test1()");
+
+        type PqType = PriorityQueue<i32, i32>;
+
+        let mut pq: PqType = PriorityQueue::new();
+        pq.push(0, 0);
+        pq.push(1, 1);
+
+        let serialized = serde_json::to_string(&pq).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: PqType = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Test 2
+    //////////////////////////////////////////////////////////////////////////////
+    #[test]
+    fn test2() {
+        println!("\n\ntest2()");
+
+        type PqType = PriorityQueue<i32, EventComparables>;
+
+        let mut pq: PqType = PriorityQueue::new();
+        pq.push(0, Default::default()); // Uuids will be different
+        pq.push(1, Default::default());
+
+        let serialized = serde_json::to_string(&pq).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: PqType = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    // Test 3
+    //////////////////////////////////////////////////////////////////////////////
+    #[test]
+    fn test3() {
+        println!("\n\ntest3()");
+
+        // Create some concrete events and comparables, and test to see that they
+        // can be serialized/deserialized
+
+        let ce1 = ConcreteEvent1{a: 12, b: 45};
+        let ec1 = EventComparables {activation_date: ActivationDate::new(0, 1), id: Uuid::new_v4()};
+
+        let ce2 = ConcreteEvent1{a: 37, b: 123};
+        let ec2 = EventComparables {activation_date: ActivationDate::new(0, 1), id: Uuid::new_v4()};
+
+        let serialized = serde_json::to_string(&ce1).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: ConcreteEvent1 = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+        assert_eq!(ce1, deserialized);
+
+        let serialized = serde_json::to_string(&ec1).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: EventComparables = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+        assert_eq!(ec1, deserialized);
+
+        let serialized = serde_json::to_string(&ce2).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: ConcreteEvent1 = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+        assert_eq!(ce2, deserialized);
+
+        let serialized = serde_json::to_string(&ec2).unwrap();
+        println!("serialized = {:?}", serialized);
+        let deserialized: EventComparables = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+        assert_eq!(ec2, deserialized);
+
+        /****************************************************************************
+         ****************************************************************************
+         ****************************************************************************
+
+        ########    ###    #### ##       #### ##    ##  ######
+        ##         ## ##    ##  ##        ##  ###   ## ##    ##
+        ##        ##   ##   ##  ##        ##  ####  ## ##
+        ######   ##     ##  ##  ##        ##  ## ## ## ##   ####
+        ##       #########  ##  ##        ##  ##  #### ##    ##
+        ##       ##     ##  ##  ##        ##  ##   ### ##    ##
+        ##       ##     ## #### ######## #### ##    ##  ######
+
+         ****************************************************************************
+         ****************************************************************************
+         ****************************************************************************/
+
+        {
+            type PqType = PriorityQueue<ConcreteEvent1, EventComparables>;
+
+            let mut pq: PqType = PriorityQueue::new();
+            pq.push(ce1, ec1);
+            pq.push(ce2, ec2);
+
+            let serialized = serde_json::to_string(&pq).unwrap();
+            println!("serialized = {:?}", serialized);
+            let deserialized: PqType = serde_json::from_str(&serialized).unwrap();
+            println!("deserialized = {:?}", deserialized);
+        }
     }
 }

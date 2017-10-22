@@ -665,28 +665,27 @@ mod serde {
     use std::marker::PhantomData;
 
     extern crate serde;
-    use self::serde::ser::{Serialize, Serializer, SerializeMap};
+    use self::serde::ser::{Serialize, Serializer, SerializeSeq};
     impl<I, P> Serialize for PriorityQueue<I, P>
         where I: Hash + Eq + Serialize,
               P: Ord + Serialize {
         fn serialize<S> (&self, serializer: S) -> Result<S::Ok, S::Error>
             where S:Serializer {
-            let mut map_serializer = serializer.serialize_map(Some(self.size))?;
+            let mut map_serializer = serializer.serialize_seq(Some(self.size))?;
             for (k, v) in &self.map {
-                map_serializer.serialize_key(k)?;
-                map_serializer.serialize_value(v.as_ref().unwrap())?;
+                map_serializer.serialize_element(&(k, v.as_ref().unwrap()))?;
             }
             map_serializer.end()
         }
     }
 
-    use self::serde::de::{Deserialize, Deserializer, Visitor, MapAccess};
+    use self::serde::de::{Deserialize, Deserializer, Visitor, SeqAccess};
     impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
         where I: Hash + Eq + Deserialize<'de>,
               P: Ord + Deserialize<'de> {
         fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
             where D: Deserializer<'de> {
-            deserializer.deserialize_map(PQVisitor{marker: PhantomData})
+            deserializer.deserialize_seq(PQVisitor{marker: PhantomData})
         }
     }
 
@@ -708,24 +707,22 @@ mod serde {
             Ok(PriorityQueue::new())
         }
 
-        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-            where A: MapAccess<'de>{
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where A: SeqAccess<'de>{
             let mut pq: PriorityQueue<I, P> = 
-                if let Some(size) = map.size_hint() {
+                if let Some(size) = seq.size_hint() {
                     PriorityQueue::with_capacity(size)
                 } else {
                     PriorityQueue::new()
                 };
 
-            while let Some((item, priority)) = map.next_entry()? {
+            while let Some((item, priority)) = seq.next_element()? {
                 pq.map.insert(item, Some(priority));
                 pq.qp.push(pq.size);
                 pq.heap.push(pq.size);
                 pq.size+=1;
             }
             pq.heap_build();
-            // if it is guaranteed that deserialization follow the same order of
-            // serialization, heap_build is useless, but anyway should be O(n)
             Ok(pq)
         }
     }
