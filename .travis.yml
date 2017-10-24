@@ -11,3 +11,6 @@ script:
   - cargo test --verbose
   - cargo build --verbose --features serde
   - cargo test --verbose --features serde
+after_success: |
+  bash <(curl -s https://codecov.io/bash) &&
+  echo "Uploaded code coverage"
