@@ -6,6 +6,9 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+env:
+  global:
+  - CODECOV_TOKEN=:175096ad-e9ca-4967-b95c-6644fd7d3a11
 script:
   - cargo build --verbose
   - cargo test --verbose
