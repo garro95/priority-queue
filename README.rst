@@ -65,6 +65,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.4.4 Fix #6
 * 0.4.3 Fix #4 changing the way PriorityQueue serializes.
   Note that old serialized PriorityQueues may be incompatible with the new version.
   The API should not be changed instead.

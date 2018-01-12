@@ -102,12 +102,20 @@ mod tests {
     #[test]
     fn push_update() {
         let mut pq = PriorityQueue::new();
-        pq.push("a", 1);
-        pq.push("b", 3);
-        pq.push("a", 4);
-        assert_eq!(pq.peek(), Some((&"a", &4)));
-    }
+        pq.push("a", 9);
+        pq.push("b", 8);
+        pq.push("c", 7);
+        pq.push("d", 6);
+        pq.push("e", 5);
+        pq.push("f", 4);
+        pq.push("g", 10);
+        pq.push("k", 11);
 
+        pq.push("d", 20);
+        assert_eq!(pq.peek(), Some((&"d", &20)));
+        assert_eq!(pq.pop(), Some(("d", 20)));
+    }
+    
     #[test]
     fn change_priority() {
         let mut pq = PriorityQueue::new();
