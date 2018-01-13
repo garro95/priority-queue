@@ -121,12 +121,14 @@ mod tests {
         let mut pq = PriorityQueue::new();
         pq.push("Processor", 1);
         pq.push("Mainboard", 2);
-        pq.push("Ram", 5);
+        pq.push("RAM", 5);
+        pq.push("GPU", 4);
+        pq.push("Disk", 3);
         pq.change_priority("Processor", 10);
         assert_eq!(pq.peek(), Some((&"Processor", &10)));
 
-        pq.change_priority("Ram", 11);
-        assert_eq!(pq.peek(), Some((&"Ram", &11)));
+        pq.change_priority("RAM", 11);
+        assert_eq!(pq.peek(), Some((&"RAM", &11)));
     }
 
     #[test]
@@ -166,11 +168,11 @@ mod tests {
     fn change_priority_by() {
         use std::iter::FromIterator;
         
-        let v = vec!(("a", 1), ("b", 2), ("f", 7));
+        let v = vec!(("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5));
         let mut pq = PriorityQueue::from_iter(v.into_iter());
 
         pq.change_priority_by("b", |b| b+8);
-        assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "a"]);
+        assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "g", "h", "a"]);
     }
 
     #[test]

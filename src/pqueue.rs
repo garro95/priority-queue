@@ -249,7 +249,7 @@ impl<I, P> PriorityQueue<I, P>
                 let tmp = *self.heap.get_unchecked(pos);
                 while (pos > 0) &&
                     (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
-                     self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
+                     self.map.get_index(tmp).unwrap().1)
                 {
                     *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
                     *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
@@ -285,7 +285,7 @@ impl<I, P> PriorityQueue<I, P>
                 let tmp = *self.heap.get_unchecked(pos);
                 while (pos > 0) &&
                     (self.map.get_index(*self.heap.get_unchecked(parent(pos))).unwrap().1 <
-                     self.map.get_index(*self.heap.get_unchecked(pos)).unwrap().1)
+                     self.map.get_index(tmp).unwrap().1)
                 {
                     *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
                     *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
