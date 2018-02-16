@@ -26,7 +26,7 @@ use std::hash::Hash;
 use std::borrow::Borrow;
 use std::iter::Iterator;
 
-use indexmap::{IndexMap, MutableKeys};
+use indexmap::map::{IndexMap, MutableKeys};
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -163,7 +163,7 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
-        use indexmap::Entry::*;
+        use indexmap::map::Entry::*;
         let mut pos = 0;
         let oldp;
 

@@ -24,7 +24,7 @@ use std::iter::*;
 use ::pqueue::PriorityQueue;
 
 pub struct Iter<'a, I:'a, P:'a> {
-    pub(crate) iter: ::indexmap::Iter<'a, I, Option<P>>
+    pub(crate) iter: ::indexmap::map::Iter<'a, I, Option<P>>
 }
 
 impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P> 
@@ -39,7 +39,7 @@ impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P>
 pub struct IntoIter<I,P>
     where I:Hash + Eq,
           P:Ord{
-    pub(crate) iter: ::indexmap::IntoIter<I, Option<P>>
+    pub(crate) iter: ::indexmap::map::IntoIter<I, Option<P>>
 }
 
 impl<I, P> Iterator for IntoIter<I, P>
