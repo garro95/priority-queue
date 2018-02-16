@@ -18,7 +18,7 @@
  */
 
 // an improvement in terms of complexity would be to use a bare HashMap
-// as vec instead of the OrderMap
+// as vec instead of the IndexMap
 use ::iterators::*;
 
 use std::cmp::{Ord, Eq};
@@ -26,7 +26,7 @@ use std::hash::Hash;
 use std::borrow::Borrow;
 use std::iter::Iterator;
 
-use ordermap::{OrderMap, MutableKeys};
+use indexmap::{IndexMap, MutableKeys};
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -35,13 +35,13 @@ use ordermap::{OrderMap, MutableKeys};
 ///
 /// The item is of type I, that must implement `Hash` and `Eq`.
 ///
-/// Implemented as a heap of indexes, stores the items inside an `OrderMap`
+/// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
 #[derive(Clone, Default, Eq)]
 pub struct PriorityQueue<I, P>
     where I: Hash+Eq,
           P: Ord {
-    map: OrderMap<I, Option<P>>, // Stores the items and assign them an index
+    map: IndexMap<I, Option<P>>, // Stores the items and assign them an index
     heap: Vec<usize>,    // Implements the heap of indexes
     qp: Vec<usize>,      // Performs the translation from the index
     // of the map to the index of the heap
@@ -55,7 +55,7 @@ impl<I, P> PriorityQueue<I, P>
     /// Creates an empty `PriorityQueue`
     pub fn new() -> PriorityQueue<I, P> {
         PriorityQueue{
-            map: OrderMap::new(),
+            map: IndexMap::new(),
             heap: Vec::new(),
             qp: Vec::new(),
             size: 0
@@ -69,7 +69,7 @@ impl<I, P> PriorityQueue<I, P>
     /// If `capacity` is 0, there will be no allocation.
     pub fn with_capacity(capacity: usize) -> PriorityQueue<I, P> {
         PriorityQueue{
-            map: OrderMap::with_capacity(capacity),
+            map: IndexMap::with_capacity(capacity),
             heap:     Vec::with_capacity(capacity),
             qp:       Vec::with_capacity(capacity),
             size: 0
@@ -117,7 +117,7 @@ impl<I, P> PriorityQueue<I, P>
         self.map.capacity()
     }
 
-    // reserve_exact -> OrderMap does not implement reserve_exact
+    // reserve_exact -> IndexMap does not implement reserve_exact
 
     /// Reserves capacity for at least `additional` more elements to be inserted
     /// in the given `PriorityQueue`. The collection may reserve more space to avoid
@@ -163,7 +163,7 @@ impl<I, P> PriorityQueue<I, P>
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P>{
-        use ordermap::Entry::*;
+        use indexmap::Entry::*;
         let mut pos = 0;
         let oldp;
 

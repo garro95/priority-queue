@@ -55,7 +55,7 @@
 //! }
 //! ```
 
-extern crate ordermap;
+extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;

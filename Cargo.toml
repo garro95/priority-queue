@@ -13,7 +13,7 @@ license = "LGPL-3.0"
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 
 [dependencies]
-ordermap = "0.3.*"
+indexmap = "0.4"
 serde = {version = "1", optional = true}
 
 [dev-dependencies]
