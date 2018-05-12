@@ -82,6 +82,11 @@ impl<I, P> PriorityQueue<I, P>
         ::pqueue::Iter{iter: self.map.iter()}
     }
 
+    pub fn itermut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
+        ::pqueue::IterMut{iter: self.map.iter_mut(),
+                          pq: self}
+    }
+
     /// Returns the couple (item, priority) with the greatest
     /// priority in the queue, or None if it is empty.
     ///
@@ -221,7 +226,6 @@ impl<I, P> PriorityQueue<I, P>
         }
         self.size += 1;
         None
-        //}
     }
 
     /// Change the priority of an Item returning the old value of priority,
@@ -483,7 +487,7 @@ impl<I, P> PriorityQueue<I, P>
 
     /// Internal function that transform the `heap`
     /// vector in a heap with its properties
-    fn heap_build(&mut self){
+    pub(crate) fn heap_build(&mut self){
         if self.size == 0 {return;}
         for i in (0..parent(self.size)).rev(){
             self.heapify(i);

@@ -23,16 +23,42 @@ use std::iter::*;
 
 use ::pqueue::PriorityQueue;
 
-pub struct Iter<'a, I:'a, P:'a> {
+pub struct Iter<'a, I:'a, P:'a>
+where I: Hash + Eq,
+      P: Ord  {
     pub(crate) iter: ::indexmap::map::Iter<'a, I, Option<P>>
 }
 
 impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P> 
-    where I: Hash + Eq,
-          P: Ord {
+where I: Hash + Eq,
+      P: Ord {
     type Item = (&'a I, &'a P);
     fn next(&mut self) -> Option<(&'a I, &'a P)> {
         self.iter.next().map(|(i, op)| (i, op.as_ref().unwrap()))
+    }
+}
+
+pub struct IterMut<'a, I:'a, P:'a> 
+where I: Hash + Eq,
+      P: Ord {
+    pub(crate) iter: ::indexmap::map::IterMut<'a, I, Option<P>>,
+    pub(crate) pq: &'a mut ::pqueue::PriorityQueue<I, P>
+}
+
+impl<'a, I: 'a, P: 'a> Iterator for IterMut<'a, I, P>
+where I: Hash + Eq,
+      P: Ord {
+    type Item = (&'a I, &'a mut P);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(i, op)| (i, op.as_mut().unwrap()))
+    }
+}
+
+impl<'a, I: 'a, P: 'a> Drop for IterMut<'a, I, P> 
+where I: Hash + Eq,
+      P: Ord {
+    fn drop(&mut self) {
+        self.pq.heap_build();
     }
 }
 
