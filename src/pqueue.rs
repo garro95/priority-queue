@@ -39,9 +39,9 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// to be able to retrieve them quickly.
 #[derive(Clone, Default, Eq)]
 pub struct PriorityQueue<I, P>
-    where I: Hash+Eq,
-          P: Ord {
-    map: IndexMap<I, Option<P>>, // Stores the items and assign them an index
+where I: Hash+Eq,
+      P: Ord {
+    pub(crate) map: IndexMap<I, Option<P>>, // Stores the items and assign them an index
     heap: Vec<usize>,    // Implements the heap of indexes
     qp: Vec<usize>,      // Performs the translation from the index
     // of the map to the index of the heap
@@ -49,8 +49,8 @@ pub struct PriorityQueue<I, P>
 }
 
 impl<I, P> PriorityQueue<I, P>
-    where P: Ord,
-          I: Hash + Eq {
+where P: Ord,
+      I: Hash + Eq {
 
     /// Creates an empty `PriorityQueue`
     pub fn new() -> PriorityQueue<I, P> {
@@ -83,8 +83,7 @@ impl<I, P> PriorityQueue<I, P>
     }
 
     pub fn itermut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
-        ::pqueue::IterMut{iter: self.map.iter_mut(),
-                          pq: self}
+        ::pqueue::IterMut::new(self)
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -93,7 +92,8 @@ impl<I, P> PriorityQueue<I, P>
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)>{
         if self.size == 0 { return None }
-        self.map.get_index(unsafe{ *self.heap.get_unchecked(0) }).map(|(k, v)| (k, v.as_ref().unwrap()))
+        self.map.get_index(unsafe{ *self.heap.get_unchecked(0) })
+            .map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -235,8 +235,8 @@ impl<I, P> PriorityQueue<I, P>
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P)
                                       -> Option<P>
-        where I: Borrow<Q>,
-              Q:Eq + Hash
+    where I: Borrow<Q>,
+          Q:Eq + Hash
     {
         let mut pos;
         let r =
@@ -272,9 +272,9 @@ impl<I, P> PriorityQueue<I, P>
     /// The operation is performed in **O(log(N))** time (worst case).
     pub fn change_priority_by<Q: ?Sized, F>
         (&mut self, item: &Q, priority_setter: F)
-        where I: Borrow<Q>,
-              Q: Eq + Hash,
-              F: FnOnce(P) -> P
+    where I: Borrow<Q>,
+          Q: Eq + Hash,
+          F: FnOnce(P) -> P
     {
         let mut pos = 0;
         let mut found = false;
@@ -304,8 +304,8 @@ impl<I, P> PriorityQueue<I, P>
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
     pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
-        where I: Borrow<Q>,
-              Q: Eq + Hash
+    where I: Borrow<Q>,
+          Q: Eq + Hash
     {
         self.map.get(item).map(|o| o.as_ref().unwrap())
     }
@@ -313,8 +313,8 @@ impl<I, P> PriorityQueue<I, P>
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
-        where I: Borrow<Q>,
-              Q: Eq + Hash
+    where I: Borrow<Q>,
+          Q: Eq + Hash
     {
         self.map.get_full(item).map(|(_, k, v)| (k, v.as_ref().unwrap()))
     }
@@ -329,8 +329,8 @@ impl<I, P> PriorityQueue<I, P>
     /// To modify the priority use `push`, `change_priority` or
     /// `change_priority_by`.
     pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
-        where I: Borrow<Q>,
-              Q: Eq + Hash
+    where I: Borrow<Q>,
+          Q: Eq + Hash
     {
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, v.as_ref().unwrap()))
     }
@@ -499,8 +499,8 @@ impl<I, P> PriorityQueue<I, P>
 //FIXME: fails when the vector contains repeated items
 // FIXED: repeated items ignored
 impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
-    where I: Hash+Eq,
-          P: Ord {
+where I: Hash+Eq,
+      P: Ord {
     fn from(vec: Vec<(I, P)>) -> PriorityQueue<I, P>{
         let mut pq = PriorityQueue::with_capacity(vec.len());
         let mut i=0;
@@ -522,10 +522,10 @@ impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
 impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
-    where I: Hash+Eq,
-          P: Ord {
+where I: Hash+Eq,
+      P: Ord {
     fn from_iter<IT>(iter: IT) -> PriorityQueue<I, P>
-        where IT: IntoIterator<Item = (I, P)>{
+    where IT: IntoIterator<Item = (I, P)>{
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         let mut pq =
@@ -555,8 +555,8 @@ impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
 }
 
 impl<I, P> ::std::iter::IntoIterator for PriorityQueue<I, P>
-    where I: Hash+Eq,
-          P: Ord {
+where I: Hash+Eq,
+      P: Ord {
     type Item = (I, P);
     type IntoIter = ::pqueue::IntoIter<I, P>;
     fn into_iter(self) -> ::pqueue::IntoIter<I, P> {
@@ -565,8 +565,8 @@ impl<I, P> ::std::iter::IntoIterator for PriorityQueue<I, P>
 }
 
 impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
-    where I: Hash+Eq,
-          P: Ord {
+where I: Hash+Eq,
+      P: Ord {
     fn extend <T: IntoIterator<Item=(I, P)>> (&mut self, iter: T) {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
@@ -603,8 +603,8 @@ impl<I, P>  ::std::iter::Extend<(I, P)> for PriorityQueue <I, P>
 
 use std::fmt;
 impl<I, P> fmt::Debug for PriorityQueue<I, P>
-    where I: fmt::Debug + Hash + Eq,
-          P: fmt::Debug + Ord {
+where I: fmt::Debug + Hash + Eq,
+      P: fmt::Debug + Ord {
     fn  fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
             .entries(self.heap.iter()
@@ -616,11 +616,11 @@ impl<I, P> fmt::Debug for PriorityQueue<I, P>
 
 use std::cmp::PartialEq;
 impl<I, P1, P2> PartialEq<PriorityQueue<I, P2>> for PriorityQueue<I, P1> 
-    where I: Hash+Eq,
-          P1: Ord,
-          P1: PartialEq<P2>,
+where I: Hash+Eq,
+      P1: Ord,
+      P1: PartialEq<P2>,
 Option<P1>: PartialEq<Option<P2>>,
-          P2: Ord {
+      P2: Ord {
     
     fn eq(&self, other: &PriorityQueue<I, P2>) -> bool {
         self.map == other.map
@@ -670,10 +670,10 @@ mod serde {
     extern crate serde;
     use self::serde::ser::{Serialize, Serializer, SerializeSeq};
     impl<I, P> Serialize for PriorityQueue<I, P>
-        where I: Hash + Eq + Serialize,
-              P: Ord + Serialize {
+    where I: Hash + Eq + Serialize,
+          P: Ord + Serialize {
         fn serialize<S> (&self, serializer: S) -> Result<S::Ok, S::Error>
-            where S:Serializer {
+        where S:Serializer {
             let mut map_serializer = serializer.serialize_seq(Some(self.size))?;
             for (k, v) in &self.map {
                 map_serializer.serialize_element(&(k, v.as_ref().unwrap()))?;
@@ -684,22 +684,22 @@ mod serde {
 
     use self::serde::de::{Deserialize, Deserializer, Visitor, SeqAccess};
     impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
-        where I: Hash + Eq + Deserialize<'de>,
-              P: Ord + Deserialize<'de> {
+    where I: Hash + Eq + Deserialize<'de>,
+          P: Ord + Deserialize<'de> {
         fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
-            where D: Deserializer<'de> {
+        where D: Deserializer<'de> {
             deserializer.deserialize_seq(PQVisitor{marker: PhantomData})
         }
     }
 
     struct PQVisitor<I, P>
-        where I: Hash + Eq,
-              P: Ord {
+    where I: Hash + Eq,
+          P: Ord {
         marker: PhantomData<PriorityQueue<I, P>>
     }
     impl<'de, I, P> Visitor<'de> for PQVisitor<I, P>
-        where I: Hash + Eq + Deserialize<'de>,
-              P: Ord + Deserialize<'de> {
+    where I: Hash + Eq + Deserialize<'de>,
+          P: Ord + Deserialize<'de> {
         type Value = PriorityQueue<I, P>;
 
         fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -711,7 +711,7 @@ mod serde {
         }
 
         fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where A: SeqAccess<'de>{
+        where A: SeqAccess<'de>{
             let mut pq: PriorityQueue<I, P> = 
                 if let Some(size) = seq.size_hint() {
                     PriorityQueue::with_capacity(size)

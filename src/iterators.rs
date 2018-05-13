@@ -41,16 +41,28 @@ where I: Hash + Eq,
 pub struct IterMut<'a, I:'a, P:'a> 
 where I: Hash + Eq,
       P: Ord {
-    pub(crate) iter: ::indexmap::map::IterMut<'a, I, Option<P>>,
-    pub(crate) pq: &'a mut ::pqueue::PriorityQueue<I, P>
+    pq: &'a mut PriorityQueue<I, P>,
+    pos: usize,
 }
 
-impl<'a, I: 'a, P: 'a> Iterator for IterMut<'a, I, P>
+impl<'a, I: 'a, P: 'a> IterMut<'a, I, P>
 where I: Hash + Eq,
       P: Ord {
-    type Item = (&'a I, &'a mut P);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(i, op)| (i, op.as_mut().unwrap()))
+    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P>) -> Self {
+        IterMut{pq, pos:0}
+    }
+}
+
+impl<'a, 'b:'a, I: 'a, P: 'a> Iterator for IterMut<'a, I, P>
+where I: Hash + Eq,
+      P: Ord {
+    type Item = (&'a mut I, &'a mut P);
+    fn next(&'b mut self) -> Option<Self::Item> {
+        let r:Option<(&'a mut I, &'a mut P)>
+            = self.pq.map.get_index_mut(self.pos)
+            .map(|(i, op)| (i, op.as_mut().unwrap()));
+        self.pos += 1;
+        r
     }
 }
 
@@ -63,14 +75,14 @@ where I: Hash + Eq,
 }
 
 pub struct IntoIter<I,P>
-    where I:Hash + Eq,
-          P:Ord{
+where I:Hash + Eq,
+      P:Ord{
     pub(crate) iter: ::indexmap::map::IntoIter<I, Option<P>>
 }
 
 impl<I, P> Iterator for IntoIter<I, P>
-    where I:Hash + Eq,
-          P:Ord {
+where I:Hash + Eq,
+      P:Ord {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
         self.iter.next().map(|(i, op)| (i, op.unwrap()))
@@ -78,14 +90,14 @@ impl<I, P> Iterator for IntoIter<I, P>
 }
 
 pub struct IntoSortedIter<I, P>
-    where I:Hash + Eq,
-          P:Ord {
+where I:Hash + Eq,
+      P:Ord {
     pub(crate) pq: PriorityQueue<I, P>
 }
 
 impl<I, P> Iterator for IntoSortedIter<I, P>
-    where I: Hash + Eq,
-          P:Ord {
+where I: Hash + Eq,
+      P:Ord {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
         self.pq.pop()
