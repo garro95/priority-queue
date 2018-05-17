@@ -57,10 +57,12 @@ impl<'a, 'b:'a, I: 'a, P: 'a> Iterator for IterMut<'a, I, P>
 where I: Hash + Eq,
       P: Ord {
     type Item = (&'a mut I, &'a mut P);
-    fn next(&'b mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         let r:Option<(&'a mut I, &'a mut P)>
             = self.pq.map.get_index_mut(self.pos)
-            .map(|(i, op)| (i, op.as_mut().unwrap()));
+            .map(|(i, op)| (i, op.as_mut().unwrap()))
+            .map(|(i, p)| (i as *mut I, p as *mut P))
+            .map(|(i, p)| unsafe{(i.as_mut().unwrap(), p.as_mut().unwrap())});
         self.pos += 1;
         r
     }

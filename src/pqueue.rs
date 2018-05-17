@@ -82,7 +82,7 @@ where P: Ord,
         ::pqueue::Iter{iter: self.map.iter()}
     }
 
-    pub fn itermut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
+    pub fn iter_mut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
         ::pqueue::IterMut::new(self)
     }
 
@@ -554,13 +554,34 @@ where I: Hash+Eq,
     }
 }
 
-impl<I, P> ::std::iter::IntoIterator for PriorityQueue<I, P>
+use ::std::iter::IntoIterator;
+impl<I, P> IntoIterator for PriorityQueue<I, P>
 where I: Hash+Eq,
       P: Ord {
     type Item = (I, P);
     type IntoIter = ::pqueue::IntoIter<I, P>;
     fn into_iter(self) -> ::pqueue::IntoIter<I, P> {
         ::pqueue::IntoIter{ iter: self.map.into_iter() }
+    }
+}
+
+impl<'a, I, P> IntoIterator for &'a PriorityQueue<I, P>
+where I: Hash + Eq,
+      P: Ord {
+    type Item = (&'a I, &'a P);
+    type IntoIter = Iter<'a, I, P>;
+    fn into_iter(self) -> Iter<'a, I, P> {
+        Iter{iter: self.map.iter()}
+    }
+}
+
+impl<'a, I, P> IntoIterator for &'a mut PriorityQueue<I, P>
+where I: Hash + Eq,
+      P: Ord {
+    type Item = (&'a mut I, &'a mut P);
+    type IntoIter = IterMut<'a, I, P>;
+    fn into_iter(self) -> IterMut<'a, I, P> {
+        IterMut::new(self)
     }
 }
 

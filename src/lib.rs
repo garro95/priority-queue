@@ -200,6 +200,32 @@ mod tests {
     }
 
     #[test]
+    fn iter_mut() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 4);
+        pq.push("h", 3);
+
+        for (i, p) in &mut pq {
+            if *i <"f" {
+                *p += 18;
+            }
+        }
+
+        assert_eq!(pq.pop(), Some(("b", 20)));
+
+        /*
+        As expected, this does not compile
+        let iter_mut = pq.iter_mut();
+        iter_mut.for_each(|(_, p)| {*p += 2});
+
+        assert_eq!(pq.pop(), Some(("f", 9)));
+        */
+    }
+
+    #[test]
     fn into_sorted_iter(){
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
