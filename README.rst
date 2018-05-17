@@ -65,6 +65,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.5.1 Add some documentation for `iter_mut()`
 * 0.5.0 Fix #7 implementing the `iter_mut` features
 * 0.4.5 Fix #6 for `change_priority` and `change_priority_by`
 * 0.4.4 Fix #6

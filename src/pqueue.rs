@@ -82,6 +82,16 @@ where P: Ord,
         ::pqueue::Iter{iter: self.map.iter()}
     }
 
+    /// Return n iterator in arbitrary order over the
+    /// (item, priority) elements in the queue.
+    ///
+    /// The item and the priority are mutable references, but it's a logic error
+    /// to modify the item in a way that change the result of `Hash` or `Eq`.
+    ///
+    /// It's *not* an error, instead, to modify the priorities, because the heap
+    /// will be rebuilt once the `IterMut` goes out of scope. It would be
+    /// rebuilt even if no priority value would have been modified, but the
+    /// procedure will not move anything, but just compare the priorities.
     pub fn iter_mut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
         ::pqueue::IterMut::new(self)
     }
