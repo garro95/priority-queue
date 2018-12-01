@@ -18,7 +18,7 @@ Usage
 -----
 To use this crate, simply add the following string to your `Cargo.toml`:
 
-	  priority-queue = "0.4"
+	  priority-queue = "0.5.2"
 
 Notice that a change in the last digit (patch number) means that the interface is
 backward and forward compatible and contains other type of fixes, like bug fixes or
@@ -65,6 +65,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.5.2 Fix documentation formatting
 * 0.5.1 Add some documentation for `iter_mut()`
 * 0.5.0 Fix #7 implementing the `iter_mut` features
 * 0.4.5 Fix #6 for `change_priority` and `change_priority_by`
