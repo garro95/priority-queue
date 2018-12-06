@@ -8,7 +8,6 @@ repository = "https://github.com/garro95/priority-queue"
 keywords = ["priority", "queue", "heap"]
 categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0"
-edition = "2018"
 
 [badges]
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }
