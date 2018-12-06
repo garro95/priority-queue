@@ -21,14 +21,14 @@
 //! with some efficient methods to change the priority of an element in
 //! **O(log(N))** time (worst case).
 //! 
-//! The elements(called `Item`s, of type `I`) must implement [`Hash`]
-//! (https://doc.rust-lang.org/std/hash/trait.Hash.html)
+//! The elements(called `Item`s, of type `I`) must implement
+//! [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html)
 //! and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
 //! 
-//! The priority `P` may be any type that implements [`Ord`]
-//! (https://doc.rust-lang.org/std/cmp/trait.Ord.html).
-//! For reverse order remember the standard wrapper [`Reverse<T>`]
-//! (https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
+//! The priority `P` may be any type that implements
+//! [`Ord`](https://doc.rust-lang.org/std/cmp/trait.Ord.html).
+//! For reverse order remember the standard wrapper
+//! [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
 //! 
 //! #Example
 //! ```rust
