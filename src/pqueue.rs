@@ -692,7 +692,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use pqueue::PriorityQueue;
+    use crate::pqueue::PriorityQueue;
 
     use std::hash::Hash;
     use std::cmp::{Ord, Eq};

@@ -266,7 +266,7 @@ mod tests {
 mod serde_tests_basics{
     extern crate serde_test;
     use self::serde_test::{Token, assert_tokens};
-    use ::PriorityQueue;
+    use crate::PriorityQueue;
     #[test]
     fn serde_empty(){
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
@@ -326,7 +326,7 @@ mod serde_tests_custom_structs{
     extern crate uuid;
     extern crate serde;
 
-    use ::PriorityQueue;
+    use crate::PriorityQueue;
     use std::cmp::{Ord, PartialOrd, Ordering};
     use std::default::Default;
     use std::time::Duration;
