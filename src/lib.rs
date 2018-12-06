@@ -61,11 +61,11 @@ extern crate indexmap;
 extern crate serde_derive;
 mod pqueue;
 mod iterators;
-pub use pqueue::PriorityQueue;
+pub use crate::pqueue::PriorityQueue;
 
 #[cfg(test)]
 mod tests {
-    pub use PriorityQueue;
+    pub use crate::PriorityQueue;
 
     #[test]
     fn init(){

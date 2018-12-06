@@ -21,7 +21,7 @@ use std::cmp::{Ord, Eq};
 use std::hash::Hash;
 use std::iter::*;
 
-use ::pqueue::PriorityQueue;
+use crate::pqueue::PriorityQueue;
 
 pub struct Iter<'a, I:'a, P:'a>
 where I: Hash + Eq,
