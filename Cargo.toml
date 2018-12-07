@@ -1,6 +1,6 @@
 [package]
 name = "priority-queue"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"
@@ -8,6 +8,7 @@ repository = "https://github.com/garro95/priority-queue"
 keywords = ["priority", "queue", "heap"]
 categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }

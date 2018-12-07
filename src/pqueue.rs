@@ -19,7 +19,7 @@
 
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
-use ::iterators::*;
+use crate::iterators::*;
 
 use std::cmp::{Ord, Eq};
 use std::hash::Hash;
@@ -78,8 +78,8 @@ where P: Ord,
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter<'a>(&'a self) -> ::pqueue::Iter<'a, I, P>  {
-        ::pqueue::Iter{iter: self.map.iter()}
+    pub fn iter<'a>(&'a self) -> crate::pqueue::Iter<'a, I, P>  {
+        crate::pqueue::Iter{iter: self.map.iter()}
     }
 
     /// Return n iterator in arbitrary order over the
@@ -92,8 +92,8 @@ where P: Ord,
     /// will be rebuilt once the `IterMut` goes out of scope. It would be
     /// rebuilt even if no priority value would have been modified, but the
     /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut<'a>(&'a mut self) -> ::pqueue::IterMut<'a, I, P> {
-        ::pqueue::IterMut::new(self)
+    pub fn iter_mut<'a>(&'a mut self) -> crate::pqueue::IterMut<'a, I, P> {
+        crate::pqueue::IterMut::new(self)
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -569,9 +569,9 @@ impl<I, P> IntoIterator for PriorityQueue<I, P>
 where I: Hash+Eq,
       P: Ord {
     type Item = (I, P);
-    type IntoIter = ::pqueue::IntoIter<I, P>;
-    fn into_iter(self) -> ::pqueue::IntoIter<I, P> {
-        ::pqueue::IntoIter{ iter: self.map.into_iter() }
+    type IntoIter = crate::pqueue::IntoIter<I, P>;
+    fn into_iter(self) -> crate::pqueue::IntoIter<I, P> {
+        crate::pqueue::IntoIter{ iter: self.map.into_iter() }
     }
 }
 
@@ -692,7 +692,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use pqueue::PriorityQueue;
+    use crate::pqueue::PriorityQueue;
 
     use std::hash::Hash;
     use std::cmp::{Ord, Eq};

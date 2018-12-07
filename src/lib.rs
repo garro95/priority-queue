@@ -21,16 +21,16 @@
 //! with some efficient methods to change the priority of an element in
 //! **O(log(N))** time (worst case).
 //! 
-//! The elements(called `Item`s, of type `I`) must implement [`Hash`]
-//! (https://doc.rust-lang.org/std/hash/trait.Hash.html)
+//! The elements (called `Item`s, of type `I`) must implement
+//! [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html)
 //! and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
 //! 
-//! The priority `P` may be any type that implements [`Ord`]
-//! (https://doc.rust-lang.org/std/cmp/trait.Ord.html).
-//! For reverse order remember the standard wrapper [`Reverse<T>`]
-//! (https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
+//! The priority `P` may be any type that implements
+//! [`Ord`](https://doc.rust-lang.org/std/cmp/trait.Ord.html).
+//! For reverse order remember the standard wrapper
+//! [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
 //! 
-//! #Example
+//! # Example
 //! ```rust
 //! extern crate priority_queue;
 //! 
@@ -61,11 +61,11 @@ extern crate indexmap;
 extern crate serde_derive;
 mod pqueue;
 mod iterators;
-pub use pqueue::PriorityQueue;
+pub use crate::pqueue::PriorityQueue;
 
 #[cfg(test)]
 mod tests {
-    pub use PriorityQueue;
+    pub use crate::PriorityQueue;
 
     #[test]
     fn init(){
@@ -266,7 +266,7 @@ mod tests {
 mod serde_tests_basics{
     extern crate serde_test;
     use self::serde_test::{Token, assert_tokens};
-    use ::PriorityQueue;
+    use crate::PriorityQueue;
     #[test]
     fn serde_empty(){
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
@@ -326,7 +326,7 @@ mod serde_tests_custom_structs{
     extern crate uuid;
     extern crate serde;
 
-    use ::PriorityQueue;
+    use crate::PriorityQueue;
     use std::cmp::{Ord, PartialOrd, Ordering};
     use std::default::Default;
     use std::time::Duration;
