@@ -20,35 +20,35 @@
 //! This crate provide a priority queue backed by an hashmap
 //! with some efficient methods to change the priority of an element in
 //! **O(log(N))** time (worst case).
-//! 
+//!
 //! The elements (called `Item`s, of type `I`) must implement
 //! [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html)
 //! and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
-//! 
+//!
 //! The priority `P` may be any type that implements
 //! [`Ord`](https://doc.rust-lang.org/std/cmp/trait.Ord.html).
 //! For reverse order remember the standard wrapper
 //! [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
-//! 
+//!
 //! # Example
 //! ```rust
 //! extern crate priority_queue;
-//! 
+//!
 //! use priority_queue::PriorityQueue;
 //!       
 //! fn main() {
 //!     let mut pq = PriorityQueue::new();
-//! 
+//!
 //!     assert!(pq.is_empty());
 //!     pq.push("Apples", 5);
 //!     pq.push("Bananas", 8);
 //!     pq.push("Strawberries", 23);
-//! 
+//!
 //!     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
 //!     
 //!     pq.change_priority("Bananas", 25);
 //!     assert_eq!(pq.peek(), Some((&"Bananas", &25)));
-//! 
+//!
 //!     for (item, _) in pq.into_sorted_iter() {
 //!         println!("{}", item);
 //!     }
@@ -59,8 +59,8 @@ extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
-mod pqueue;
 mod iterators;
+mod pqueue;
 pub use crate::pqueue::PriorityQueue;
 
 #[cfg(test)]
@@ -68,7 +68,7 @@ mod tests {
     pub use crate::PriorityQueue;
 
     #[test]
-    fn init(){
+    fn init() {
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
         println!("{:?}", pq);
     }
@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(pq.peek(), Some((&"d", &20)));
         assert_eq!(pq.pop(), Some(("d", 20)));
     }
-    
+
     #[test]
     fn change_priority() {
         let mut pq = PriorityQueue::new();
@@ -133,15 +133,15 @@ mod tests {
 
     #[test]
     fn from_vec() {
-        let v = vec!(("a", 1), ("b", 2), ("f", 7));
+        let v = vec![("a", 1), ("b", 2), ("f", 7)];
         let mut pq = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
-    
+
     #[test]
     fn from_vec_with_repeated() {
-        let v = vec!(("a", 1), ("b", 2), ("f", 7), ("a", 2));
+        let v = vec![("a", 1), ("b", 2), ("f", 7), ("a", 2)];
         let mut pq = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
@@ -150,8 +150,8 @@ mod tests {
     #[test]
     fn from_iter() {
         use std::iter::FromIterator;
-        
-        let v = vec!(("a", 1), ("b", 2), ("f", 7));
+
+        let v = vec![("a", 1), ("b", 2), ("f", 7)];
         let mut pq = PriorityQueue::from_iter(v.into_iter());
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn heap_sort() {
-        let v = vec!(("a", 2), ("b", 7), ("f", 1));
+        let v = vec![("a", 2), ("b", 7), ("f", 1)];
         let sorted = (PriorityQueue::from(v)).into_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
     }
@@ -167,11 +167,11 @@ mod tests {
     #[test]
     fn change_priority_by() {
         use std::iter::FromIterator;
-        
-        let v = vec!(("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5));
+
+        let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
         let mut pq = PriorityQueue::from_iter(v.into_iter());
 
-        pq.change_priority_by("b", |b| b+8);
+        pq.change_priority_by("b", |b| b + 8);
         assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "g", "h", "a"]);
     }
 
@@ -182,11 +182,13 @@ mod tests {
         pq.push("b", 2);
         pq.push("f", 7);
 
-        let v = vec!(("c", 4), ("d", 6), ("e", 3));
+        let v = vec![("c", 4), ("d", 6), ("e", 3)];
         pq.extend(v);
         assert_eq!(pq.len(), 6);
-        assert_eq!(pq.into_sorted_vec().as_slice(),
-                   &["f", "d", "c", "e", "b", "a"]);
+        assert_eq!(
+            pq.into_sorted_vec().as_slice(),
+            &["f", "d", "c", "e", "b", "a"]
+        );
     }
 
     #[test]
@@ -209,7 +211,7 @@ mod tests {
         pq.push("h", 3);
 
         for (i, p) in &mut pq {
-            if *i <"f" {
+            if *i < "f" {
                 *p += 18;
             }
         }
@@ -226,18 +228,20 @@ mod tests {
     }
 
     #[test]
-    fn into_sorted_iter(){
+    fn into_sorted_iter() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
         pq.push("b", 2);
         pq.push("f", 7);
 
-        assert_eq!(pq.into_sorted_iter().collect::<Vec<_>>(),
-                   vec!(("f", 7), ("b", 2), ("a", 1)));
+        assert_eq!(
+            pq.into_sorted_iter().collect::<Vec<_>>(),
+            vec!(("f", 7), ("b", 2), ("a", 1))
+        );
     }
 
     #[test]
-    fn eq(){
+    fn eq() {
         let mut a = PriorityQueue::new();
         let mut b = PriorityQueue::new();
         assert_eq!(a, b);
@@ -263,74 +267,70 @@ mod tests {
 }
 
 #[cfg(all(feature = "serde", test))]
-mod serde_tests_basics{
+mod serde_tests_basics {
     extern crate serde_test;
-    use self::serde_test::{Token, assert_tokens};
+    use self::serde_test::{assert_tokens, Token};
     use crate::PriorityQueue;
     #[test]
-    fn serde_empty(){
+    fn serde_empty() {
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
-        
-        assert_tokens(&pq, &[
-            Token::Seq{len: Some(0)},
-            Token::SeqEnd
-        ]);
+
+        assert_tokens(&pq, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
     }
 
     #[test]
-    fn serde(){
+    fn serde() {
         let mut pq = PriorityQueue::new();
-        
+
         pq.push("a", 1);
         pq.push("b", 2);
         pq.push("f", 7);
         pq.push("g", 4);
         pq.push("h", 3);
 
-        assert_tokens(&pq, &[
-            Token::Seq{len: Some(5)},
-            Token::Tuple{len:2},
-            Token::BorrowedStr("a"),
-            Token::I32(1),
-            Token::TupleEnd,
-
-            Token::Tuple{len:2},
-            Token::BorrowedStr("b"),
-            Token::I32(2),
-            Token::TupleEnd,
-
-            Token::Tuple{len:2},
-            Token::BorrowedStr("f"),
-            Token::I32(7),
-            Token::TupleEnd,
-
-            Token::Tuple{len:2},
-            Token::BorrowedStr("g"),
-            Token::I32(4),
-            Token::TupleEnd,
-
-            Token::Tuple{len:2},
-            Token::BorrowedStr("h"),
-            Token::I32(3),
-            Token::TupleEnd,
-            Token::SeqEnd
-        ]);
+        assert_tokens(
+            &pq,
+            &[
+                Token::Seq { len: Some(5) },
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr("a"),
+                Token::I32(1),
+                Token::TupleEnd,
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr("b"),
+                Token::I32(2),
+                Token::TupleEnd,
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr("f"),
+                Token::I32(7),
+                Token::TupleEnd,
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr("g"),
+                Token::I32(4),
+                Token::TupleEnd,
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr("h"),
+                Token::I32(3),
+                Token::TupleEnd,
+                Token::SeqEnd,
+            ],
+        );
     }
 }
 
 //more complex tests
 //thanks to ckaran
 #[cfg(all(feature = "serde", test))]
-mod serde_tests_custom_structs{
+mod serde_tests_custom_structs {
+    extern crate serde;
     extern crate serde_json;
     extern crate uuid;
-    extern crate serde;
 
+    use self::uuid::Uuid;
     use crate::PriorityQueue;
-    use std::cmp::{Ord, PartialOrd, Ordering};
+    use std::cmp::{Ord, Ordering, PartialOrd};
     use std::default::Default;
     use std::time::Duration;
-    use self::uuid::Uuid;
 
     // Abusing Duration as a mutable std::time::Instant
     type ActivationDate = Duration;
@@ -358,7 +358,7 @@ mod serde_tests_custom_structs{
 
         /// This is a unique ID.  Except for ensuring that different events are
         /// guaranteed to compare as being different, it has no purpose.
-        id: Uuid
+        id: Uuid,
     }
 
     /// Default events activate at time (0, 0)
@@ -368,7 +368,10 @@ mod serde_tests_custom_structs{
     /// create, they will always execute in the same order.
     impl Default for EventComparables {
         fn default() -> Self {
-            EventComparables {activation_date: ActivationDate::new(0,0), id: Uuid::new_v4()}
+            EventComparables {
+                activation_date: ActivationDate::new(0, 0),
+                id: Uuid::new_v4(),
+            }
         }
     }
 
@@ -376,12 +379,13 @@ mod serde_tests_custom_structs{
     /// queue becomes a min-heap instead of a max-heap.
     impl Ord for EventComparables {
         fn cmp(&self, other: &Self) -> Ordering {
-
             // Notice that the we flip the ordering on costs. In case of a tie we
             // compare by id - this step is necessary to make implementations of
             // `PartialEq` and `Ord` consistent.
 
-            other.activation_date.cmp(&self.activation_date)
+            other
+                .activation_date
+                .cmp(&self.activation_date)
                 .then_with(|| self.id.cmp(&other.id))
         }
     }
@@ -403,12 +407,12 @@ mod serde_tests_custom_structs{
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
     struct ConcreteEvent1 {
         a: i32,
-        b: i64
+        b: i64,
     }
 
     impl Default for ConcreteEvent1 {
         fn default() -> Self {
-            ConcreteEvent1 {a: 0, b: 0}
+            ConcreteEvent1 { a: 0, b: 0 }
         }
     }
 
@@ -460,11 +464,17 @@ mod serde_tests_custom_structs{
         // Create some concrete events and comparables, and test to see that they
         // can be serialized/deserialized
 
-        let ce1 = ConcreteEvent1{a: 12, b: 45};
-        let ec1 = EventComparables {activation_date: ActivationDate::new(0, 1), id: Uuid::new_v4()};
+        let ce1 = ConcreteEvent1 { a: 12, b: 45 };
+        let ec1 = EventComparables {
+            activation_date: ActivationDate::new(0, 1),
+            id: Uuid::new_v4(),
+        };
 
-        let ce2 = ConcreteEvent1{a: 37, b: 123};
-        let ec2 = EventComparables {activation_date: ActivationDate::new(0, 1), id: Uuid::new_v4()};
+        let ce2 = ConcreteEvent1 { a: 37, b: 123 };
+        let ec2 = EventComparables {
+            activation_date: ActivationDate::new(0, 1),
+            id: Uuid::new_v4(),
+        };
 
         let serialized = serde_json::to_string(&ce1).unwrap();
         println!("serialized = {:?}", serialized);
