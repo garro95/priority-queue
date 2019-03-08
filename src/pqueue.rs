@@ -81,7 +81,7 @@ where
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter<'a>(&'a self) -> crate::pqueue::Iter<'a, I, P> {
+    pub fn iter(&self) -> crate::pqueue::Iter<I, P> {
         crate::pqueue::Iter {
             iter: self.map.iter(),
         }
@@ -97,7 +97,7 @@ where
     /// will be rebuilt once the `IterMut` goes out of scope. It would be
     /// rebuilt even if no priority value would have been modified, but the
     /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut<'a>(&'a mut self) -> crate::pqueue::IterMut<'a, I, P> {
+    pub fn iter_mut(&mut self) -> crate::pqueue::IterMut<I, P> {
         crate::pqueue::IterMut::new(self)
     }
 
@@ -244,7 +244,7 @@ where
                     .get_index(*self.heap.get_unchecked(parent(i)))
                     .unwrap()
                     .1
-                    < &priority)
+                    < priority)
             {
                 *self.heap.get_unchecked_mut(i) = *self.heap.get_unchecked(parent(i));
                 *self.qp.get_unchecked_mut(*self.heap.get_unchecked(i)) = i;
