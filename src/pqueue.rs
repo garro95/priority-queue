@@ -268,6 +268,9 @@ where
     /// Change the priority of an Item returning the old value of priority,
     /// or `None` if the item wasn't in the queue.
     ///
+    /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
+    /// in the priority queue.
+    ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>

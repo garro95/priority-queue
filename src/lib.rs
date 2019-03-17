@@ -132,6 +132,56 @@ mod tests {
     }
 
     #[test]
+    fn change_priority_does_not_change_contents() {
+        use std::hash::{Hash, Hasher};
+        struct MyFn {
+            name: &'static str,
+            func: fn(&mut i32),
+        }
+        impl Default for MyFn {
+            fn default() -> Self {
+                Self {
+                    name: "",
+                    func: |_| {},
+                }
+            }
+        }
+        impl PartialEq for MyFn {
+            fn eq(&self, other: &Self) -> bool {
+                self.name == other.name
+            }
+        }
+        impl Eq for MyFn {}
+        impl Hash for MyFn {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                self.name.hash(state);
+            }
+        }
+        impl std::fmt::Debug for MyFn {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write![f, "{:?}", self.name]
+            }
+        }
+
+        let mut pq = PriorityQueue::new();
+        pq.push(MyFn { name: "increment-one", func: |x| *x += 1 }, 2);
+        pq.push(MyFn { name: "increment-two", func: |x| *x += 2 }, 1);
+
+        let mut cnt = 0;
+        assert_eq![pq.peek(), Some((&MyFn { name: "increment-one", func: |_| {} }, &2))];
+        pq.change_priority(&MyFn { name: "increment-one", func: |_| {} }, 0);
+        assert_eq![pq.peek(), Some((&MyFn { name: "increment-two", func: |_| {} }, &1))];
+
+        assert_eq![cnt, 0];
+
+        (pq.pop().unwrap().0.func)(&mut cnt);
+        assert_eq![cnt, 2];
+
+        (pq.pop().unwrap().0.func)(&mut cnt);
+        assert_eq![cnt, 3];
+    }
+
+    #[test]
     fn from_vec() {
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
         let mut pq = PriorityQueue::from(v);
