@@ -37,7 +37,7 @@ use indexmap::map::{IndexMap, MutableKeys};
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Default, Eq)]
+#[derive(Clone, Eq)]
 pub struct PriorityQueue<I, P>
 where
     I: Hash + Eq,
@@ -48,6 +48,12 @@ where
     qp: Vec<usize>,                         // Performs the translation from the index
     // of the map to the index of the heap
     size: usize, // The size of the heap
+}
+
+impl<I: Hash + Eq, P: Ord> Default for PriorityQueue<I, P> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<I, P> PriorityQueue<I, P>

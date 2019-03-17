@@ -264,6 +264,13 @@ mod tests {
         assert_eq!(a, b);
         assert_eq!(b, a);
     }
+
+    #[test]
+    fn non_default_key() {
+        use std::time::*;
+        type PqType = PriorityQueue<i32, Instant>;
+        let _: PqType = PriorityQueue::default();
+    }
 }
 
 #[cfg(all(feature = "serde", test))]
