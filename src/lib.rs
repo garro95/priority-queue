@@ -54,7 +54,8 @@
 //!     }
 //! }
 //! ```
-
+#![feature(test)]
+extern crate test;
 extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
@@ -66,6 +67,7 @@ pub use crate::pqueue::PriorityQueue;
 #[cfg(test)]
 mod tests {
     pub use crate::PriorityQueue;
+    use test::{black_box, Bencher};
 
     #[test]
     fn init() {
@@ -329,6 +331,29 @@ mod tests {
         use std::time::*;
         type PqType = PriorityQueue<i32, Instant>;
         let _: PqType = PriorityQueue::default();
+    }
+
+    #[bench]
+    fn push_and_pop(b: &mut Bencher) {
+        type PqType = PriorityQueue<usize, i32>;
+        let mut pq: PqType = PriorityQueue::new();
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop().unwrap().1, 0];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_on_large_queue(b: &mut Bencher) {
+        type PqType = PriorityQueue<usize, i32>;
+        let mut pq: PqType = PriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(100_000), black_box(100_000));
+            assert_eq![pq.pop().unwrap().1, black_box(100_000)];
+        });
     }
 }
 
