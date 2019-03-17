@@ -35,7 +35,7 @@
 //! extern crate priority_queue;
 //!
 //! use priority_queue::PriorityQueue;
-//!       
+//!
 //! fn main() {
 //!     let mut pq = PriorityQueue::new();
 //!
@@ -45,7 +45,7 @@
 //!     pq.push("Strawberries", 23);
 //!
 //!     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
-//!     
+//!
 //!     pq.change_priority("Bananas", 25);
 //!     assert_eq!(pq.peek(), Some((&"Bananas", &25)));
 //!
