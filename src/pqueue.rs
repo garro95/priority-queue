@@ -394,7 +394,7 @@ where
         self.map.into_iter().map(|(i, _)| i).collect()
     }
 
-    /// Implements an HeapSort
+    /// Implements a HeapSort
     pub fn into_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.size);
         while let Some((i, _)) = self.pop() {
