@@ -182,6 +182,15 @@ mod tests {
     }
 
     #[test]
+    fn reversed_order() {
+        use std::cmp::Reverse;
+        let mut pq: PriorityQueue<_, Reverse<i32>> = PriorityQueue::new();
+        pq.push("a", Reverse(1));
+        pq.push("b", Reverse(2));
+        assert_eq![pq.pop(), Some(("a", Reverse(1)))];
+    }
+
+    #[test]
     fn from_vec() {
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
         let mut pq = PriorityQueue::from(v);
