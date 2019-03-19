@@ -35,7 +35,7 @@
 //! extern crate priority_queue;
 //!
 //! use priority_queue::PriorityQueue;
-//!       
+//!
 //! fn main() {
 //!     let mut pq = PriorityQueue::new();
 //!
@@ -45,7 +45,7 @@
 //!     pq.push("Strawberries", 23);
 //!
 //!     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
-//!     
+//!
 //!     pq.change_priority("Bananas", 25);
 //!     assert_eq!(pq.peek(), Some((&"Bananas", &25)));
 //!
@@ -54,7 +54,8 @@
 //!     }
 //! }
 //! ```
-
+#![feature(test)]
+extern crate test;
 extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
@@ -66,6 +67,7 @@ pub use crate::pqueue::PriorityQueue;
 #[cfg(test)]
 mod tests {
     pub use crate::PriorityQueue;
+    use test::{black_box, Bencher};
 
     #[test]
     fn init() {
@@ -129,6 +131,65 @@ mod tests {
 
         pq.change_priority("RAM", 11);
         assert_eq!(pq.peek(), Some((&"RAM", &11)));
+    }
+
+    #[test]
+    fn change_priority_does_not_change_contents() {
+        use std::hash::{Hash, Hasher};
+        struct MyFn {
+            name: &'static str,
+            func: fn(&mut i32),
+        }
+        impl Default for MyFn {
+            fn default() -> Self {
+                Self {
+                    name: "",
+                    func: |_| {},
+                }
+            }
+        }
+        impl PartialEq for MyFn {
+            fn eq(&self, other: &Self) -> bool {
+                self.name == other.name
+            }
+        }
+        impl Eq for MyFn {}
+        impl Hash for MyFn {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                self.name.hash(state);
+            }
+        }
+        impl std::fmt::Debug for MyFn {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write![f, "{:?}", self.name]
+            }
+        }
+
+        let mut pq = PriorityQueue::new();
+        pq.push(MyFn { name: "increment-one", func: |x| *x += 1 }, 2);
+        pq.push(MyFn { name: "increment-two", func: |x| *x += 2 }, 1);
+
+        let mut cnt = 0;
+        assert_eq![pq.peek(), Some((&MyFn { name: "increment-one", func: |_| {} }, &2))];
+        pq.change_priority(&MyFn { name: "increment-one", func: |_| {} }, 0);
+        assert_eq![pq.peek(), Some((&MyFn { name: "increment-two", func: |_| {} }, &1))];
+
+        assert_eq![cnt, 0];
+
+        (pq.pop().unwrap().0.func)(&mut cnt);
+        assert_eq![cnt, 2];
+
+        (pq.pop().unwrap().0.func)(&mut cnt);
+        assert_eq![cnt, 3];
+    }
+
+    #[test]
+    fn reversed_order() {
+        use std::cmp::Reverse;
+        let mut pq: PriorityQueue<_, Reverse<i32>> = PriorityQueue::new();
+        pq.push("a", Reverse(1));
+        pq.push("b", Reverse(2));
+        assert_eq![pq.pop(), Some(("a", Reverse(1)))];
     }
 
     #[test]
@@ -263,6 +324,36 @@ mod tests {
         a.push("h", 3);
         assert_eq!(a, b);
         assert_eq!(b, a);
+    }
+
+    #[test]
+    fn non_default_key() {
+        use std::time::*;
+        type PqType = PriorityQueue<i32, Instant>;
+        let _: PqType = PriorityQueue::default();
+    }
+
+    #[bench]
+    fn push_and_pop(b: &mut Bencher) {
+        type PqType = PriorityQueue<usize, i32>;
+        let mut pq: PqType = PriorityQueue::new();
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop().unwrap().1, 0];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_on_large_queue(b: &mut Bencher) {
+        type PqType = PriorityQueue<usize, i32>;
+        let mut pq: PqType = PriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(100_000), black_box(100_000));
+            assert_eq![pq.pop().unwrap().1, black_box(100_000)];
+        });
     }
 }
 

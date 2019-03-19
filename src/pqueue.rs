@@ -37,7 +37,7 @@ use indexmap::map::{IndexMap, MutableKeys};
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Default, Eq)]
+#[derive(Clone, Eq)]
 pub struct PriorityQueue<I, P>
 where
     I: Hash + Eq,
@@ -48,6 +48,12 @@ where
     qp: Vec<usize>,                         // Performs the translation from the index
     // of the map to the index of the heap
     size: usize, // The size of the heap
+}
+
+impl<I: Hash + Eq, P: Ord> Default for PriorityQueue<I, P> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<I, P> PriorityQueue<I, P>
@@ -262,6 +268,9 @@ where
     /// Change the priority of an Item returning the old value of priority,
     /// or `None` if the item wasn't in the queue.
     ///
+    /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
+    /// in the priority queue.
+    ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>
@@ -385,7 +394,7 @@ where
         self.map.into_iter().map(|(i, _)| i).collect()
     }
 
-    /// Implements an HeapSort
+    /// Implements a HeapSort
     pub fn into_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.size);
         while let Some((i, _)) = self.pop() {
