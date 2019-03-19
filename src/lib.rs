@@ -32,8 +32,6 @@
 //!
 //! # Example
 //! ```rust
-//! extern crate priority_queue;
-//!
 //! use priority_queue::PriorityQueue;
 //!
 //! fn main() {
@@ -55,7 +53,6 @@
 //! }
 //! ```
 #![cfg_attr(feature = "benchmarks", feature(test))]
-extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
@@ -361,8 +358,7 @@ mod tests {
 
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_basics {
-    extern crate serde_test;
-    use self::serde_test::{assert_tokens, Token};
+    use serde_test::{assert_tokens, Token};
     use crate::PriorityQueue;
     #[test]
     fn serde_empty() {
@@ -415,11 +411,7 @@ mod serde_tests_basics {
 //thanks to ckaran
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_custom_structs {
-    extern crate serde;
-    extern crate serde_json;
-    extern crate uuid;
-
-    use self::uuid::Uuid;
+    use uuid::Uuid;
     use crate::PriorityQueue;
     use std::cmp::{Ord, Ordering, PartialOrd};
     use std::default::Default;
