@@ -782,8 +782,7 @@ mod serde {
     use std::hash::Hash;
     use std::marker::PhantomData;
 
-    extern crate serde;
-    use self::serde::ser::{Serialize, SerializeSeq, Serializer};
+    use serde::ser::{Serialize, SerializeSeq, Serializer};
     impl<I, P> Serialize for PriorityQueue<I, P>
     where
         I: Hash + Eq + Serialize,
@@ -801,7 +800,7 @@ mod serde {
         }
     }
 
-    use self::serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+    use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
     impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
     where
         I: Hash + Eq + Deserialize<'de>,
