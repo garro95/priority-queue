@@ -54,8 +54,7 @@
 //!     }
 //! }
 //! ```
-#![feature(test)]
-extern crate test;
+#![cfg_attr(feature = "benchmarks", feature(test))]
 extern crate indexmap;
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
@@ -67,7 +66,6 @@ pub use crate::pqueue::PriorityQueue;
 #[cfg(test)]
 mod tests {
     pub use crate::PriorityQueue;
-    use test::{black_box, Bencher};
 
     #[test]
     fn init() {
@@ -333,8 +331,10 @@ mod tests {
         let _: PqType = PriorityQueue::default();
     }
 
+    #[cfg(feature = "benchmarks")]
     #[bench]
     fn push_and_pop(b: &mut Bencher) {
+        use test::{black_box, Bencher};
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
         b.iter(|| {
@@ -343,8 +343,10 @@ mod tests {
         });
     }
 
+    #[cfg(feature = "benchmarks")]
     #[bench]
     fn push_and_pop_on_large_queue(b: &mut Bencher) {
+        use test::{black_box, Bencher};
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
         for i in 0..100_000 {
