@@ -329,9 +329,13 @@ mod tests {
     }
 
     #[cfg(feature = "benchmarks")]
+    extern crate test;
+    #[cfg(feature = "benchmarks")]
+    use test::{black_box, Bencher};
+
+    #[cfg(feature = "benchmarks")]
     #[bench]
     fn push_and_pop(b: &mut Bencher) {
-        use test::{black_box, Bencher};
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
         b.iter(|| {
@@ -340,10 +344,22 @@ mod tests {
         });
     }
 
+    //for comparison, using the BinaryHeap
+    #[cfg(feature = "benchmarks")]
+    #[bench]
+    fn push_and_pop_std(b: &mut Bencher) {
+        use std::collections::BinaryHeap;
+        type PqType = BinaryHeap<(usize, i32)>;
+        let mut pq: PqType = BinaryHeap::new();
+        b.iter(|| {
+            pq.push((black_box(0), black_box(0)));
+            assert_eq![pq.pop().unwrap().1, 0];
+        });
+    }
+
     #[cfg(feature = "benchmarks")]
     #[bench]
     fn push_and_pop_on_large_queue(b: &mut Bencher) {
-        use test::{black_box, Bencher};
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
         for i in 0..100_000 {
@@ -354,6 +370,22 @@ mod tests {
             assert_eq![pq.pop().unwrap().1, black_box(100_000)];
         });
     }
+
+    #[cfg(feature = "benchmarks")]
+    #[bench]
+    fn push_and_pop_on_large_queue_std(b: &mut Bencher) {
+        use std::collections::BinaryHeap;
+        type PqType = BinaryHeap<(usize, i32)>;
+        let mut pq: PqType = BinaryHeap::new();
+        for i in 0..100_000 {
+            pq.push((black_box(i as usize), black_box(i)));
+        }
+        b.iter(|| {
+            pq.push((black_box(100_000), black_box(100_000)));
+            assert_eq![pq.pop().unwrap().1, black_box(100_000)];
+        });
+    }
+
 }
 
 #[cfg(all(feature = "serde", test))]
