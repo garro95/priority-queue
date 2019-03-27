@@ -248,6 +248,19 @@ mod tests {
     }
 
     #[test]
+    fn extend_empty() {
+        let mut pq = PriorityQueue::new();
+
+        let v = vec![("c", 4), ("d", 6), ("e", 3)];
+        pq.extend(v);
+        assert_eq!(pq.len(), 3);
+        assert_eq!(
+            pq.into_sorted_vec().as_slice(),
+            &["d", "c", "e"]
+        );
+    }
+
+    #[test]
     fn iter() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
