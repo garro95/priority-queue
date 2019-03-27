@@ -66,6 +66,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.5.4 Prevent panic on extending an empty queue
 * 0.5.3 New implementation of the `Default` trait avoids the requirement that `P: Default`
 * 0.5.2 Fix documentation formatting
 * 0.5.1 Add some documentation for `iter_mut()`
