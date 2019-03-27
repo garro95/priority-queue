@@ -771,6 +771,12 @@ fn log2_fast(x: usize) -> usize {
 // assuming len1 >= len2.
 #[inline]
 fn better_to_rebuild(len1: usize, len2: usize) -> bool {
+    // log(1) == 0, so the inequation always falsy
+    // log(0) is inapplicable and produces panic
+    if len1 <= 1 {
+        return false;
+    }
+
     2 * (len1 + len2) < len2 * log2_fast(len1)
 }
 
