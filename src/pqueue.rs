@@ -62,8 +62,8 @@ where
     I: Hash + Eq,
 {
     /// Creates an empty `PriorityQueue`
-    pub fn new() -> PriorityQueue<I, P> {
-        PriorityQueue {
+    pub fn new() -> Self {
+        Self {
             map: IndexMap::new(),
             heap: Vec::new(),
             qp: Vec::new(),
@@ -76,8 +76,8 @@ where
     /// The internal collections will be able to hold at least `capacity`
     /// elements without reallocating.
     /// If `capacity` is 0, there will be no allocation.
-    pub fn with_capacity(capacity: usize) -> PriorityQueue<I, P> {
-        PriorityQueue {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
             map: IndexMap::with_capacity(capacity),
             heap: Vec::with_capacity(capacity),
             qp: Vec::with_capacity(capacity),
@@ -576,8 +576,8 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    fn from(vec: Vec<(I, P)>) -> PriorityQueue<I, P> {
-        let mut pq = PriorityQueue::with_capacity(vec.len());
+    fn from(vec: Vec<(I, P)>) -> Self {
+        let mut pq = Self::with_capacity(vec.len());
         let mut i = 0;
         for (item, priority) in vec {
             if !pq.map.contains_key(&item) {
@@ -601,29 +601,29 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    fn from_iter<IT>(iter: IT) -> PriorityQueue<I, P>
+    fn from_iter<IT>(iter: IT) -> Self
     where
         IT: IntoIterator<Item = (I, P)>,
     {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         let mut pq = if let Some(max) = max {
-            PriorityQueue::with_capacity(max)
-        } else if min != 0 {
-            PriorityQueue::with_capacity(min)
+            Self::with_capacity(max)
+        } else if min > 0 {
+            Self::with_capacity(min)
         } else {
-            PriorityQueue::new()
+            Self::new()
         };
         for (item, priority) in iter {
-            if !pq.map.contains_key(&item) {
+            if pq.map.contains_key(&item) {
+                let (_, old_item, old_priority) = pq.map.get_full_mut2(&item).unwrap();
+                *old_item = item;
+                *old_priority = Some(priority);
+            } else {
                 pq.map.insert(item, Some(priority));
                 pq.qp.push(pq.size);
                 pq.heap.push(pq.size);
                 pq.size += 1;
-            } else {
-                let (_, old_item, old_priority) = pq.map.get_full_mut2(&item).unwrap();
-                *old_item = item;
-                *old_priority = Some(priority);
             }
         }
         pq.heap_build();
@@ -690,15 +690,15 @@ where
         }
         if rebuild {
             for (item, priority) in iter {
-                if !self.map.contains_key(&item) {
+                if self.map.contains_key(&item) {
+                    let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
+                    *old_item = item;
+                    *old_priority = Some(priority);
+                } else {
                     self.map.insert(item, Some(priority));
                     self.qp.push(self.size);
                     self.heap.push(self.size);
                     self.size += 1;
-                } else {
-                    let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
-                    *old_item = item;
-                    *old_priority = Some(priority);
                 }
             }
             self.heap_build();
@@ -742,23 +742,19 @@ where
     }
 }
 
-#[inline(always)]
 /// Compute the index of the left child of an item from its index
 fn left(i: usize) -> usize {
     (i * 2) + 1
 }
-#[inline(always)]
 /// Compute the index of the right child of an item from its index
 fn right(i: usize) -> usize {
     (i * 2) + 2
 }
-#[inline(always)]
 /// Compute the index of the parent element in the heap from its index
 fn parent(i: usize) -> usize {
     (i - 1) / 2
 }
 
-#[inline(always)]
 fn log2_fast(x: usize) -> usize {
     use std::mem::size_of;
     8 * size_of::<usize>() - (x.leading_zeros() as usize) - 1
@@ -769,7 +765,6 @@ fn log2_fast(x: usize) -> usize {
 // while `extend` takes O(len2 * log_2(len1)) operations
 // and about 1 * len2 * log_2(len1) comparisons in the worst case,
 // assuming len1 >= len2.
-#[inline]
 fn better_to_rebuild(len1: usize, len2: usize) -> bool {
     // log(1) == 0, so the inequation always falsy
     // log(0) is inapplicable and produces panic
