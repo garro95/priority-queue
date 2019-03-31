@@ -23,7 +23,8 @@ use crate::iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
-use std::hash::Hash;
+use std::collections::hash_map::RandomState;
+use std::hash::{BuildHasher, Hash};
 use std::iter::Iterator;
 
 use indexmap::map::{IndexMap, MutableKeys};
@@ -37,22 +38,36 @@ use indexmap::map::{IndexMap, MutableKeys};
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Eq)]
-pub struct PriorityQueue<I, P>
+#[derive(Clone)]
+pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) map: IndexMap<I, Option<P>>, // Stores the items and assign them an index
-    heap: Vec<usize>,                       // Implements the heap of indexes
-    qp: Vec<usize>,                         // Performs the translation from the index
+    pub(crate) map: IndexMap<I, Option<P>, H>, // Stores the items and assign them an index
+    heap: Vec<usize>,                          // Implements the heap of indexes
+    qp: Vec<usize>,                            // Performs the translation from the index
     // of the map to the index of the heap
     size: usize, // The size of the heap
 }
 
-impl<I: Hash + Eq, P: Ord> Default for PriorityQueue<I, P> {
+// do not [derive(Eq)] to loosen up trait requirements for other types and impls
+impl<I, P, H> Eq for PriorityQueue<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+    H: BuildHasher,
+{
+}
+
+impl<I, P, H> Default for PriorityQueue<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+    H: BuildHasher + Default,
+{
     fn default() -> Self {
-        Self::new()
+        Self::with_default_hasher()
     }
 }
 
@@ -63,22 +78,51 @@ where
 {
     /// Creates an empty `PriorityQueue`
     pub fn new() -> Self {
-        Self {
-            map: IndexMap::new(),
-            heap: Vec::new(),
-            qp: Vec::new(),
-            size: 0,
-        }
+        Self::with_capacity(0)
     }
 
     /// Creates an empty `PriorityQueue` with the specified capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self::with_capacity_and_default_hasher(capacity)
+    }
+}
+
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+    H: BuildHasher + Default,
+{
+    /// Creates an empty `PriorityQueue` with the default hasher
+    pub fn with_default_hasher() -> Self {
+        Self::with_capacity_and_default_hasher(0)
+    }
+
+    /// Creates an empty `PriorityQueue` with the specified capacity and default hasher
+    pub fn with_capacity_and_default_hasher(capacity: usize) -> Self {
+        Self::with_capacity_and_hasher(capacity, H::default())
+    }
+}
+
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+    H: BuildHasher,
+{
+    /// Creates an empty `PriorityQueue` with the specified hasher
+    pub fn with_hasher(hash_builder: H) -> Self {
+        Self::with_capacity_and_hasher(0, hash_builder)
+    }
+
+    /// Creates an empty `PriorityQueue` with the specified capacity and hasher
     ///
     /// The internal collections will be able to hold at least `capacity`
     /// elements without reallocating.
     /// If `capacity` is 0, there will be no allocation.
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity_and_hasher(capacity: usize, hash_builder: H) -> Self {
         Self {
-            map: IndexMap::with_capacity(capacity),
+            map: IndexMap::with_capacity_and_hasher(capacity, hash_builder),
             heap: Vec::with_capacity(capacity),
             qp: Vec::with_capacity(capacity),
             size: 0,
@@ -92,7 +136,13 @@ where
             iter: self.map.iter(),
         }
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /// Return n iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
     ///
@@ -103,7 +153,7 @@ where
     /// will be rebuilt once the `IterMut` goes out of scope. It would be
     /// rebuilt even if no priority value would have been modified, but the
     /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> crate::pqueue::IterMut<I, P> {
+    pub fn iter_mut(&mut self) -> crate::pqueue::IterMut<I, P, H> {
         crate::pqueue::IterMut::new(self)
     }
 
@@ -148,7 +198,13 @@ where
     pub fn capacity(&self) -> usize {
         self.map.capacity()
     }
-
+}
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+    H: BuildHasher,
+{
     // reserve_exact -> IndexMap does not implement reserve_exact
 
     /// Reserves capacity for at least `additional` more elements to be inserted
@@ -165,7 +221,13 @@ where
         self.heap.reserve(additional);
         self.qp.reserve(additional);
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
     pub fn shrink_to_fit(&mut self) {
@@ -187,7 +249,14 @@ where
             }
         }
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+    H: BuildHasher,
+{
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equals to `item` was already into the queue,
@@ -393,7 +462,13 @@ where
     pub fn into_vec(self) -> Vec<I> {
         self.map.into_iter().map(|(i, _)| i).collect()
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /// Implements a HeapSort
     pub fn into_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.size);
@@ -412,7 +487,14 @@ where
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+    H: BuildHasher,
+{
     /// Drops all items from the priority queue
     pub fn clear(&mut self) {
         self.heap.clear();
@@ -451,11 +533,17 @@ where
         other.qp.clear();
         self.heap_build();
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /// Generates a new iterator from self that
     /// will extract the elements from the one with the highest priority
     /// to the lowest one.
-    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P> {
+    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
         IntoSortedIter { pq: self }
     }
     /**************************************************************************/
@@ -608,11 +696,11 @@ where
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         let mut pq = if let Some(max) = max {
-            Self::with_capacity(max)
+            Self::with_capacity_and_default_hasher(max)
         } else if min > 0 {
-            Self::with_capacity(min)
+            Self::with_capacity_and_default_hasher(min)
         } else {
-            Self::new()
+            Self::with_default_hasher()
         };
         for (item, priority) in iter {
             if pq.map.contains_key(&item) {
@@ -632,10 +720,11 @@ where
 }
 
 use ::std::iter::IntoIterator;
-impl<I, P> IntoIterator for PriorityQueue<I, P>
+impl<I, P, H> IntoIterator for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (I, P);
     type IntoIter = crate::pqueue::IntoIter<I, P>;
@@ -646,10 +735,11 @@ where
     }
 }
 
-impl<'a, I, P> IntoIterator for &'a PriorityQueue<I, P>
+impl<'a, I, P, H> IntoIterator for &'a PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a I, &'a P);
     type IntoIter = Iter<'a, I, P>;
@@ -660,22 +750,23 @@ where
     }
 }
 
-impl<'a, I, P> IntoIterator for &'a mut PriorityQueue<I, P>
+impl<'a, I, P, H> IntoIterator for &'a mut PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
 {
     type Item = (&'a mut I, &'a mut P);
-    type IntoIter = IterMut<'a, I, P>;
-    fn into_iter(self) -> IterMut<'a, I, P> {
+    type IntoIter = IterMut<'a, I, P, H>;
+    fn into_iter(self) -> IterMut<'a, I, P, H> {
         IterMut::new(self)
     }
 }
 
-impl<I, P> ::std::iter::Extend<(I, P)> for PriorityQueue<I, P>
+impl<I, P, H> ::std::iter::Extend<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
         let iter = iter.into_iter();
@@ -711,7 +802,7 @@ where
 }
 
 use std::fmt;
-impl<I, P> fmt::Debug for PriorityQueue<I, P>
+impl<I, P, H> fmt::Debug for PriorityQueue<I, P, H>
 where
     I: fmt::Debug + Hash + Eq,
     P: fmt::Debug + Ord,
@@ -729,15 +820,18 @@ where
 }
 
 use std::cmp::PartialEq;
-impl<I, P1, P2> PartialEq<PriorityQueue<I, P2>> for PriorityQueue<I, P1>
+
+impl<I, P1, H1, P2, H2> PartialEq<PriorityQueue<I, P2, H2>> for PriorityQueue<I, P1, H1>
 where
     I: Hash + Eq,
     P1: Ord,
     P1: PartialEq<P2>,
     Option<P1>: PartialEq<Option<P2>>,
     P2: Ord,
+    H1: BuildHasher,
+    H2: BuildHasher,
 {
-    fn eq(&self, other: &PriorityQueue<I, P2>) -> bool {
+    fn eq(&self, other: &PriorityQueue<I, P2, H2>) -> bool {
         self.map == other.map
     }
 }
@@ -780,14 +874,16 @@ mod serde {
     use crate::pqueue::PriorityQueue;
 
     use std::cmp::{Eq, Ord};
-    use std::hash::Hash;
+    use std::collections::hash_map::RandomState;
+    use std::hash::{BuildHasher, Hash};
     use std::marker::PhantomData;
 
     use serde::ser::{Serialize, SerializeSeq, Serializer};
-    impl<I, P> Serialize for PriorityQueue<I, P>
+    impl<I, P, H> Serialize for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Serialize,
         P: Ord + Serialize,
+        H: BuildHasher,
     {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -802,12 +898,13 @@ mod serde {
     }
 
     use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
-    impl<'de, I, P> Deserialize<'de> for PriorityQueue<I, P>
+    impl<'de, I, P, H> Deserialize<'de> for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
         P: Ord + Deserialize<'de>,
+        H: BuildHasher + Default,
     {
-        fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P>, D::Error>
+        fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P, H>, D::Error>
         where
             D: Deserializer<'de>,
         {
@@ -817,36 +914,37 @@ mod serde {
         }
     }
 
-    struct PQVisitor<I, P>
+    struct PQVisitor<I, P, H = RandomState>
     where
         I: Hash + Eq,
         P: Ord,
     {
-        marker: PhantomData<PriorityQueue<I, P>>,
+        marker: PhantomData<PriorityQueue<I, P, H>>,
     }
-    impl<'de, I, P> Visitor<'de> for PQVisitor<I, P>
+    impl<'de, I, P, H> Visitor<'de> for PQVisitor<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
         P: Ord + Deserialize<'de>,
+        H: BuildHasher + Default,
     {
-        type Value = PriorityQueue<I, P>;
+        type Value = PriorityQueue<I, P, H>;
 
         fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             write!(formatter, "A priority queue")
         }
 
         fn visit_unit<E>(self) -> Result<Self::Value, E> {
-            Ok(PriorityQueue::new())
+            Ok(PriorityQueue::with_default_hasher())
         }
 
         fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
         where
             A: SeqAccess<'de>,
         {
-            let mut pq: PriorityQueue<I, P> = if let Some(size) = seq.size_hint() {
-                PriorityQueue::with_capacity(size)
+            let mut pq: PriorityQueue<I, P, H> = if let Some(size) = seq.size_hint() {
+                PriorityQueue::with_capacity_and_default_hasher(size)
             } else {
-                PriorityQueue::new()
+                PriorityQueue::with_default_hasher()
             };
 
             while let Some((item, priority)) = seq.next_element()? {

@@ -18,6 +18,7 @@
  */
 
 use std::cmp::{Eq, Ord};
+use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
 
@@ -42,26 +43,26 @@ where
     }
 }
 
-pub struct IterMut<'a, I: 'a, P: 'a>
+pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pq: &'a mut PriorityQueue<I, P>,
+    pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
 }
 
-impl<'a, I: 'a, P: 'a> IterMut<'a, I, P>
+impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P>) -> Self {
+    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
         IterMut { pq, pos: 0 }
     }
 }
 
-impl<'a, 'b: 'a, I: 'a, P: 'a> Iterator for IterMut<'a, I, P>
+impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -80,7 +81,7 @@ where
     }
 }
 
-impl<'a, I: 'a, P: 'a> Drop for IterMut<'a, I, P>
+impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -109,15 +110,15 @@ where
     }
 }
 
-pub struct IntoSortedIter<I, P>
+pub struct IntoSortedIter<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) pq: PriorityQueue<I, P>,
+    pub(crate) pq: PriorityQueue<I, P, H>,
 }
 
-impl<I, P> Iterator for IntoSortedIter<I, P>
+impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,

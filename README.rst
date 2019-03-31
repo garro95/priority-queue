@@ -57,7 +57,21 @@ Example
 	  }
 
 Note: in recent versions of Rust (edition 2018) the `extern crate priority_queue` is not necessary anymore!
-	  
+
+Speeding up
+-----------
+
+You can use custom BuildHasher for the underlying IndexMap and therefore achieve better performance.
+For example you can create the queue with the speedy FxHash_ hasher:
+
+.. code:: rust
+
+      use hashbrown::hash_map::DefaultHashBuilder;
+
+      let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+
+.. _FxHash: https://github.com/Amanieu/hashbrown
+
 Contributing
 ------------
 
