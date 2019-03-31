@@ -161,13 +161,49 @@ mod tests {
         }
 
         let mut pq = PriorityQueue::new();
-        pq.push(MyFn { name: "increment-one", func: |x| *x += 1 }, 2);
-        pq.push(MyFn { name: "increment-two", func: |x| *x += 2 }, 1);
+        pq.push(
+            MyFn {
+                name: "increment-one",
+                func: |x| *x += 1,
+            },
+            2,
+        );
+        pq.push(
+            MyFn {
+                name: "increment-two",
+                func: |x| *x += 2,
+            },
+            1,
+        );
 
         let mut cnt = 0;
-        assert_eq![pq.peek(), Some((&MyFn { name: "increment-one", func: |_| {} }, &2))];
-        pq.change_priority(&MyFn { name: "increment-one", func: |_| {} }, 0);
-        assert_eq![pq.peek(), Some((&MyFn { name: "increment-two", func: |_| {} }, &1))];
+        assert_eq![
+            pq.peek(),
+            Some((
+                &MyFn {
+                    name: "increment-one",
+                    func: |_| {}
+                },
+                &2
+            ))
+        ];
+        pq.change_priority(
+            &MyFn {
+                name: "increment-one",
+                func: |_| {},
+            },
+            0,
+        );
+        assert_eq![
+            pq.peek(),
+            Some((
+                &MyFn {
+                    name: "increment-two",
+                    func: |_| {}
+                },
+                &1
+            ))
+        ];
 
         assert_eq![cnt, 0];
 
@@ -254,10 +290,7 @@ mod tests {
         let v = vec![("c", 4), ("d", 6), ("e", 3)];
         pq.extend(v);
         assert_eq!(pq.len(), 3);
-        assert_eq!(
-            pq.into_sorted_vec().as_slice(),
-            &["d", "c", "e"]
-        );
+        assert_eq!(pq.into_sorted_vec().as_slice(), &["d", "c", "e"]);
     }
 
     #[test]
@@ -403,8 +436,8 @@ mod tests {
 
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_basics {
-    use serde_test::{assert_tokens, Token};
     use crate::PriorityQueue;
+    use serde_test::{assert_tokens, Token};
     #[test]
     fn serde_empty() {
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
@@ -456,11 +489,11 @@ mod serde_tests_basics {
 //thanks to ckaran
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_custom_structs {
-    use uuid::Uuid;
     use crate::PriorityQueue;
     use std::cmp::{Ord, Ordering, PartialOrd};
     use std::default::Default;
     use std::time::Duration;
+    use uuid::Uuid;
 
     // Abusing Duration as a mutable std::time::Instant
     type ActivationDate = Duration;

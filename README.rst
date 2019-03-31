@@ -41,7 +41,7 @@ Example
 
 	  use priority_queue::PriorityQueue;
 	  
-	  fn main {
+	  fn main() {
 	      let mut pq = PriorityQueue::new();
 
 	      assert!(pq.is_empty());
@@ -49,7 +49,7 @@ Example
 	      pq.push("Bananas", 8);
 	      pq.push("Strawberries", 23);
 
-	      assert_eq!(pq.peek(), &("Strawberries", 23));
+	      assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
 
 	      for (item, _) in pq.into_sorted_iter() {
 	          println!("{}", item);
