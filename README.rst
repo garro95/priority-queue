@@ -41,7 +41,7 @@ Example
 
 	  use priority_queue::PriorityQueue;
 	  
-	  fn main {
+	  fn main() {
 	      let mut pq = PriorityQueue::new();
 
 	      assert!(pq.is_empty());
@@ -49,7 +49,7 @@ Example
 	      pq.push("Bananas", 8);
 	      pq.push("Strawberries", 23);
 
-	      assert_eq!(pq.peek(), &("Strawberries", 23));
+	      assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
 
 	      for (item, _) in pq.into_sorted_iter() {
 	          println!("{}", item);
@@ -57,7 +57,21 @@ Example
 	  }
 
 Note: in recent versions of Rust (edition 2018) the `extern crate priority_queue` is not necessary anymore!
-	  
+
+Speeding up
+-----------
+
+You can use custom BuildHasher for the underlying IndexMap and therefore achieve better performance.
+For example you can create the queue with the speedy FxHash_ hasher:
+
+.. code:: rust
+
+      use hashbrown::hash_map::DefaultHashBuilder;
+
+      let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+
+.. _FxHash: https://github.com/Amanieu/hashbrown
+
 Contributing
 ------------
 
