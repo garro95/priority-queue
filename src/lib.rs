@@ -622,6 +622,7 @@ mod serde_tests_custom_structs {
 #[cfg(all(test, feature = "benchmarks"))]
 mod benchmarks {
     extern crate test;
+    use crate::PriorityQueue;
     use test::{black_box, Bencher};
     use hashbrown::hash_map::DefaultHashBuilder;
     
