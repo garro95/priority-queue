@@ -72,6 +72,19 @@ For example you can create the queue with the speedy FxHash_ hasher:
 
 .. _FxHash: https://github.com/Amanieu/hashbrown
 
+Benchmarks
+----------
+Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
+The benchmarks produced the following results:
+.. code::
+   test benchmarks::push_and_pop                    ... bench:          80 ns/iter (+/- 6)
+   test benchmarks::push_and_pop_fx                 ... bench:          49 ns/iter (+/- 5)
+   test benchmarks::push_and_pop_on_large_queue     ... bench:         296 ns/iter (+/- 25)
+   test benchmarks::push_and_pop_on_large_queue_fx  ... bench:         259 ns/iter (+/- 41)
+   test benchmarks::push_and_pop_on_large_queue_std ... bench:          75 ns/iter (+/- 6)
+   test benchmarks::push_and_pop_std                ... bench:          11 ns/iter (+/- 1)
+
+
 Contributing
 ------------
 
@@ -80,6 +93,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.6.0 Allow the usage of custom hasher
 * 0.5.4 Prevent panic on extending an empty queue
 * 0.5.3 New implementation of the `Default` trait avoids the requirement that `P: Default`
 * 0.5.2 Fix documentation formatting
