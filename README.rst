@@ -76,7 +76,7 @@ Benchmarks
 ----------
 Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
 The benchmarks produced the following results:
-
+::
    test benchmarks::push_and_pop                    ... bench:          80 ns/iter (+/- 6)
    test benchmarks::push_and_pop_fx                 ... bench:          49 ns/iter (+/- 5)
    test benchmarks::push_and_pop_on_large_queue     ... bench:         296 ns/iter (+/- 25)
