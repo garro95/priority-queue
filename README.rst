@@ -22,7 +22,7 @@ To use this crate, simply add the following string to your `Cargo.toml`:
 
 Version numbers follow the semver__ convention.
 
-__https://semver.org/
+__ https://semver.org/
 
 Then use the data structure inside your Rust source code as in the following Example.
 
