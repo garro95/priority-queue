@@ -623,11 +623,21 @@ mod serde_tests_custom_structs {
 mod benchmarks {
     extern crate test;
     use test::{black_box, Bencher};
-
+    use hashbrown::hash_map::DefaultHashBuilder;
+    
     #[bench]
     fn push_and_pop(b: &mut Bencher) {
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop().unwrap().1, 0];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_fx(b: &mut Bencher) {
+        let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
         b.iter(|| {
             pq.push(black_box(0), black_box(0));
             assert_eq![pq.pop().unwrap().1, 0];
@@ -650,6 +660,17 @@ mod benchmarks {
     fn push_and_pop_on_large_queue(b: &mut Bencher) {
         type PqType = PriorityQueue<usize, i32>;
         let mut pq: PqType = PriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(100_000), black_box(100_000));
+            assert_eq![pq.pop().unwrap().1, black_box(100_000)];
+        });
+    }
+    #[bench]
+    fn push_and_pop_on_large_queue_fx(b: &mut Bencher) {
+        let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
         for i in 0..100_000 {
             pq.push(black_box(i as usize), black_box(i));
         }
