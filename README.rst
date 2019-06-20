@@ -67,6 +67,8 @@ For example you can create the queue with the speedy FxHash_ hasher:
 
 .. _FxHash: https://github.com/Amanieu/hashbrown
 
+Attention: FxHash does not offer any protection for dos attacks. This means that some pathological inputs can make the operations on the hashmap O(n^2). Use the standard hasher if you cannot control the inputs.
+
 Benchmarks
 ----------
 Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
