@@ -29,7 +29,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) iter: ::indexmap::map::Iter<'a, I, Option<P>>,
+    pub(crate) iter: ::indexmap::map::Iter<'a, I, P>,
 }
 
 impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P>
@@ -39,7 +39,7 @@ where
 {
     type Item = (&'a I, &'a P);
     fn next(&mut self) -> Option<(&'a I, &'a P)> {
-        self.iter.next().map(|(i, op)| (i, op.as_ref().unwrap()))
+        self.iter.next()
     }
 }
 
@@ -73,7 +73,6 @@ where
             .pq
             .map
             .get_index_mut(self.pos)
-            .map(|(i, op)| (i, op.as_mut().unwrap()))
             .map(|(i, p)| (i as *mut I, p as *mut P))
             .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
         self.pos += 1;
@@ -96,7 +95,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) iter: ::indexmap::map::IntoIter<I, Option<P>>,
+    pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
 }
 
 impl<I, P> Iterator for IntoIter<I, P>
@@ -106,7 +105,7 @@ where
 {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
-        self.iter.next().map(|(i, op)| (i, op.unwrap()))
+        self.iter.next()
     }
 }
 
