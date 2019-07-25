@@ -885,7 +885,7 @@ mod serde {
         {
             let mut map_serializer = serializer.serialize_seq(Some(self.size))?;
             for (k, v) in &self.map {
-                map_serializer.serialize_element(&(k, v.as_ref().unwrap()))?;
+                map_serializer.serialize_element(&(k, v))?;
             }
             map_serializer.end()
         }
@@ -942,7 +942,7 @@ mod serde {
             };
 
             while let Some((item, priority)) = seq.next_element()? {
-                pq.map.insert(item, Some(priority));
+                pq.map.insert(item, priority);
                 pq.qp.push(pq.size);
                 pq.heap.push(pq.size);
                 pq.size += 1;
