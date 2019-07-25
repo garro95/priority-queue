@@ -26,8 +26,10 @@ use std::cmp::{Eq, Ord};
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::Iterator;
+use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
+use take_mut::take;
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -44,7 +46,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) map: IndexMap<I, Option<P>, H>, // Stores the items and assign them an index
+    pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
     heap: Vec<usize>,                          // Implements the heap of indexes
     qp: Vec<usize>,                            // Performs the translation from the index
     // of the map to the index of the heap
@@ -167,7 +169,6 @@ where
         }
         self.map
             .get_index(unsafe { *self.heap.get_unchecked(0) })
-            .map(|(k, v)| (k, v.as_ref().unwrap()))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -187,7 +188,7 @@ where
         }
         self.map
             .get_index_mut(unsafe { *self.heap.get_unchecked(0) })
-            .map(|(k, v)| (k, v.as_ref().unwrap()))
+            .map(|(k, v)| (k, &*v))
     }
 
     /// Returns the number of elements the internal map can hold without
@@ -267,17 +268,15 @@ where
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {
         use indexmap::map::Entry::*;
         let mut pos = 0;
-        let oldp;
+        let mut oldp = None;
 
         match self.map.entry(item) {
             Occupied(mut e) => {
-                oldp = e.get_mut().take();
-                *e.get_mut() = Some(priority);
+                oldp = Some(replace(e.get_mut(), priority));
                 pos = unsafe { *self.qp.get_unchecked(e.index()) };
             }
             Vacant(e) => {
-                e.insert(Some(priority));
-                oldp = None;
+                e.insert(priority);
             }
         }
 
@@ -342,17 +341,16 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>
+    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, mut new_priority: P) -> Option<P>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
         let mut pos;
         let r = if let Some((index, _, p)) = self.map.get_full_mut(item) {
-            let oldp = p.take();
-            *p = Some(new_priority);
+            swap(p, &mut new_priority);
             pos = unsafe { *self.qp.get_unchecked(index) };
-            oldp
+            Some(new_priority)
         } else {
             return None;
         };
@@ -391,8 +389,7 @@ where
         let mut pos = 0;
         let mut found = false;
         if let Some((index, _, p)) = self.map.get_full_mut(item) {
-            let oldp = p.take().unwrap();
-            *p = Some(priority_setter(oldp));
+            take(p, priority_setter);
             pos = unsafe { *self.qp.get_unchecked(index) };
             found = true;
         }
@@ -424,7 +421,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map.get(item).map(|o| o.as_ref().unwrap())
+        self.map.get(item)
     }
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
@@ -436,7 +433,7 @@ where
     {
         self.map
             .get_full(item)
-            .map(|(_, k, v)| (k, v.as_ref().unwrap()))
+            .map(|(_, k, v)| (k, v))
     }
 
     /// Get the couple (item, priority) of an arbitrary element, or `None`
@@ -455,7 +452,7 @@ where
     {
         self.map
             .get_full_mut2(item)
-            .map(|(_, k, v)| (k, v.as_ref().unwrap()))
+            .map(|(_, k, v)| (k, &*v))
     }
 
     /// Returns the items not ordered
@@ -562,8 +559,7 @@ where
             self.qp.pop();
             return self
                 .map
-                .swap_remove_index(head)
-                .map(|(i, o)| (i, o.unwrap()));
+                .swap_remove_index(head);
         }
         unsafe {
             *self.qp.get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
@@ -577,7 +573,6 @@ where
         // swap remove from the map and return to the client
         self.map
             .swap_remove_index(head)
-            .map(|(i, o)| (i, o.unwrap()))
     }
 
     /// Swap two elements keeping a consistent state.
@@ -669,7 +664,7 @@ where
         let mut i = 0;
         for (item, priority) in vec {
             if !pq.map.contains_key(&item) {
-                pq.map.insert(item, Some(priority));
+                pq.map.insert(item, priority);
                 pq.qp.push(i);
                 pq.heap.push(i);
                 i += 1;
@@ -706,9 +701,9 @@ where
             if pq.map.contains_key(&item) {
                 let (_, old_item, old_priority) = pq.map.get_full_mut2(&item).unwrap();
                 *old_item = item;
-                *old_priority = Some(priority);
+                *old_priority = priority;
             } else {
-                pq.map.insert(item, Some(priority));
+                pq.map.insert(item, priority);
                 pq.qp.push(pq.size);
                 pq.heap.push(pq.size);
                 pq.size += 1;
@@ -784,9 +779,9 @@ where
                 if self.map.contains_key(&item) {
                     let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
                     *old_item = item;
-                    *old_priority = Some(priority);
+                    *old_priority = priority;
                 } else {
-                    self.map.insert(item, Some(priority));
+                    self.map.insert(item, priority);
                     self.qp.push(self.size);
                     self.heap.push(self.size);
                     self.size += 1;
@@ -812,8 +807,7 @@ where
             .entries(
                 self.heap
                     .iter()
-                    .map(|&i| self.map.get_index(i).unwrap())
-                    .map(|(i, op)| (i, op.as_ref().unwrap())),
+                    .map(|&i| self.map.get_index(i).unwrap()),
             )
             .finish()
     }
