@@ -114,6 +114,32 @@ mod tests {
     }
 
     #[test]
+    fn push_increase() {
+        let mut pq = PriorityQueue::new();
+        pq.push("Processor", 1);
+        pq.push("Mainboard", 2);
+        pq.push("RAM", 5);
+        pq.push("GPU", 4);
+        pq.push("Disk", 3);
+
+        let processor_priority = |pq: &PriorityQueue<&str, i32>| {
+            *pq.iter()
+                .filter_map(|(i, p)| if *i == "Processor" { Some(p) } else { None })
+                .next()
+                .unwrap()
+        };
+
+        pq.push_increase("Processor", 3);
+        assert_eq!(processor_priority(&pq), 3);
+
+        pq.push_increase("Processor", 1);
+        assert_eq!(processor_priority(&pq), 3);
+
+        pq.push_increase("Processor", 6);
+        assert_eq!(pq.peek(), Some((&"Processor", &6)));
+    }
+
+    #[test]
     fn change_priority() {
         let mut pq = PriorityQueue::new();
         pq.push("Processor", 1);
@@ -623,9 +649,9 @@ mod serde_tests_custom_structs {
 mod benchmarks {
     extern crate test;
     use crate::PriorityQueue;
-    use test::{black_box, Bencher};
     use hashbrown::hash_map::DefaultHashBuilder;
-    
+    use test::{black_box, Bencher};
+
     #[bench]
     fn push_and_pop(b: &mut Bencher) {
         type PqType = PriorityQueue<usize, i32>;
@@ -694,5 +720,4 @@ mod benchmarks {
             assert_eq![pq.pop().unwrap().1, black_box(100_000)];
         });
     }
-
 }

@@ -47,8 +47,8 @@ where
     P: Ord,
 {
     pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    heap: Vec<usize>,                          // Implements the heap of indexes
-    qp: Vec<usize>,                            // Performs the translation from the index
+    heap: Vec<usize>,                  // Implements the heap of indexes
+    qp: Vec<usize>,                    // Performs the translation from the index
     // of the map to the index of the heap
     size: usize, // The size of the heap
 }
@@ -167,8 +167,7 @@ where
         if self.size == 0 {
             return None;
         }
-        self.map
-            .get_index(unsafe { *self.heap.get_unchecked(0) })
+        self.map.get_index(unsafe { *self.heap.get_unchecked(0) })
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -260,7 +259,7 @@ where
 {
     /// Insert the item-priority pair into the queue.
     ///
-    /// If an element equals to `item` was already into the queue,
+    /// If an element equal to `item` was already into the queue,
     /// it is updated and the old value of its priority returned in `Some`;
     /// otherwise, return `None`.
     ///
@@ -331,6 +330,30 @@ where
         }
         self.size += 1;
         None
+    }
+
+    /// Increase the priority of an existing item in the queue, or
+    /// insert it if not present.
+    ///
+    /// If an element equal to `item` is already in the queue with a
+    /// lower priority, its priority is increased to the new one
+    /// without replacing the element. Otherwise, the new element is
+    /// inserted into the queue.
+    ///
+    /// Computes in **O(log(N))** time.
+    pub fn push_increase(&mut self, item: I, priority: P)
+    where
+        P: Clone,
+    {
+        let mut found = false;
+        let p = priority.clone();
+        self.change_priority_by(&item, |old_p| {
+            found = true;
+            p.max(old_p)
+        });
+        if !found {
+            self.push(item, priority);
+        }
     }
 
     /// Change the priority of an Item returning the old value of priority,
@@ -431,9 +454,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map
-            .get_full(item)
-            .map(|(_, k, v)| (k, v))
+        self.map.get_full(item).map(|(_, k, v)| (k, v))
     }
 
     /// Get the couple (item, priority) of an arbitrary element, or `None`
@@ -450,9 +471,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map
-            .get_full_mut2(item)
-            .map(|(_, k, v)| (k, &*v))
+        self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
     /// Returns the items not ordered
@@ -557,9 +576,7 @@ where
         // swap remove the old heap from the qp
         if self.size == 0 {
             self.qp.pop();
-            return self
-                .map
-                .swap_remove_index(head);
+            return self.map.swap_remove_index(head);
         }
         unsafe {
             *self.qp.get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
@@ -571,8 +588,7 @@ where
             }
         }
         // swap remove from the map and return to the client
-        self.map
-            .swap_remove_index(head)
+        self.map.swap_remove_index(head)
     }
 
     /// Swap two elements keeping a consistent state.
@@ -804,11 +820,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
-            .entries(
-                self.heap
-                    .iter()
-                    .map(|&i| self.map.get_index(i).unwrap()),
-            )
+            .entries(self.heap.iter().map(|&i| self.map.get_index(i).unwrap()))
             .finish()
     }
 }
