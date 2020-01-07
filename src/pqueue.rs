@@ -331,7 +331,7 @@ where
         self.size += 1;
         None
     }
-    
+
     /// Increase the priority of an existing item in the queue, or
     /// insert it if not present.
     ///
@@ -346,16 +346,14 @@ where
     /// If the item is not in the queue, `None` is returned.
     ///
     /// Computes in **O(log(N))** time.
-    pub fn push_increase(&mut self, item: I, priority: P) -> Option<P>
-    {
+    pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
         if self.get(&item).map_or(true, |(_, p)| priority > *p) {
             self.push(item, priority)
-        }
-        else {
+        } else {
             Some(priority)
         }
     }
-    
+
     /// Decrease the priority of an existing item in the queue, or
     /// insert it if not present.
     ///
@@ -370,12 +368,10 @@ where
     /// If the item is not in the queue, `None` is returned.
     ///
     /// Computes in **O(log(N))** time.
-    pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P>
-    {
+    pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
         if self.get(&item).map_or(true, |(_, p)| priority < *p) {
             self.push(item, priority)
-        }
-        else {
+        } else {
             Some(priority)
         }
     }
