@@ -18,7 +18,7 @@ Usage
 -----
 To use this crate, simply add the following string to your `Cargo.toml`:
 
-	  priority-queue = "0.6.0"
+	  priority-queue = "0.7.0"
 
 Version numbers follow the semver__ convention.
 
@@ -90,6 +90,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 0.7.0 Implement the push_increase and push_decrease convenience methods.
 * 0.6.0 Allow the usage of custom hasher
 * 0.5.4 Prevent panic on extending an empty queue
 * 0.5.3 New implementation of the `Default` trait avoids the requirement that `P: Default`
