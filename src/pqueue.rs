@@ -145,7 +145,7 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Return n iterator in arbitrary order over the
+    /// Return an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
     ///
     /// The item and the priority are mutable references, but it's a logic error
@@ -331,28 +331,52 @@ where
         self.size += 1;
         None
     }
-
+    
     /// Increase the priority of an existing item in the queue, or
     /// insert it if not present.
     ///
     /// If an element equal to `item` is already in the queue with a
     /// lower priority, its priority is increased to the new one
-    /// without replacing the element. Otherwise, the new element is
-    /// inserted into the queue.
+    /// without replacing the element and the old priority is returned.
+    /// Otherwise, the new element is inserted into the queue.
+    ///
+    /// Returns `Some` if an element equal to `item` is already in the
+    /// queue. If its priority is higher then `priority`, the latter is returned back,
+    /// otherwise, the old priority is contained in the Option.
+    /// If the item is not in the queue, `None` is returned.
     ///
     /// Computes in **O(log(N))** time.
-    pub fn push_increase(&mut self, item: I, priority: P)
-    where
-        P: Clone,
+    pub fn push_increase(&mut self, item: I, priority: P) -> Option<P>
     {
-        let mut found = false;
-        let p = priority.clone();
-        self.change_priority_by(&item, |old_p| {
-            found = true;
-            p.max(old_p)
-        });
-        if !found {
-            self.push(item, priority);
+        if self.get(&item).map_or(true, |(_, p)| priority > *p) {
+            self.push(item, priority)
+        }
+        else {
+            Some(priority)
+        }
+    }
+    
+    /// Decrease the priority of an existing item in the queue, or
+    /// insert it if not present.
+    ///
+    /// If an element equal to `item` is already in the queue with a
+    /// higher priority, its priority is decreased to the new one
+    /// without replacing the element and the old priority is returned.
+    /// Otherwise, the new element is inserted into the queue.
+    ///
+    /// Returns `Some` if an element equal to `item` is already in the
+    /// queue. If its priority is lower then `priority`, the latter is returned back,
+    /// otherwise, the old priority is contained in the Option.
+    /// If the item is not in the queue, `None` is returned.
+    ///
+    /// Computes in **O(log(N))** time.
+    pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P>
+    {
+        if self.get(&item).map_or(true, |(_, p)| priority < *p) {
+            self.push(item, priority)
+        }
+        else {
+            Some(priority)
         }
     }
 
