@@ -16,7 +16,6 @@ travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 [dependencies]
 indexmap = "1"
 serde = {version = "1", optional = true}
-take_mut = "0.2"
 
 [dev-dependencies]
 serde_test = "1"
