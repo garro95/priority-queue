@@ -347,7 +347,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get(&item).map_or(true, |(_, p)| priority > *p) {
+        if self.get_priority(&item).map_or(true, |p| priority > *p) {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -369,7 +369,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get(&item).map_or(true, |(_, p)| priority < *p) {
+        if self.get_priority(&item).map_or(true, |p| priority < *p) {
             self.push(item, priority)
         } else {
             Some(priority)
