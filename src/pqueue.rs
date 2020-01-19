@@ -29,7 +29,6 @@ use std::iter::Iterator;
 use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
-use take_mut::take;
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -427,12 +426,12 @@ where
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
-        F: FnOnce(P) -> P,
+        F: FnOnce(&mut P),
     {
         let mut pos = 0;
         let mut found = false;
-        if let Some((index, _, p)) = self.map.get_full_mut(item) {
-            take(p, priority_setter);
+        if let Some((index, _, mut p)) = self.map.get_full_mut(item) {
+            priority_setter(&mut p);
             pos = unsafe { *self.qp.get_unchecked(index) };
             found = true;
         }
