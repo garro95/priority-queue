@@ -14,7 +14,7 @@ edition = "2018"
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 
 [build-dependencies]
-autocfg = "0.1"
+autocfg = "1"
 
 [dependencies]
 indexmap = "1"
