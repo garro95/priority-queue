@@ -52,6 +52,7 @@
 //!     }
 //! }
 //! ```
+#![cfg_attr(not(has_std), no_std)]
 #![cfg_attr(feature = "benchmarks", feature(test))]
 #[cfg(all(feature = "serde", test))]
 #[macro_use]

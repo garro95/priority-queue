@@ -17,6 +17,25 @@
  *
  */
 
+#[cfg(not(has_std))]
+#[macro_use(vec)]
+extern crate alloc;
+
+#[cfg(not(has_std))]
+pub(crate) mod std {
+    pub use core::*;
+    pub mod alloc {
+        pub use alloc::*;
+    }
+    pub mod collections {
+        pub use alloc::collections::*;
+    }
+    pub use alloc::vec;
+}
+
+#[cfg(not(has_std))]
+use std::vec::Vec;
+
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
 use crate::iterators::*;
