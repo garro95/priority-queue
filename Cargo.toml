@@ -29,3 +29,6 @@ hashbrown = "0.3"
 
 [features]
 benchmarks = []
+
+[workspace]
+members = ["test-nostd"]
