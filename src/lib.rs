@@ -54,6 +54,11 @@
 //! ```
 #![cfg_attr(not(has_std), no_std)]
 #![cfg_attr(feature = "benchmarks", feature(test))]
+
+#[cfg(not(has_std))]
+#[macro_use(vec)]
+extern crate alloc;
+
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
