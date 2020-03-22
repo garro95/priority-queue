@@ -13,6 +13,9 @@ edition = "2018"
 [badges]
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }
 
+[build-dependencies]
+autocfg = "0.1"
+
 [dependencies]
 indexmap = "1"
 serde = {version = "1", optional = true}
