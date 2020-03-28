@@ -17,18 +17,6 @@
  *
  */
 #[cfg(not(has_std))]
-pub(crate) mod std {
-    pub use core::*;
-    pub mod alloc {
-        pub use ::alloc::*;
-    }
-    pub mod collections {
-        pub use ::alloc::collections::*;
-    }
-    pub use ::alloc::vec;
-}
-
-#[cfg(not(has_std))]
 use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
@@ -37,9 +25,10 @@ use crate::iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
+#[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
-use std::iter::Iterator;
+use std::iter::{Iterator, FromIterator, IntoIterator, Extend};
 use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
@@ -561,7 +550,7 @@ where
     /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
         if other.size > self.size {
-            ::std::mem::swap(self, other);
+            std::mem::swap(self, other);
         }
         if other.size == 0 {
             return;
@@ -728,7 +717,7 @@ where
 //FIXME: fails when the iterator contains repeated items
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
-impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
+impl<I, P> FromIterator<(I, P)> for PriorityQueue<I, P>
 where
     I: Hash + Eq,
     P: Ord,
@@ -763,7 +752,6 @@ where
     }
 }
 
-use ::std::iter::IntoIterator;
 impl<I, P, H> IntoIterator for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -806,7 +794,7 @@ where
     }
 }
 
-impl<I, P, H> ::std::iter::Extend<(I, P)> for PriorityQueue<I, P, H>
+impl<I, P, H> Extend<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,

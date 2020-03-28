@@ -17,7 +17,20 @@
  *
  */
 
+#[cfg(not(has_std))]
+pub(crate) mod std {
+    pub use core::*;
+    pub mod alloc {
+        pub use ::alloc::*;
+    }
+    pub mod collections {
+        pub use ::alloc::collections::*;
+    }
+    pub use ::alloc::vec;
+}
+
 use std::cmp::{Eq, Ord};
+#[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
