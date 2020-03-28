@@ -43,7 +43,22 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
 #[derive(Clone)]
+#[cfg(has_std)]
 pub struct PriorityQueue<I, P, H = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
+    heap: Vec<usize>,                  // Implements the heap of indexes
+    qp: Vec<usize>,                    // Performs the translation from the index
+    // of the map to the index of the heap
+    size: usize, // The size of the heap
+}
+
+#[derive(Clone)]
+#[cfg(not(has_std))]
+pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -64,6 +79,7 @@ where
 {
 }
 
+#[cfg(not(has_std))]
 impl<I, P, H> Default for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -75,6 +91,18 @@ where
     }
 }
 
+#[cfg(has_std)]
+impl<I, P> Default for PriorityQueue<I, P>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    fn default() -> Self {
+        Self::with_default_hasher()
+    }
+}
+
+#[cfg(has_std)]
 impl<I, P> PriorityQueue<I, P>
 where
     P: Ord,
@@ -692,10 +720,11 @@ where
 
 //FIXME: fails when the vector contains repeated items
 // FIXED: repeated items ignored
-impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
+impl<I, P, H> From<Vec<(I, P)>> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
         let mut pq = Self::with_capacity(vec.len());
@@ -717,10 +746,11 @@ where
 //FIXME: fails when the iterator contains repeated items
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
-impl<I, P> FromIterator<(I, P)> for PriorityQueue<I, P>
+impl<I, P, H> FromIterator<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher + Default,
 {
     fn from_iter<IT>(iter: IT) -> Self
     where

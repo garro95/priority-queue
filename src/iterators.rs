@@ -56,7 +56,18 @@ where
     }
 }
 
+#[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a mut PriorityQueue<I, P, H>,
+    pos: usize,
+}
+
+#[cfg(not(has_std))]
+pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
     I: Hash + Eq,
     P: Ord,
@@ -122,7 +133,17 @@ where
     }
 }
 
+#[cfg(has_std)]
 pub struct IntoSortedIter<I, P, H = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) pq: PriorityQueue<I, P, H>,
+}
+
+#[cfg(not(has_std))]
+pub struct IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,

@@ -14,5 +14,5 @@ pub fn test_compile() {
     queue.push(2, 4);
     for (_, _) in queue.iter() {}
 
-    let _queue2 = PriorityQueue::from_iter(Some((1, 1)));
+    let _queue2 = PQ::from_iter(Some((1, 1)));
 }
