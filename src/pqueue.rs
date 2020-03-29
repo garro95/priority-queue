@@ -493,6 +493,22 @@ where
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
+    pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash,
+    {
+        let element = self.map.swap_remove_full(item);
+
+        if let Some((i, _, _)) = element {
+            let pos = self.qp.swap_remove(i);
+            self.heap.swap_remove(pos);
+            self.heapify(pos);
+        }
+
+        element.map(|(_, i, p)| (i, p))
+    }
+
     /// Returns the items not ordered
     pub fn into_vec(self) -> Vec<I> {
         self.map.into_iter().map(|(i, _)| i).collect()
