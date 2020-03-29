@@ -504,7 +504,6 @@ where
         Q: Eq + Hash,
     {
         let element = self.map.swap_remove_full(item);
-        dbg!(&self.heap, &self.qp);
         if let Some((i, _, _)) = element {
             self.size -= 1;
 
@@ -524,7 +523,6 @@ where
                     self.qp[self.heap[pos]] = pos;
                 }
             }
-            dbg!(&self.heap, &self.qp);
             self.heapify(pos);
         }
 

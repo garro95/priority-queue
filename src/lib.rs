@@ -317,7 +317,6 @@ mod tests {
 
         let v = vec![("a", 1), ("f", 7), ("g", 6), ("h", 5), ("b", 2),];
         let mut pq = PriorityQueue::from_iter(v.into_iter());
-        dbg!(&pq);
 
         pq.remove(&"b").unwrap();
         assert_eq!(["f", "g", "h", "a"], pq.into_sorted_vec().as_slice());
