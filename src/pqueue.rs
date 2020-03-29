@@ -493,6 +493,11 @@ where
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
+    /// Remove an arbitrary element from the priority queue.
+    /// Returns the (item, priority) couple or None if the item
+    /// is not found in the queue.
+    ///
+    /// The operation is performed in **O(log(N))** time (worst case).
     pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
     where
         I: Borrow<Q>,
