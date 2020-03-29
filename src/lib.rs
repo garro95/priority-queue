@@ -315,10 +315,12 @@ mod tests {
     fn remove() {
         use std::iter::FromIterator;
 
-        let v = vec![("a", 1), ("f", 7), ("g", 6), ("h", 5), ("b", 2),];
+        let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5),];
         let mut pq = PriorityQueue::from_iter(v.into_iter());
 
         pq.remove(&"b").unwrap();
+        pq.push("b", 2);
+        pq.remove(&"b");
         assert_eq!(["f", "g", "h", "a"], pq.into_sorted_vec().as_slice());
     }
 
