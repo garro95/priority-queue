@@ -504,10 +504,27 @@ where
         Q: Eq + Hash,
     {
         let element = self.map.swap_remove_full(item);
-
+        dbg!(&self.heap, &self.qp);
         if let Some((i, _, _)) = element {
+            self.size -= 1;
+
             let pos = self.qp.swap_remove(i);
             self.heap.swap_remove(pos);
+            if i < self.size {
+                if self.qp[i] == self.size {
+                    self.qp[i] = pos;
+                } else {
+                    self.heap[self.qp[i]] = i;
+                }
+            }
+            if pos < self.size {
+                if self.heap[pos] == self.size {
+                    self.heap[pos] = i;
+                } else {
+                    self.qp[self.heap[pos]] = pos;
+                }
+            }
+            dbg!(&self.heap, &self.qp);
             self.heapify(pos);
         }
 
@@ -608,6 +625,7 @@ where
     /// Remove and return the element with the max priority
     /// and swap it with the last element keeping a consistent
     /// state.
+    ///
     /// Computes in **O(1)** time (average)
     fn swap_remove(&mut self) -> Option<(I, P)> {
         // swap_remove the head
