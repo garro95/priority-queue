@@ -79,23 +79,11 @@ where
 {
 }
 
-#[cfg(not(has_std))]
 impl<I, P, H> Default for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
     H: BuildHasher + Default,
-{
-    fn default() -> Self {
-        Self::with_default_hasher()
-    }
-}
-
-#[cfg(has_std)]
-impl<I, P> Default for PriorityQueue<I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
 {
     fn default() -> Self {
         Self::with_default_hasher()
@@ -229,6 +217,7 @@ where
         self.map.capacity()
     }
 }
+
 impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
@@ -727,7 +716,7 @@ where
     H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
-        let mut pq = Self::with_capacity(vec.len());
+        let mut pq = Self::with_capacity_and_hasher(vec.len(), <_>::default());
         let mut i = 0;
         for (item, priority) in vec {
             if !pq.map.contains_key(&item) {
@@ -759,11 +748,11 @@ where
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         let mut pq = if let Some(max) = max {
-            Self::with_capacity_and_default_hasher(max)
+            Self::with_capacity_and_hasher(max, <_>::default())
         } else if min > 0 {
-            Self::with_capacity_and_default_hasher(min)
+            Self::with_capacity_and_hasher(min, <_>::default())
         } else {
-            Self::with_default_hasher()
+            Self::with_hasher(<_>::default())
         };
         for (item, priority) in iter {
             if pq.map.contains_key(&item) {
