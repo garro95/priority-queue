@@ -510,20 +510,26 @@ where
             let pos = self.qp.swap_remove(i);
             self.heap.swap_remove(pos);
             if i < self.size {
-                if self.qp[i] == self.size {
-                    self.qp[i] = pos;
-                } else {
-                    self.heap[self.qp[i]] = i;
+                unsafe{
+                    let qpi = self.qp.get_unchecked_mut(i);
+                    if *qpi == self.size {
+                        *qpi = pos;
+                    } else {
+                        *self.heap.get_unchecked_mut(*qpi) = i;
+                    }
                 }
             }
             if pos < self.size {
-                if self.heap[pos] == self.size {
-                    self.heap[pos] = i;
-                } else {
-                    self.qp[self.heap[pos]] = pos;
+                unsafe {
+                    let heap_pos = self.heap.get_unchecked_mut(pos);
+                    if *heap_pos == self.size {
+                        *heap_pos = i;
+                    } else {
+                        *self.qp.get_unchecked_mut(*heap_pos) = pos;
+                    }
                 }
+                self.heapify(pos);
             }
-            self.heapify(pos);
         }
 
         element.map(|(_, i, p)| (i, p))
