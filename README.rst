@@ -88,6 +88,7 @@ On a Ryzen 9 3900X, the benchmarks produced the following results:
    test benchmarks::push_and_pop_std                   ... bench:           4 ns/iter (+/- 0)
 
 The priority change on the standard queue was obtained with the following:
+
 .. code:: rust
 
   	    pq = pq.drain().map(|Entry(i, p)| {
