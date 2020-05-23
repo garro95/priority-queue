@@ -333,9 +333,10 @@ mod tests {
     #[test]
     fn remove() {
         use std::iter::FromIterator;
+	type Pq<I, P> = PriorityQueue<I, P>;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5),];
-        let mut pq = PriorityQueue::from_iter(v.into_iter());
+        let mut pq = Pq::from_iter(v.into_iter());
 
         pq.remove(&"b").unwrap();
         pq.push("b", 2);
