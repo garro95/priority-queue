@@ -728,10 +728,11 @@ where
 //FIXME: fails when the iterator contains repeated items
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
-impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
+impl<I, P, H> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher + Default,
 {
     fn from_iter<IT>(iter: IT) -> Self
     where
