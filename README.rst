@@ -72,14 +72,35 @@ Attention: FxHash does not offer any protection for dos attacks. This means that
 Benchmarks
 ----------
 Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
-The benchmarks produced the following results:
+On a Ryzen 9 3900X, the benchmarks produced the following results:
 ::
-   test benchmarks::push_and_pop                    ... bench:          80 ns/iter (+/- 6)
-   test benchmarks::push_and_pop_fx                 ... bench:          49 ns/iter (+/- 5)
-   test benchmarks::push_and_pop_on_large_queue     ... bench:         296 ns/iter (+/- 25)
-   test benchmarks::push_and_pop_on_large_queue_fx  ... bench:         259 ns/iter (+/- 41)
-   test benchmarks::push_and_pop_on_large_queue_std ... bench:          75 ns/iter (+/- 6)
-   test benchmarks::push_and_pop_std                ... bench:          11 ns/iter (+/- 1)
+   test benchmarks::priority_change_on_large_queue     ... bench:          20 ns/iter (+/- 0)
+   test benchmarks::priority_change_on_large_queue_fx  ... bench:           7 ns/iter (+/- 0)
+   test benchmarks::priority_change_on_large_queue_std ... bench:     255,098 ns/iter (+/- 45,542)
+   test benchmarks::priority_change_on_small_queue     ... bench:          19 ns/iter (+/- 0)
+   test benchmarks::priority_change_on_small_queue_fx  ... bench:           7 ns/iter (+/- 0)
+   test benchmarks::priority_change_on_small_queue_std ... bench:       1,741 ns/iter (+/- 24)
+   test benchmarks::push_and_pop                       ... bench:          37 ns/iter (+/- 0)
+   test benchmarks::push_and_pop_fx                    ... bench:          25 ns/iter (+/- 0)
+   test benchmarks::push_and_pop_on_large_queue        ... bench:         185 ns/iter (+/- 3)
+   test benchmarks::push_and_pop_on_large_queue_fx     ... bench:         118 ns/iter (+/- 1)
+   test benchmarks::push_and_pop_on_large_queue_std    ... bench:          33 ns/iter (+/- 6)
+   test benchmarks::push_and_pop_std                   ... bench:           4 ns/iter (+/- 0)
+
+The priority change on the standard queue was obtained with the following:
+.. code:: rust
+
+  	    pq = pq.drain().map(|Entry(i, p)| {
+		if i == 50_000 {
+		    Entry(i, p/2)
+		} else {
+		    Entry(i, p)
+		}
+	    }).collect()
+
+The interpretation of the benchmarks is that the data structure provided by this crate is generally slightly slower then the standard Binary Heap.
+On small queues (<10000 elements), also the change_priority function, obtained on the standard Binary Heap with the code above, is roughly as fast as the one provided by PriorityQueue.
+With the queue becoming bigger though, PriorityQueue performs much faster on priority change operations.
 
 
 Contributing
