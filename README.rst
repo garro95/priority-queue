@@ -91,7 +91,7 @@ Changes
 -------
 
 * 1.0.0 This release contains **breaking changes!**
-    * From and FromIterator now accept custom hashers -- **Breaking:** every usage of from and from_iter must specify some type to help the type inference. To use the default hasher (RandomState), often it will be enough to add something like::
+    * From and FromIterator now accept custom hashers -- **Breaking:** every usage of from and from_iter must specify some type to help the type inference. To use the default hasher (RandomState), often it will be enough to add something like ::
       let pq: PriorityQueue<_, _> = PriorityQueue::from...
     or you can add a type definition like ::
       type Pq<I, P> = PriorityQueue<I, P>
