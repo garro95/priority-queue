@@ -95,11 +95,15 @@ Changes
       every usage of ``from`` and ``from_iter`` must specify some type to help the type inference. To use the default hasher (``RandomState``), often it will be enough to add something like
 
       .. code:: rust
+
 		let pq: PriorityQueue<_, _> = PriorityQueue::from...
+
       or you can add a type definition like
 
       .. code:: rust
+
 		type Pq<I, P> = PriorityQueue<I, P>
+
       and then use ``Pq::from()`` or ``Pq::from_iter()``
     * Support no-std architectures
     * Add a method to remove elements at arbitrary positions
