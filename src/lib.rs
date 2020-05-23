@@ -52,7 +52,24 @@
 //!     }
 //! }
 //! ```
+#![cfg_attr(not(has_std), no_std)]
 #![cfg_attr(feature = "benchmarks", feature(test))]
+
+#[cfg(not(has_std))]
+extern crate alloc;
+
+#[cfg(not(has_std))]
+pub(crate) mod std {
+    pub use core::*;
+    pub mod alloc {
+        pub use ::alloc::*;
+    }
+    pub mod collections {
+        pub use ::alloc::collections::*;
+    }
+    pub use ::alloc::vec;
+}
+
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
@@ -252,7 +269,7 @@ mod tests {
     #[test]
     fn from_vec() {
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq = PriorityQueue::from(v);
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -260,7 +277,7 @@ mod tests {
     #[test]
     fn from_vec_with_repeated() {
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("a", 2)];
-        let mut pq = PriorityQueue::from(v);
+        let mut pq: PriorityQueue<_, _> = v.into();
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -270,15 +287,17 @@ mod tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
 
     #[test]
     fn heap_sort() {
-        let v = vec![("a", 2), ("b", 7), ("f", 1)];
-        let sorted = (PriorityQueue::from(v)).into_sorted_vec();
+	type Pq<I, P> = PriorityQueue<I, P>;
+
+	let v = vec![("a", 2), ("b", 7), ("f", 1)];
+        let sorted = (Pq::from(v)).into_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
     }
 
@@ -287,7 +306,7 @@ mod tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
 
         pq.change_priority_by("b", |b| *b += 8);
         assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "g", "h", "a"]);

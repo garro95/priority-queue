@@ -10,8 +10,13 @@ categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0"
 edition = "2018"
 
+build = "build.rs"
+
 [badges]
 travis-ci = { repository = "garro95/priority-queue", branch = "master" }
+
+[build-dependencies]
+autocfg = "1"
 
 [dependencies]
 indexmap = "1"
@@ -26,3 +31,6 @@ hashbrown = "0.3"
 
 [features]
 benchmarks = []
+
+[workspace]
+members = ["test-nostd"]

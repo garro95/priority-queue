@@ -17,7 +17,20 @@
  *
  */
 
+#[cfg(not(has_std))]
+pub(crate) mod std {
+    pub use core::*;
+    pub mod alloc {
+        pub use ::alloc::*;
+    }
+    pub mod collections {
+        pub use ::alloc::collections::*;
+    }
+    pub use ::alloc::vec;
+}
+
 use std::cmp::{Eq, Ord};
+#[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
@@ -43,7 +56,18 @@ where
     }
 }
 
+#[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a mut PriorityQueue<I, P, H>,
+    pos: usize,
+}
+
+#[cfg(not(has_std))]
+pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
     I: Hash + Eq,
     P: Ord,
@@ -109,7 +133,17 @@ where
     }
 }
 
+#[cfg(has_std)]
 pub struct IntoSortedIter<I, P, H = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) pq: PriorityQueue<I, P, H>,
+}
+
+#[cfg(not(has_std))]
+pub struct IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,

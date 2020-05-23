@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#[cfg(not(has_std))]
+use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
@@ -23,9 +25,10 @@ use crate::iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
+#[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
-use std::iter::Iterator;
+use std::iter::{Iterator, FromIterator, IntoIterator, Extend};
 use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
@@ -40,7 +43,22 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
 #[derive(Clone)]
+#[cfg(has_std)]
 pub struct PriorityQueue<I, P, H = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
+    heap: Vec<usize>,                  // Implements the heap of indexes
+    qp: Vec<usize>,                    // Performs the translation from the index
+    // of the map to the index of the heap
+    size: usize, // The size of the heap
+}
+
+#[derive(Clone)]
+#[cfg(not(has_std))]
+pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -72,6 +90,7 @@ where
     }
 }
 
+#[cfg(has_std)]
 impl<I, P> PriorityQueue<I, P>
 where
     P: Ord,
@@ -198,6 +217,7 @@ where
         self.map.capacity()
     }
 }
+
 impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
@@ -589,7 +609,7 @@ where
     /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
         if other.size > self.size {
-            ::std::mem::swap(self, other);
+            std::mem::swap(self, other);
         }
         if other.size == 0 {
             return;
@@ -732,13 +752,14 @@ where
 
 //FIXME: fails when the vector contains repeated items
 // FIXED: repeated items ignored
-impl<I, P> From<Vec<(I, P)>> for PriorityQueue<I, P>
+impl<I, P, H> From<Vec<(I, P)>> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
-        let mut pq = Self::with_capacity(vec.len());
+        let mut pq = Self::with_capacity_and_hasher(vec.len(), <_>::default());
         let mut i = 0;
         for (item, priority) in vec {
             if !pq.map.contains_key(&item) {
@@ -757,10 +778,11 @@ where
 //FIXME: fails when the iterator contains repeated items
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
-impl<I, P> ::std::iter::FromIterator<(I, P)> for PriorityQueue<I, P>
+impl<I, P, H> FromIterator<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher + Default,
 {
     fn from_iter<IT>(iter: IT) -> Self
     where
@@ -769,11 +791,11 @@ where
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
         let mut pq = if let Some(max) = max {
-            Self::with_capacity_and_default_hasher(max)
+            Self::with_capacity_and_hasher(max, <_>::default())
         } else if min > 0 {
-            Self::with_capacity_and_default_hasher(min)
+            Self::with_capacity_and_hasher(min, <_>::default())
         } else {
-            Self::with_default_hasher()
+            Self::with_hasher(<_>::default())
         };
         for (item, priority) in iter {
             if pq.map.contains_key(&item) {
@@ -792,7 +814,6 @@ where
     }
 }
 
-use ::std::iter::IntoIterator;
 impl<I, P, H> IntoIterator for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -835,7 +856,7 @@ where
     }
 }
 
-impl<I, P, H> ::std::iter::Extend<(I, P)> for PriorityQueue<I, P, H>
+impl<I, P, H> Extend<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
