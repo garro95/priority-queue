@@ -92,23 +92,23 @@ Changes
 
 * 1.0.0 This release contains **breaking changes!**
     * From and FromIterator now accept custom hashers -- **Breaking:** every usage of from and from_iter must specify some type to help the type inference. To use the default hasher (RandomState), often it will be enough to add something like ::
-      let pq: PriorityQueue<_, _> = PriorityQueue::from...
-    or you can add a type definition like ::
-      type Pq<I, P> = PriorityQueue<I, P>
-    and then use ::
-      Pq::from()
-    or ::
-      Pq::from_iter()
-  * Support no-std architectures
-  * Add a method to remove elements at arbitrary positions
-  * Remove take_mut dependency -- **Breaking:** ::
-      change_priority_by
-    signature has changed. Now it takes a priority_setter ::
-      F: FnOnce(&mut P)
-    If you want you can use the unsafe ::
-      take_mut
-    yourself or also use ::
-      std::mem::replace
+	let pq: PriorityQueue<_, _> = PriorityQueue::from...
+      or you can add a type definition like ::
+	type Pq<I, P> = PriorityQueue<I, P>
+      and then use ::
+	Pq::from()
+      or ::
+	Pq::from_iter()
+    * Support no-std architectures
+    * Add a method to remove elements at arbitrary positions
+    * Remove take_mut dependency -- **Breaking:** ::
+	change_priority_by
+      signature has changed. Now it takes a priority_setter ::
+	F: FnOnce(&mut P)
+      If you want you can use the unsafe ::
+	take_mut
+      yourself or also use ::
+	std::mem::replace
 * 0.7.0 Implement the push_increase and push_decrease convenience methods.
 * 0.6.0 Allow the usage of custom hasher
 * 0.5.4 Prevent panic on extending an empty queue
