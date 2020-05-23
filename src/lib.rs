@@ -287,7 +287,7 @@ mod tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -304,7 +304,7 @@ mod tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
 
         pq.change_priority_by("b", |b| *b += 8);
         assert_eq!(pq.into_sorted_vec().as_slice(), &["b", "f", "g", "h", "a"]);
