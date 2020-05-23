@@ -269,7 +269,7 @@ mod tests {
     #[test]
     fn from_vec() {
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq = PriorityQueue::from(v);
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn from_vec_with_repeated() {
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("a", 2)];
-        let mut pq = PriorityQueue::from(v);
+        let mut pq: PriorityQueue<_, _> = v.into();
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -294,8 +294,10 @@ mod tests {
 
     #[test]
     fn heap_sort() {
-        let v = vec![("a", 2), ("b", 7), ("f", 1)];
-        let sorted = (PriorityQueue::from(v)).into_sorted_vec();
+	type Pq<I, P> = PriorityQueue<I, P>;
+
+	let v = vec![("a", 2), ("b", 7), ("f", 1)];
+        let sorted = (Pq::from(v)).into_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
     }
 
