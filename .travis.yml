@@ -6,6 +6,14 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+  include:
+    - rust: stable
+      env: TARGET=thumbv6m-none-eabi
+      before_script:
+        - rustup target add $TARGET
+      script:
+        - cargo build -vv --target=$TARGET
+	- cargo-build -v -p test-nostd --target=$TARGET
 env:
   global:
   - CODECOV_TOKEN=:175096ad-e9ca-4967-b95c-6644fd7d3a11
