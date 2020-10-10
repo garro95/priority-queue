@@ -25,6 +25,15 @@
 //! [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html)
 //! and [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) traits.
 //!
+//! This can frequently be achieved by using `#[derive(PartialEq, Eq, Hash)]`.
+//! If you implement these yourself, it is important that the following property holds:
+//!
+//! ```
+//! k1 == k2 -> hash(k1) == hash(k2)
+//! ```
+//!
+//! In other words, if two keys are equal, their hashes must be equal.
+//!
 //! The priority `P` may be any type that implements
 //! [`Ord`](https://doc.rust-lang.org/std/cmp/trait.Ord.html).
 //! For reverse order remember the standard wrapper
@@ -294,9 +303,9 @@ mod tests {
 
     #[test]
     fn heap_sort() {
-	type Pq<I, P> = PriorityQueue<I, P>;
+        type Pq<I, P> = PriorityQueue<I, P>;
 
-	let v = vec![("a", 2), ("b", 7), ("f", 1)];
+        let v = vec![("a", 2), ("b", 7), ("f", 1)];
         let sorted = (Pq::from(v)).into_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
     }
@@ -333,9 +342,9 @@ mod tests {
     #[test]
     fn remove() {
         use std::iter::FromIterator;
-	type Pq<I, P> = PriorityQueue<I, P>;
+        type Pq<I, P> = PriorityQueue<I, P>;
 
-        let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5),];
+        let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
         let mut pq = Pq::from_iter(v.into_iter());
 
         pq.remove(&"b").unwrap();
@@ -775,36 +784,39 @@ mod benchmarks {
     #[bench]
     fn priority_change_on_large_queue_std(b: &mut Bencher) {
         use std::collections::BinaryHeap;
-	struct Entry(usize, i32);
-	impl Ord for Entry {
-	    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.0.cmp(&other.0)
-	    }
-	}
-	impl PartialOrd for Entry {
-	    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.0.partial_cmp(&other.0)
-	    }
-	}
-	impl Eq for Entry {}
-	impl PartialEq for Entry {
-	    fn eq(&self, other: &Self) -> bool {
-		self.0 == other.0
-	    }
-	}
+        struct Entry(usize, i32);
+        impl Ord for Entry {
+            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                self.0.cmp(&other.0)
+            }
+        }
+        impl PartialOrd for Entry {
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                self.0.partial_cmp(&other.0)
+            }
+        }
+        impl Eq for Entry {}
+        impl PartialEq for Entry {
+            fn eq(&self, other: &Self) -> bool {
+                self.0 == other.0
+            }
+        }
         type PqType = BinaryHeap<Entry>;
         let mut pq: PqType = BinaryHeap::new();
         for i in 0..100_000 {
             pq.push(Entry(black_box(i as usize), black_box(i)));
         }
         b.iter(|| {
-	    pq = pq.drain().map(|Entry(i, p)| {
-		if i == 50_000 {
-		    Entry(i, p/2)
-		} else {
-		    Entry(i, p)
-		}
-	    }).collect()
+            pq = pq
+                .drain()
+                .map(|Entry(i, p)| {
+                    if i == 50_000 {
+                        Entry(i, p / 2)
+                    } else {
+                        Entry(i, p)
+                    }
+                })
+                .collect()
         });
     }
 
@@ -816,7 +828,7 @@ mod benchmarks {
             pq.push(black_box(i as usize), black_box(i));
         }
         b.iter(|| {
-	    pq.change_priority_by(&50_000, |p| *p = *p/2);
+            pq.change_priority_by(&50_000, |p| *p = *p / 2);
         });
     }
     #[bench]
@@ -826,43 +838,46 @@ mod benchmarks {
             pq.push(black_box(i as usize), black_box(i));
         }
         b.iter(|| {
-	    pq.change_priority_by(&50_000, |p| *p = *p/2);
+            pq.change_priority_by(&50_000, |p| *p = *p / 2);
         });
     }
 
     #[bench]
     fn priority_change_on_small_queue_std(b: &mut Bencher) {
         use std::collections::BinaryHeap;
-	struct Entry(usize, i32);
-	impl Ord for Entry {
-	    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.0.cmp(&other.0)
-	    }
-	}
-	impl PartialOrd for Entry {
-	    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.0.partial_cmp(&other.0)
-	    }
-	}
-	impl Eq for Entry {}
-	impl PartialEq for Entry {
-	    fn eq(&self, other: &Self) -> bool {
-		self.0 == other.0
-	    }
-	}
+        struct Entry(usize, i32);
+        impl Ord for Entry {
+            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                self.0.cmp(&other.0)
+            }
+        }
+        impl PartialOrd for Entry {
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                self.0.partial_cmp(&other.0)
+            }
+        }
+        impl Eq for Entry {}
+        impl PartialEq for Entry {
+            fn eq(&self, other: &Self) -> bool {
+                self.0 == other.0
+            }
+        }
         type PqType = BinaryHeap<Entry>;
         let mut pq: PqType = BinaryHeap::new();
         for i in 0..1_000 {
             pq.push(Entry(black_box(i as usize), black_box(i)));
         }
         b.iter(|| {
-	    pq = pq.drain().map(|Entry(i, p)| {
-		if i == 500 {
-		    Entry(i, p/2)
-		} else {
-		    Entry(i, p)
-		}
-	    }).collect()
+            pq = pq
+                .drain()
+                .map(|Entry(i, p)| {
+                    if i == 500 {
+                        Entry(i, p / 2)
+                    } else {
+                        Entry(i, p)
+                    }
+                })
+                .collect()
         });
     }
 
@@ -874,7 +889,7 @@ mod benchmarks {
             pq.push(black_box(i as usize), black_box(i));
         }
         b.iter(|| {
-	    pq.change_priority_by(&500, |p| *p = *p/2);
+            pq.change_priority_by(&500, |p| *p = *p / 2);
         });
     }
     #[bench]
@@ -884,7 +899,7 @@ mod benchmarks {
             pq.push(black_box(i as usize), black_box(i));
         }
         b.iter(|| {
-	    pq.change_priority_by(&500, |p| *p = *p/2);
+            pq.change_priority_by(&500, |p| *p = *p / 2);
         });
     }
 }
