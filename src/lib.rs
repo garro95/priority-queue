@@ -28,7 +28,7 @@
 //! This can frequently be achieved by using `#[derive(PartialEq, Eq, Hash)]`.
 //! If you implement these yourself, it is important that the following property holds:
 //!
-//! ```
+//! ```text
 //! k1 == k2 -> hash(k1) == hash(k2)
 //! ```
 //!
