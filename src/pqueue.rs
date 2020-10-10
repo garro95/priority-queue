@@ -28,7 +28,7 @@ use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Iterator, FromIterator, IntoIterator, Extend};
+use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
@@ -530,7 +530,7 @@ where
             let pos = self.qp.swap_remove(i);
             self.heap.swap_remove(pos);
             if i < self.size {
-                unsafe{
+                unsafe {
                     let qpi = self.qp.get_unchecked_mut(i);
                     if *qpi == self.size {
                         *qpi = pos;
