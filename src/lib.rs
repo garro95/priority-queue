@@ -429,6 +429,36 @@ mod tests {
     }
 
     #[test]
+    fn iter_mut1() {
+        let mut queue: PriorityQueue<&'static str, i32> = Default::default();
+
+        queue.push("a", 0);
+        queue.push("b", 1);
+        assert_eq!(queue.peek().unwrap().0, &"b");
+
+	let iter_mut = queue.iter_mut();
+        for (k, v) in iter_mut {
+	    if k == &"a" {
+                *v = 2;
+	    }
+        }
+
+        assert_eq!(queue.peek().unwrap().0, &"a");
+    }
+
+    #[test]
+    fn iter_mut_empty() {
+        let mut queue: PriorityQueue<&'static str, i32> = Default::default();
+
+	let iter_mut = queue.iter_mut();
+        for (k, v) in iter_mut {
+	    if k == &"a" {
+                *v = 2;
+	    }
+        }
+    }
+
+    #[test]
     fn eq() {
         let mut a = PriorityQueue::new();
         let mut b = PriorityQueue::new();
