@@ -744,7 +744,7 @@ where
         if self.size == 0 {
             return;
         }
-        for i in (0..parent(self.size)).rev() {
+        for i in (0..=parent(self.size)).rev() {
             self.heapify(i);
         }
     }
