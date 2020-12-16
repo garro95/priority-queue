@@ -5,7 +5,7 @@
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version, or (at your opinion) under the terms 
+ *  (at your option) any later version, or (at your opinion) under the terms
  *  of the Mozilla Public License version 2.0.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -549,7 +549,25 @@ where
                         *self.qp.get_unchecked_mut(*heap_pos) = pos;
                     }
                 }
-                self.heapify(parent(pos));
+                let mut pos = pos;
+                unsafe {
+                    let tmp = *self.heap.get_unchecked(pos);
+                    while (pos > 0)
+                        && (self
+                            .map
+                            .get_index(*self.heap.get_unchecked(parent(pos)))
+                            .unwrap()
+                            .1
+                            < self.map.get_index(tmp).unwrap().1)
+                    {
+                        *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
+                        *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
+                        pos = parent(pos);
+                    }
+                    *self.heap.get_unchecked_mut(pos) = tmp;
+                    *self.qp.get_unchecked_mut(tmp) = pos;
+                }
+                self.heapify(pos)
             }
         }
 
@@ -676,7 +694,7 @@ where
 
     /// Swap two elements keeping a consistent state.
     ///
-    /// Computes in **O(1)** time (average)
+    /// Computes in **O(1)** time
     fn swap(&mut self, a: usize, b: usize) {
         let (i, j) = unsafe { (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
         self.heap.swap(a, b);
@@ -684,6 +702,8 @@ where
     }
 
     /// Internal function that restore the functional property of the heap
+    ///
+    /// Computes in **O(log(N))** time
     fn heapify(&mut self, i: usize) {
         let (mut l, mut r) = (left(i), right(i));
         let mut i = i;
@@ -741,6 +761,8 @@ where
 
     /// Internal function that transform the `heap`
     /// vector in a heap with its properties
+    ///
+    /// Computes in **O(n)**
     pub(crate) fn heap_build(&mut self) {
         if self.size == 0 {
             return;
