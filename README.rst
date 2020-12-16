@@ -107,11 +107,12 @@ With the queue becoming bigger though, PriorityQueue performs much faster on pri
 Contributing
 ------------
 
-Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL.
+Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL and with the MPL.
 
 Changes
 -------
 
+* 1.0.4 Bug fix: `#28 <https://github.com/garro95/priority-queue/issues/28>`_
 * 1.0.3 Bug fix: `#26 <https://github.com/garro95/priority-queue/issues/26>`_
 * 1.0.2 Added documentation link to Cargo.toml so the link is shown in the results page of crates.io
 * 1.0.1 Documentation
