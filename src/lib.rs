@@ -354,6 +354,25 @@ mod tests {
     }
 
     #[test]
+    fn remove2() {
+	use std::collections::hash_map::RandomState;
+	let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
+
+	for i in 0..7 {
+            queue.push(i, i);
+	}
+
+	queue.remove(&0);
+
+	let mut last_priority = *queue.peek().unwrap().1;
+	while let Some((_, priority)) = queue.pop() {
+            dbg!(priority);
+            assert!(last_priority >= priority);
+            last_priority = priority;
+	}
+    }
+
+    #[test]
     fn extend() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
