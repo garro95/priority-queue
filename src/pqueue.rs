@@ -300,24 +300,7 @@ where
         }
 
         if oldp.is_some() {
-            unsafe {
-                let tmp = *self.heap.get_unchecked(pos);
-                while (pos > 0)
-                    && (self
-                        .map
-                        .get_index(*self.heap.get_unchecked(parent(pos)))
-                        .unwrap()
-                        .1
-                        < self.map.get_index(tmp).unwrap().1)
-                {
-                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
-                    pos = parent(pos);
-                }
-                *self.heap.get_unchecked_mut(pos) = tmp;
-                *self.qp.get_unchecked_mut(tmp) = pos;
-            }
-            self.heapify(pos);
+            self.up_heapify(pos);
             return oldp;
         }
         // get a reference to the priority
@@ -409,7 +392,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        let mut pos;
+        let pos;
         let r = if let Some((index, _, p)) = self.map.get_full_mut(item) {
             swap(p, &mut new_priority);
             pos = unsafe { *self.qp.get_unchecked(index) };
@@ -418,24 +401,7 @@ where
             return None;
         };
         if r.is_some() {
-            unsafe {
-                let tmp = *self.heap.get_unchecked(pos);
-                while (pos > 0)
-                    && (self
-                        .map
-                        .get_index(*self.heap.get_unchecked(parent(pos)))
-                        .unwrap()
-                        .1
-                        < self.map.get_index(tmp).unwrap().1)
-                {
-                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
-                    pos = parent(pos);
-                }
-                *self.heap.get_unchecked_mut(pos) = tmp;
-                *self.qp.get_unchecked_mut(tmp) = pos;
-            }
-            self.heapify(pos);
+            self.up_heapify(pos);
         }
         r
     }
@@ -457,24 +423,7 @@ where
             found = true;
         }
         if found {
-            unsafe {
-                let tmp = *self.heap.get_unchecked(pos);
-                while (pos > 0)
-                    && (self
-                        .map
-                        .get_index(*self.heap.get_unchecked(parent(pos)))
-                        .unwrap()
-                        .1
-                        < self.map.get_index(tmp).unwrap().1)
-                {
-                    *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                    *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
-                    pos = parent(pos);
-                }
-                *self.heap.get_unchecked_mut(pos) = tmp;
-                *self.qp.get_unchecked_mut(tmp) = pos;
-            }
-            self.heapify(pos);
+            self.up_heapify(pos);
         }
     }
 
@@ -549,25 +498,7 @@ where
                         *self.qp.get_unchecked_mut(*heap_pos) = pos;
                     }
                 }
-                let mut pos = pos;
-                unsafe {
-                    let tmp = *self.heap.get_unchecked(pos);
-                    while (pos > 0)
-                        && (self
-                            .map
-                            .get_index(*self.heap.get_unchecked(parent(pos)))
-                            .unwrap()
-                            .1
-                            < self.map.get_index(tmp).unwrap().1)
-                    {
-                        *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                        *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
-                        pos = parent(pos);
-                    }
-                    *self.heap.get_unchecked_mut(pos) = tmp;
-                    *self.qp.get_unchecked_mut(tmp) = pos;
-                }
-                self.heapify(pos)
+                self.up_heapify(pos);
             }
         }
 
@@ -757,6 +688,28 @@ where
                 largest = r;
             }
         }
+    }
+
+    fn up_heapify(&mut self, i: usize) {
+        let mut pos = i;
+        unsafe {
+            let tmp = *self.heap.get_unchecked(pos);
+            while (pos > 0)
+                && (self
+                    .map
+                    .get_index(*self.heap.get_unchecked(parent(pos)))
+                    .unwrap()
+                    .1
+                    < self.map.get_index(tmp).unwrap().1)
+            {
+                *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
+                *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
+                pos = parent(pos);
+            }
+            *self.heap.get_unchecked_mut(pos) = tmp;
+            *self.qp.get_unchecked_mut(tmp) = pos;
+        }
+        self.heapify(pos)
     }
 
     /// Internal function that transform the `heap`
