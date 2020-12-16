@@ -112,6 +112,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 Changes
 -------
 
+* 1.0.5 Bug fix: `#28 <https://github.com/garro95/priority-queue/issues/28>`_
 * 1.0.4 Bug fix: `#28 <https://github.com/garro95/priority-queue/issues/28>`_
 * 1.0.3 Bug fix: `#26 <https://github.com/garro95/priority-queue/issues/26>`_
 * 1.0.2 Added documentation link to Cargo.toml so the link is shown in the results page of crates.io
