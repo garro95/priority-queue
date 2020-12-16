@@ -5,7 +5,7 @@
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version, or (at your opinion) under the terms 
+ *  (at your option) any later version, or (at your opinion) under the terms
  *  of the Mozilla Public License version 2.0.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -356,21 +356,36 @@ mod tests {
 
     #[test]
     fn remove2() {
-	use std::collections::hash_map::RandomState;
-	let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
+        use std::collections::hash_map::RandomState;
+        let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
 
-	for i in 0..7 {
+        for i in 0..7 {
             queue.push(i, i);
-	}
+        }
 
-	queue.remove(&0);
+        queue.remove(&0);
 
-	let mut last_priority = *queue.peek().unwrap().1;
-	while let Some((_, priority)) = queue.pop() {
+        let mut last_priority = *queue.peek().unwrap().1;
+        while let Some((_, priority)) = queue.pop() {
             dbg!(priority);
             assert!(last_priority >= priority);
             last_priority = priority;
-	}
+        }
+
+        let mut queue: PriorityQueue<i32, i32, RandomState> =
+            [20, 7, 19, 5, 6, 15, 18, 1, 2, 3, 4, 13, 14, 16, 17]
+                .iter()
+                .map(|i| (*i, *i))
+                .collect();
+
+        queue.remove(&1);
+
+        let mut last_priority = *queue.peek().unwrap().1;
+        while let Some((_, priority)) = queue.pop() {
+            dbg!(priority);
+            assert!(last_priority >= priority);
+            last_priority = priority;
+        }
     }
 
     #[test]
@@ -456,11 +471,11 @@ mod tests {
         queue.push("b", 1);
         assert_eq!(queue.peek().unwrap().0, &"b");
 
-	let iter_mut = queue.iter_mut();
+        let iter_mut = queue.iter_mut();
         for (k, v) in iter_mut {
-	    if k == &"a" {
+            if k == &"a" {
                 *v = 2;
-	    }
+            }
         }
 
         assert_eq!(queue.peek().unwrap().0, &"a");
@@ -470,11 +485,11 @@ mod tests {
     fn iter_mut_empty() {
         let mut queue: PriorityQueue<&'static str, i32> = Default::default();
 
-	let iter_mut = queue.iter_mut();
+        let iter_mut = queue.iter_mut();
         for (k, v) in iter_mut {
-	    if k == &"a" {
+            if k == &"a" {
                 *v = 2;
-	    }
+            }
         }
     }
 
