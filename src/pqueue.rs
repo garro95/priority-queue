@@ -25,7 +25,7 @@ use std::vec::Vec;
 use crate::iterators::*;
 
 use std::borrow::Borrow;
-use std::cmp::{Eq, Ord};
+use std::cmp::{Eq, PartialOrd};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
@@ -37,7 +37,7 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// A priority queue with efficient change function to change the priority of an
 /// element.
 ///
-/// The priority is of type P, that must implement `std::cmp::Ord`.
+/// The priority is of type P, that must implement `std::cmp::PartialOrd`.
 ///
 /// The item is of type I, that must implement `Hash` and `Eq`.
 ///
@@ -48,7 +48,7 @@ use indexmap::map::{IndexMap, MutableKeys};
 pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
     heap: Vec<usize>,                  // Implements the heap of indexes
@@ -62,7 +62,7 @@ where
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
     heap: Vec<usize>,                  // Implements the heap of indexes
@@ -75,7 +75,7 @@ where
 impl<I, P, H> Eq for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher,
 {
 }
@@ -83,7 +83,7 @@ where
 impl<I, P, H> Default for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher + Default,
 {
     fn default() -> Self {
@@ -94,7 +94,7 @@ where
 #[cfg(has_std)]
 impl<I, P> PriorityQueue<I, P>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
 {
     /// Creates an empty `PriorityQueue`
@@ -110,7 +110,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
     H: BuildHasher + Default,
 {
@@ -127,7 +127,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
     H: BuildHasher,
 {
@@ -150,7 +150,7 @@ where
         }
     }
 
-    /// Returns an iterator in arbitrary order over the
+    /// Returns an iterator in arbitrary Partialorder over the
     /// (item, priority) elements in the queue
     pub fn iter(&self) -> crate::pqueue::Iter<I, P> {
         crate::pqueue::Iter {
@@ -161,10 +161,10 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
 {
-    /// Return an iterator in arbitrary order over the
+    /// Return an iterator in arbitrary Partialorder over the
     /// (item, priority) elements in the queue.
     ///
     /// The item and the priority are mutable references, but it's a logic error
@@ -221,7 +221,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
     H: BuildHasher,
 {
@@ -245,7 +245,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
 {
     /// Shrinks the capacity of the internal data structures
@@ -273,7 +273,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
     H: BuildHasher,
 {
@@ -505,7 +505,7 @@ where
         element.map(|(_, i, p)| (i, p))
     }
 
-    /// Returns the items not ordered
+    /// Returns the items not Partialordered
     pub fn into_vec(self) -> Vec<I> {
         self.map.into_iter().map(|(i, _)| i).collect()
     }
@@ -513,7 +513,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
 {
     /// Implements a HeapSort
@@ -538,7 +538,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
     H: BuildHasher,
 {
@@ -584,7 +584,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H>
 where
-    P: Ord,
+    P: PartialOrd,
     I: Hash + Eq,
 {
     /// Generates a new iterator from self that
@@ -731,7 +731,7 @@ where
 impl<I, P, H> From<Vec<(I, P)>> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
@@ -757,7 +757,7 @@ where
 impl<I, P, H> FromIterator<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher + Default,
 {
     fn from_iter<IT>(iter: IT) -> Self
@@ -793,7 +793,7 @@ where
 impl<I, P, H> IntoIterator for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher,
 {
     type Item = (I, P);
@@ -808,7 +808,7 @@ where
 impl<'a, I, P, H> IntoIterator for &'a PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher,
 {
     type Item = (&'a I, &'a P);
@@ -823,7 +823,7 @@ where
 impl<'a, I, P, H> IntoIterator for &'a mut PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     type Item = (&'a mut I, &'a mut P);
     type IntoIter = IterMut<'a, I, P, H>;
@@ -835,7 +835,7 @@ where
 impl<I, P, H> Extend<(I, P)> for PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
     H: BuildHasher,
 {
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
@@ -875,7 +875,7 @@ use std::fmt;
 impl<I, P, H> fmt::Debug for PriorityQueue<I, P, H>
 where
     I: fmt::Debug + Hash + Eq,
-    P: fmt::Debug + Ord,
+    P: fmt::Debug + PartialOrd,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
@@ -889,10 +889,10 @@ use std::cmp::PartialEq;
 impl<I, P1, H1, P2, H2> PartialEq<PriorityQueue<I, P2, H2>> for PriorityQueue<I, P1, H1>
 where
     I: Hash + Eq,
-    P1: Ord,
+    P1: PartialOrd,
     P1: PartialEq<P2>,
     Option<P1>: PartialEq<Option<P2>>,
-    P2: Ord,
+    P2: PartialOrd,
     H1: BuildHasher,
     H2: BuildHasher,
 {
@@ -938,7 +938,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 mod serde {
     use crate::pqueue::PriorityQueue;
 
-    use std::cmp::{Eq, Ord};
+    use std::cmp::{Eq, PartialOrd};
     use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hash};
     use std::marker::PhantomData;
@@ -947,7 +947,7 @@ mod serde {
     impl<I, P, H> Serialize for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Serialize,
-        P: Ord + Serialize,
+        P: PartialOrd + Serialize,
         H: BuildHasher,
     {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -966,7 +966,7 @@ mod serde {
     impl<'de, I, P, H> Deserialize<'de> for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
-        P: Ord + Deserialize<'de>,
+        P: PartialOrd + Deserialize<'de>,
         H: BuildHasher + Default,
     {
         fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P, H>, D::Error>
@@ -982,14 +982,14 @@ mod serde {
     struct PQVisitor<I, P, H = RandomState>
     where
         I: Hash + Eq,
-        P: Ord,
+        P: PartialOrd,
     {
         marker: PhantomData<PriorityQueue<I, P, H>>,
     }
     impl<'de, I, P, H> Visitor<'de> for PQVisitor<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
-        P: Ord + Deserialize<'de>,
+        P: PartialOrd + Deserialize<'de>,
         H: BuildHasher + Default,
     {
         type Value = PriorityQueue<I, P, H>;

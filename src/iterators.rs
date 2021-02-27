@@ -30,7 +30,7 @@ pub(crate) mod std {
     pub use ::alloc::vec;
 }
 
-use std::cmp::{Eq, Ord};
+use std::cmp::{Eq, PartialOrd};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
@@ -41,7 +41,7 @@ use crate::pqueue::PriorityQueue;
 pub struct Iter<'a, I: 'a, P: 'a>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) iter: ::indexmap::map::Iter<'a, I, P>,
 }
@@ -49,7 +49,7 @@ where
 impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     type Item = (&'a I, &'a P);
     fn next(&mut self) -> Option<(&'a I, &'a P)> {
@@ -61,7 +61,7 @@ where
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
@@ -71,7 +71,7 @@ where
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
@@ -80,7 +80,7 @@ where
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
         IterMut { pq, pos: 0 }
@@ -90,7 +90,7 @@ where
 impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     type Item = (&'a mut I, &'a mut P);
     fn next(&mut self) -> Option<Self::Item> {
@@ -108,7 +108,7 @@ where
 impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     fn drop(&mut self) {
         self.pq.heap_build();
@@ -118,7 +118,7 @@ where
 pub struct IntoIter<I, P>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
 }
@@ -126,7 +126,7 @@ where
 impl<I, P> Iterator for IntoIter<I, P>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
@@ -138,7 +138,7 @@ where
 pub struct IntoSortedIter<I, P, H = RandomState>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
@@ -147,7 +147,7 @@ where
 pub struct IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
@@ -155,7 +155,7 @@ where
 impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
-    P: Ord,
+    P: PartialOrd,
 {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
