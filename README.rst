@@ -18,7 +18,7 @@ Usage
 -----
 To use this crate, simply add the following string to your `Cargo.toml`:
 
-	  priority-queue = "1.0.0"
+	  priority-queue = "1.1.0"
 
 Version numbers follow the semver__ convention.
 
@@ -111,7 +111,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 Changes
 -------
-
+* 1.1.0 Smooth `Q: Sized` requirement on some methods (fix `#32 <https://github.com/garro95/priority-queue/issues/32>`_)
 * 1.0.5 Bug fix: `#28 <https://github.com/garro95/priority-queue/issues/28>`_
 * 1.0.4 Bug fix: `#28 <https://github.com/garro95/priority-queue/issues/28>`_
 * 1.0.3 Bug fix: `#26 <https://github.com/garro95/priority-queue/issues/26>`_
