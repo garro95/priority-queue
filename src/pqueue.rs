@@ -438,7 +438,7 @@ where
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
-    pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
+    pub fn get<Q: ?Sized>(&self, item: &Q) -> Option<(&I, &P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -455,7 +455,7 @@ where
     /// The priority cannot be modified with a call to this function.
     /// To modify the priority use `push`, `change_priority` or
     /// `change_priority_by`.
-    pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
+    pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -468,7 +468,7 @@ where
     /// is not found in the queue.
     ///
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
+    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -632,12 +632,11 @@ where
         self.qp.swap(i, j);
     }
 
-    /// Internal function that restore the functional property of the heap
+    /// Internal function that restores the functional property of the sub-heap rooted in `i`
     ///
     /// Computes in **O(log(N))** time
-    fn heapify(&mut self, i: usize) {
+    fn heapify(&mut self, mut i: usize) {
         let (mut l, mut r) = (left(i), right(i));
-        let mut i = i;
         let mut largest = if l < self.size
             && unsafe {
                 self.map.get_index(*self.heap.get_unchecked(l)).unwrap().1
@@ -647,7 +646,8 @@ where
         } else {
             i
         };
-        if r < self.size
+
+	if r < self.size
             && unsafe {
                 self.map.get_index(*self.heap.get_unchecked(r)).unwrap().1
                     > self
@@ -659,7 +659,8 @@ where
         {
             largest = r;
         }
-        while largest != i {
+
+	while largest != i {
             self.swap(i, largest);
 
             i = largest;
@@ -690,6 +691,10 @@ where
         }
     }
 
+    /// Internal function that moves a leaf in position `i` to its correct place in the heap
+    /// and restores the functional property
+    ///
+    /// Computes in **O(log(N))**
     fn up_heapify(&mut self, i: usize) {
         let mut pos = i;
         unsafe {
@@ -715,7 +720,7 @@ where
     /// Internal function that transform the `heap`
     /// vector in a heap with its properties
     ///
-    /// Computes in **O(n)**
+    /// Computes in **O(N)**
     pub(crate) fn heap_build(&mut self) {
         if self.size == 0 {
             return;
