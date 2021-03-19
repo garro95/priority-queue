@@ -438,7 +438,7 @@ where
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
-    pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
+    pub fn get<Q: ?Sized>(&self, item: &Q) -> Option<(&I, &P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -455,7 +455,7 @@ where
     /// The priority cannot be modified with a call to this function.
     /// To modify the priority use `push`, `change_priority` or
     /// `change_priority_by`.
-    pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
+    pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -468,7 +468,7 @@ where
     /// is not found in the queue.
     ///
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
+    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
