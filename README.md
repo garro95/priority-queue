@@ -24,24 +24,24 @@ Remember that, if you need serde support, you should compile using `--features s
 ## Example
 
 ```rust
-	extern crate priority_queue; // not necessary in Rust edition 2018
+extern crate priority_queue; // not necessary in Rust edition 2018
 
-	use priority_queue::PriorityQueue;
-	
-	fn main() {
-	    let mut pq = PriorityQueue::new();
+use priority_queue::PriorityQueue;
 
-	    assert!(pq.is_empty());
-	    pq.push("Apples", 5);
-	    pq.push("Bananas", 8);
-	    pq.push("Strawberries", 23);
+fn main() {
+    let mut pq = PriorityQueue::new();
 
-	    assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+    assert!(pq.is_empty());
+    pq.push("Apples", 5);
+    pq.push("Bananas", 8);
+    pq.push("Strawberries", 23);
 
-	    for (item, _) in pq.into_sorted_iter() {
-	        println!("{}", item);
-	    }
-	}
+    assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+
+    for (item, _) in pq.into_sorted_iter() {
+        println!("{}", item);
+    }
+}
 ```
 
 Note: in recent versions of Rust (edition 2018) the `extern crate priority_queue` is not necessary anymore!
@@ -52,9 +52,9 @@ You can use custom BuildHasher for the underlying IndexMap and therefore achieve
 For example you can create the queue with the speedy [FxHash](https://github.com/Amanieu/hashbrown) hasher:
 
 ```rust
-    use hashbrown::hash_map::DefaultHashBuilder;
+use hashbrown::hash_map::DefaultHashBuilder;
 
-    let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
 ```
 
 Attention: FxHash does not offer any protection for dos attacks. This means that some pathological inputs can make the operations on the hashmap O(n^2). Use the standard hasher if you cannot control the inputs.
@@ -64,18 +64,18 @@ Attention: FxHash does not offer any protection for dos attacks. This means that
 Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
 On a Ryzen 9 3900X, the benchmarks produced the following results:
 ```
-   test benchmarks::priority_change_on_large_queue     ... bench:          20 ns/iter (+/- 0)
-   test benchmarks::priority_change_on_large_queue_fx  ... bench:           7 ns/iter (+/- 0)
-   test benchmarks::priority_change_on_large_queue_std ... bench:     255,098 ns/iter (+/- 45,542)
-   test benchmarks::priority_change_on_small_queue     ... bench:          19 ns/iter (+/- 0)
-   test benchmarks::priority_change_on_small_queue_fx  ... bench:           7 ns/iter (+/- 0)
-   test benchmarks::priority_change_on_small_queue_std ... bench:       1,741 ns/iter (+/- 24)
-   test benchmarks::push_and_pop                       ... bench:          37 ns/iter (+/- 0)
-   test benchmarks::push_and_pop_fx                    ... bench:          25 ns/iter (+/- 0)
-   test benchmarks::push_and_pop_on_large_queue        ... bench:         185 ns/iter (+/- 3)
-   test benchmarks::push_and_pop_on_large_queue_fx     ... bench:         118 ns/iter (+/- 1)
-   test benchmarks::push_and_pop_on_large_queue_std    ... bench:          33 ns/iter (+/- 6)
-   test benchmarks::push_and_pop_std                   ... bench:           4 ns/iter (+/- 0)
+test benchmarks::priority_change_on_large_queue     ... bench:          20 ns/iter (+/- 0)
+test benchmarks::priority_change_on_large_queue_fx  ... bench:           7 ns/iter (+/- 0)
+test benchmarks::priority_change_on_large_queue_std ... bench:     255,098 ns/iter (+/- 45,542)
+test benchmarks::priority_change_on_small_queue     ... bench:          19 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_queue_fx  ... bench:           7 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_queue_std ... bench:       1,741 ns/iter (+/- 24)
+test benchmarks::push_and_pop                       ... bench:          37 ns/iter (+/- 0)
+test benchmarks::push_and_pop_fx                    ... bench:          25 ns/iter (+/- 0)
+test benchmarks::push_and_pop_on_large_queue        ... bench:         185 ns/iter (+/- 3)
+test benchmarks::push_and_pop_on_large_queue_fx     ... bench:         118 ns/iter (+/- 1)
+test benchmarks::push_and_pop_on_large_queue_std    ... bench:          33 ns/iter (+/- 6)
+test benchmarks::push_and_pop_std                   ... bench:           4 ns/iter (+/- 0)
 ```
 
 The priority change on the standard queue was obtained with the following:
@@ -101,6 +101,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.1.1 Convert documentation to Markdown
 * 1.1.0 Smooth `Q: Sized` requirement on some methods (fix [#32](https://github.com/garro95/priority-queue/issues/32>))
 * 1.0.5 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
 * 1.0.4 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
@@ -136,13 +137,13 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 * 0.5.0 Fix [#7](https://github.com/garro95/priority-queue/issues/7) implementing the `iter_mut` features
 * 0.4.5 Fix [#6](https://github.com/garro95/priority-queue/issues/6) for `change_priority` and `change_priority_by`
 * 0.4.4 Fix [#6](https://github.com/garro95/priority-queue/issues/6)
-* 0.4.3 Fix [#4](https://github.com/garro95/priority-queue/issues/4) changing the way PriorityQueue serializes.
-  Note that old serialized PriorityQueues may be incompatible with the new version.
+* 0.4.3 Fix [#4](https://github.com/garro95/priority-queue/issues/4) changing the way `PriorityQueue` serializes.
+  Note that old serialized `PriorityQueue`s may be incompatible with the new version.
   The API should not be changed instead.
 * 0.4.2 Improved performance using some unsafe code in the implementation.
-* 0.4.1 Support for serde when compiled with `--features serde`.
-  serde marked as optional and serde-test as dev-dipendency.
-  Now compiling the crate won't download and compile also serde-test, neither serde if not needed.
+* 0.4.1 Support for `serde` when compiled with `--features serde`.
+  `serde` marked as optional and `serde-test` as dev-dipendency.
+  Now compiling the crate won't download and compile also `serde-test`, neither `serde` if not needed.
 * 0.4.0 Support for serde when compiled with `cfg(serde)`
 * 0.3.1 Fix [#3](https://github.com/garro95/priority-queue/issues/3)
 * 0.3.0 Implement PartialEq and Eq traits
