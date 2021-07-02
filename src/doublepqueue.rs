@@ -317,7 +317,7 @@ where
         }
     }
 
-    /// Removes the item with the greatest priority from
+    /// Removes the item with the lowest priority from
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop_min(&mut self) -> Option<(I, P)> {
@@ -578,10 +578,21 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Implements a HeapSort
-    pub fn into_sorted_vec(mut self) -> Vec<I> {
+    /// Implements a HeapSort. Produces a vector where the elements are sorted
+    /// from the minimum priority to the maximum priority
+    pub fn into_ascending_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.size);
-        while let Some((i, _)) = self.pop() {
+        while let Some((i, _)) = self.pop_min() {
+            res.push(i);
+        }
+        res
+    }
+
+    /// Implements a HeapSort. Produces a vector where the elements are sorted
+    /// from the maximum priority to the minimum priority
+    pub fn into_descending_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.size);
+        while let Some((i, _)) = self.pop_max() {
             res.push(i);
         }
         res
@@ -606,8 +617,10 @@ where
 {
     /// Drops all items from the priority queue
     pub fn clear(&mut self) {
-        self.heap.clear();
-        self.qp.clear();
+        self.max_heap.clear();
+        self.max_qp.clear();
+        self.min_heap.clear();
+        self.min_qp.clear();
         self.map.clear();
         self.size = 0;
     }
@@ -617,8 +630,8 @@ where
     /// At the end, `other` will be empty.
     ///
     /// **Note** that at the end, the priority of the duplicated elements
-    /// inside self may be the one of the elements in other,
-    /// if other is longer than self
+    /// inside `self` may be the one of the elements in `other`,
+    /// if `other` is longer than `self`
     pub fn append(&mut self, other: &mut Self) {
         if other.size > self.size {
             std::mem::swap(self, other);
@@ -633,13 +646,17 @@ where
             if !self.map.contains_key(&k) {
                 let i = self.size;
                 self.map.insert(k, v);
-                self.heap.push(i);
-                self.qp.push(i);
+                self.min_heap.push(i);
+                self.min_qp.push(i);
+                self.max_heap.push(i);
+                self.max_qp.push(i);
                 self.size += 1;
             }
         }
-        other.heap.clear();
-        other.qp.clear();
+        other.min_heap.clear();
+        other.min_qp.clear();
+        other.max_heap.clear();
+        other.max_qp.clear();
         self.heap_build();
     }
 }
