@@ -34,7 +34,7 @@ use std::cmp::{Eq, Ord};
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
-use std::mem::{replace, swap};
+use std::mem::replace;
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -380,23 +380,17 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, mut new_priority: P) -> Option<P>
+    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        let pos;
-        let r = if let Some((index, _, p)) = self.store.map.get_full_mut(item) {
-            swap(p, &mut new_priority);
-            pos = unsafe { *self.store.qp.get_unchecked(index) };
-            Some(new_priority)
-        } else {
-            return None;
-        };
-        if r.is_some() {
-            self.up_heapify(pos);
-        }
-        r
+	if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
+	    self.up_heapify(pos);
+	    Some(r)
+	} else {
+	    None
+	}
     }
 
     /// Change the priority of an Item using the provided function.
@@ -408,14 +402,7 @@ where
         Q: Eq + Hash,
         F: FnOnce(&mut P),
     {
-        let mut pos = 0;
-        let mut found = false;
-        if let Some((index, _, mut p)) = self.store.map.get_full_mut(item) {
-            priority_setter(&mut p);
-            pos = unsafe { *self.store.qp.get_unchecked(index) };
-            found = true;
-        }
-        if found {
+        if let Some(pos) = self.store.change_priority_by(item, priority_setter) {
             self.up_heapify(pos);
         }
     }

@@ -30,6 +30,7 @@ use std::cmp::{Eq, Ord};
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{FromIterator, IntoIterator, Iterator};
+use std::mem::swap;
 
 use indexmap::map::{IndexMap, MutableKeys};
 
@@ -271,6 +272,43 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    /// Change the priority of an Item returning the old value of priority,
+    /// or `None` if the item wasn't in the queue.
+    ///
+    /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
+    /// in the priority queue.
+    ///
+    /// The item is found in **O(1)** thanks to the hash table.
+    /// The operation is performed in **O(log(N))** time.
+    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, mut new_priority: P) -> Option<(P, usize)>
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash,
+    {
+	let Store{map, qp, ..} = self;
+	map.get_full_mut(item).map(|(index, _, p)| {
+            swap(p, &mut new_priority);
+            let pos = unsafe { *qp.get_unchecked(index) };
+            (new_priority, pos)
+	})
+    }
+
+    /// Change the priority of an Item using the provided function.
+    /// The item is found in **O(1)** thanks to the hash table.
+    /// The operation is performed in **O(log(N))** time (worst case).
+    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F) -> Option<usize>
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash,
+        F: FnOnce(&mut P),
+    {
+	let Store{map, qp, ..} = self;
+	map.get_full_mut(item).map(|(index, _, mut p)| {
+            priority_setter(&mut p);
+	    unsafe { *qp.get_unchecked(index) }
+	})
+    }
+
     /// Get the priority of an item, or `None`, if the item is not in the queue
     pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
     where
