@@ -83,9 +83,9 @@ pub(crate) mod std {
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
+mod core_iterators;
 mod priority_queue;
 mod store;
-mod core_iterators;
 
 pub use crate::priority_queue::PriorityQueue;
 

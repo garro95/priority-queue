@@ -24,9 +24,9 @@ use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
-use iterators::*;
 use crate::core_iterators::{IntoIter, Iter};
 use crate::store::Store;
+use iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -54,7 +54,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    store: Store<I, P, H>
+    store: Store<I, P, H>,
 }
 
 #[derive(Clone)]
@@ -64,7 +64,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    store: Store<I, P, H>
+    store: Store<I, P, H>,
 }
 
 // do not [derive(Eq)] to loosen up trait requirements for other types and impls
@@ -139,7 +139,7 @@ where
     /// If `capacity` is 0, there will be no allocation.
     pub fn with_capacity_and_hasher(capacity: usize, hash_builder: H) -> Self {
         Self {
-	    store: Store::with_capacity_and_hasher(capacity, hash_builder)
+            store: Store::with_capacity_and_hasher(capacity, hash_builder),
         }
     }
 
@@ -177,7 +177,9 @@ where
         if self.store.size == 0 {
             return None;
         }
-        self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(0) })
+        self.store
+            .map
+            .get_index(unsafe { *self.store.heap.get_unchecked(0) })
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -195,7 +197,8 @@ where
         if self.store.size == 0 {
             return None;
         }
-        self.store.map
+        self.store
+            .map
             .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) })
             .map(|(k, v)| (k, &*v))
     }
@@ -304,7 +307,7 @@ where
         unsafe {
             while (i > 0)
                 && (self
-		    .store
+                    .store
                     .map
                     .get_index(*self.store.heap.get_unchecked(parent(i)))
                     .unwrap()
@@ -312,7 +315,10 @@ where
                     < &priority)
             {
                 *self.store.heap.get_unchecked_mut(i) = *self.store.heap.get_unchecked(parent(i));
-                *self.store.qp.get_unchecked_mut(*self.store.heap.get_unchecked(i)) = i;
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(i)) = i;
                 i = parent(i);
             }
             // put the new element into the heap and
@@ -596,12 +602,18 @@ where
             return self.store.map.swap_remove_index(head);
         }
         unsafe {
-            *self.store.qp.get_unchecked_mut(*self.store.heap.get_unchecked(0)) = 0;
+            *self
+                .store
+                .qp
+                .get_unchecked_mut(*self.store.heap.get_unchecked(0)) = 0;
         }
         self.store.qp.swap_remove(head);
         if head < self.store.size {
             unsafe {
-                *self.store.heap.get_unchecked_mut(*self.store.qp.get_unchecked(head)) = head;
+                *self
+                    .store
+                    .heap
+                    .get_unchecked_mut(*self.store.qp.get_unchecked(head)) = head;
             }
         }
         // swap remove from the map and return to the client
@@ -612,7 +624,12 @@ where
     ///
     /// Computes in **O(1)** time
     fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe { (*self.store.heap.get_unchecked(a), *self.store.heap.get_unchecked(b)) };
+        let (i, j) = unsafe {
+            (
+                *self.store.heap.get_unchecked(a),
+                *self.store.heap.get_unchecked(b),
+            )
+        };
         self.store.heap.swap(a, b);
         self.store.qp.swap(i, j);
     }
@@ -624,17 +641,30 @@ where
         let (mut l, mut r) = (left(i), right(i));
         let mut largest = if l < self.store.size
             && unsafe {
-                self.store.map.get_index(*self.store.heap.get_unchecked(l)).unwrap().1
-                    > self.store.map.get_index(*self.store.heap.get_unchecked(i)).unwrap().1
+                self.store
+                    .map
+                    .get_index(*self.store.heap.get_unchecked(l))
+                    .unwrap()
+                    .1
+                    > self
+                        .store
+                        .map
+                        .get_index(*self.store.heap.get_unchecked(i))
+                        .unwrap()
+                        .1
             } {
             l
         } else {
             i
         };
 
-	if r < self.store.size
+        if r < self.store.size
             && unsafe {
-                self.store.map.get_index(*self.store.heap.get_unchecked(r)).unwrap().1
+                self.store
+                    .map
+                    .get_index(*self.store.heap.get_unchecked(r))
+                    .unwrap()
+                    .1
                     > self
                         .store
                         .map
@@ -646,7 +676,7 @@ where
             largest = r;
         }
 
-	while largest != i {
+        while largest != i {
             self.swap(i, largest);
 
             i = largest;
@@ -654,8 +684,17 @@ where
             r = right(i);
             if l < self.store.size
                 && unsafe {
-                    self.store.map.get_index(*self.store.heap.get_unchecked(l)).unwrap().1
-                        > self.store.map.get_index(*self.store.heap.get_unchecked(i)).unwrap().1
+                    self.store
+                        .map
+                        .get_index(*self.store.heap.get_unchecked(l))
+                        .unwrap()
+                        .1
+                        > self
+                            .store
+                            .map
+                            .get_index(*self.store.heap.get_unchecked(i))
+                            .unwrap()
+                            .1
                 }
             {
                 largest = l;
@@ -664,7 +703,11 @@ where
             }
             if r < self.store.size
                 && unsafe {
-                    self.store.map.get_index(*self.store.heap.get_unchecked(r)).unwrap().1
+                    self.store
+                        .map
+                        .get_index(*self.store.heap.get_unchecked(r))
+                        .unwrap()
+                        .1
                         > self
                             .store
                             .map
@@ -695,8 +738,12 @@ where
                     .1
                     < self.store.map.get_index(tmp).unwrap().1)
             {
-                *self.store.heap.get_unchecked_mut(pos) = *self.store.heap.get_unchecked(parent(pos));
-                *self.store.qp.get_unchecked_mut(*self.store.heap.get_unchecked(pos)) = pos;
+                *self.store.heap.get_unchecked_mut(pos) =
+                    *self.store.heap.get_unchecked(parent(pos));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(pos)) = pos;
                 pos = parent(pos);
             }
             *self.store.heap.get_unchecked_mut(pos) = tmp;
@@ -728,10 +775,8 @@ where
     H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
-	let store = Store::from(vec);
-	let mut pq = PriorityQueue {
-	    store
-	};
+        let store = Store::from(vec);
+        let mut pq = PriorityQueue { store };
         pq.heap_build();
         pq
     }
@@ -750,8 +795,8 @@ where
     where
         IT: IntoIterator<Item = (I, P)>,
     {
-	let store = Store::from_iter(iter);
-	let mut pq = PriorityQueue{store};
+        let store = Store::from_iter(iter);
+        let mut pq = PriorityQueue { store };
         pq.heap_build();
         pq
     }
@@ -842,7 +887,12 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
-            .entries(self.store.heap.iter().map(|&i| self.store.map.get_index(i).unwrap()))
+            .entries(
+                self.store
+                    .heap
+                    .iter()
+                    .map(|&i| self.store.map.get_index(i).unwrap()),
+            )
             .finish()
     }
 }

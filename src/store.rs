@@ -44,8 +44,8 @@ where
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
     pub heap: Vec<usize>,       // Implements the heap of indexes
     pub qp: Vec<usize>,         // Performs the translation from the index
-                                // of the map to the index of the heap
-    pub size: usize,            // The size of the heap
+    // of the map to the index of the heap
+    pub size: usize, // The size of the heap
 }
 
 #[derive(Clone)]
@@ -58,8 +58,8 @@ where
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
     pub heap: Vec<usize>,       // Implements the heap of indexes
     pub qp: Vec<usize>,         // Performs the translation from the index
-                                // of the map to the index of the heap
-    pub size: usize,            // The size of the heap
+    // of the map to the index of the heap
+    pub size: usize, // The size of the heap
 }
 
 // do not [derive(Eq)] to loosen up trait requirements for other types and impls
@@ -144,7 +144,9 @@ where
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
     pub fn iter(&self) -> Iter<I, P> {
-        Iter { iter: self.map.iter() }
+        Iter {
+            iter: self.map.iter(),
+        }
     }
     // reserve_exact -> IndexMap does not implement reserve_exact
 
@@ -274,7 +276,6 @@ where
     }
 }
 
-
 impl<I, P, H> IntoIterator for Store<I, P, H>
 where
     I: Hash + Eq,
@@ -339,7 +340,7 @@ where
                 i += 1;
             }
         }
-	store.size = i;
+        store.size = i;
         store
     }
 }

@@ -59,7 +59,6 @@ where
     pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
 }
 
-
 impl<I, P> Iterator for IntoIter<I, P>
 where
     I: Hash + Eq,
