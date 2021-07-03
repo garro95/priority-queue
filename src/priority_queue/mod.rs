@@ -549,25 +549,7 @@ where
     /// inside self may be the one of the elements in other,
     /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
-        if other.store.size > self.store.size {
-            std::mem::swap(self, other);
-        }
-        if other.store.size == 0 {
-            return;
-        }
-        let drain = other.store.map.drain(..);
-        // what should we do for duplicated keys?
-        // ignore
-        for (k, v) in drain {
-            if !self.store.map.contains_key(&k) {
-                let i = self.store.size;
-                self.store.map.insert(k, v);
-                self.store.heap.push(i);
-                self.store.qp.push(i);
-                self.store.size += 1;
-            }
-        }
-        other.clear();
+	self.store.append(&mut other.store);
         self.heap_build();
     }
 }

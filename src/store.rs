@@ -319,6 +319,28 @@ where
         self.map.clear();
         self.size = 0;
     }
+
+    pub fn append(&mut self, other: &mut Self) {
+        if other.size > self.size {
+            std::mem::swap(self, other);
+        }
+        if other.size == 0 {
+            return;
+        }
+        let drain = other.map.drain(..);
+        // what should we do for duplicated keys?
+        // ignore
+        for (k, v) in drain {
+            if !self.map.contains_key(&k) {
+                let i = self.size;
+                self.map.insert(k, v);
+                self.heap.push(i);
+                self.qp.push(i);
+                self.size += 1;
+            }
+        }
+        other.clear();
+    }
 }
 
 impl<I, P, H> IntoIterator for Store<I, P, H>
