@@ -379,3 +379,93 @@ where
         store
     }
 }
+
+#[cfg(feature = "serde")]
+mod serde {
+    use crate::store::Store;
+
+    use std::cmp::{Eq, Ord};
+    use std::collections::hash_map::RandomState;
+    use std::hash::{BuildHasher, Hash};
+    use std::marker::PhantomData;
+
+    use serde::ser::{Serialize, SerializeSeq, Serializer};
+
+    impl<I, P, H> Serialize for Store<I, P, H>
+    where
+        I: Hash + Eq + Serialize,
+        P: Ord + Serialize,
+        H: BuildHasher,
+    {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            let mut map_serializer = serializer.serialize_seq(Some(self.size))?;
+            for (k, v) in &self.map {
+                map_serializer.serialize_element(&(k, v))?;
+            }
+            map_serializer.end()
+        }
+    }
+
+    use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+    impl<'de, I, P, H> Deserialize<'de> for Store<I, P, H>
+    where
+        I: Hash + Eq + Deserialize<'de>,
+        P: Ord + Deserialize<'de>,
+        H: BuildHasher + Default,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Store<I, P, H>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_seq(StoreVisitor {
+                marker: PhantomData,
+            })
+        }
+    }
+
+    struct StoreVisitor<I, P, H = RandomState>
+    where
+        I: Hash + Eq,
+        P: Ord,
+    {
+        marker: PhantomData<Store<I, P, H>>,
+    }
+    impl<'de, I, P, H> Visitor<'de> for StoreVisitor<I, P, H>
+    where
+        I: Hash + Eq + Deserialize<'de>,
+        P: Ord + Deserialize<'de>,
+        H: BuildHasher + Default,
+    {
+        type Value = Store<I, P, H>;
+
+        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+            write!(formatter, "A priority queue")
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E> {
+            Ok(Store::with_default_hasher())
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: SeqAccess<'de>,
+        {
+            let mut store: Store<I, P, H> = if let Some(size) = seq.size_hint() {
+                Store::with_capacity_and_default_hasher(size)
+            } else {
+                Store::with_default_hasher()
+            };
+
+            while let Some((item, priority)) = seq.next_element()? {
+                store.map.insert(item, priority);
+                store.qp.push(store.size);
+                store.heap.push(store.size);
+                store.size += 1;
+            }
+            Ok(store)
+        }
+    }
+}

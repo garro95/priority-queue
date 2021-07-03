@@ -83,8 +83,9 @@ pub(crate) mod std {
 #[cfg(all(feature = "serde", test))]
 #[macro_use]
 extern crate serde_derive;
-mod core_iterators;
-mod priority_queue;
+pub mod core_iterators;
+pub mod priority_queue;
+// pub mod double_priority_queue;
 mod store;
 
 pub use crate::priority_queue::PriorityQueue;
@@ -606,9 +607,9 @@ mod serde_tests_custom_structs {
     /// events all  occur at the same time, they will still be executed in a
     /// deterministic order, every single time the queue's contents are executed.
     /// This is  critical for deterministic simulators.
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
     #[serde(default)]
     #[serde(deny_unknown_fields)]
-    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
     struct EventComparables {
         /// This is when the event will be fired.
         activation_date: ActivationDate,
@@ -659,9 +660,9 @@ mod serde_tests_custom_structs {
     /// This is a fake event that I'll fire when the corresponding
     /// EventComparables instance comes up.  The contents are immaterial; I'm just
     /// using it for testing
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
     #[serde(default)]
     #[serde(deny_unknown_fields)]
-    #[derive(Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
     struct ConcreteEvent1 {
         a: i32,
         b: i64,

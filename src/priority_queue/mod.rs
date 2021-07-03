@@ -57,8 +57,9 @@ where
     store: Store<I, P, H>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 #[cfg(not(has_std))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -949,14 +950,15 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use crate::PriorityQueue;
-
     use std::cmp::{Eq, Ord};
-    use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hash};
-    use std::marker::PhantomData;
 
-    use serde::ser::{Serialize, SerializeSeq, Serializer};
+    use serde::ser::{Serialize, Serializer};
+    use serde::de::{Deserialize, Deserializer};
+
+    use super::PriorityQueue;
+    use crate::store::Store;
+
     impl<I, P, H> Serialize for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Serialize,
@@ -967,15 +969,10 @@ mod serde {
         where
             S: Serializer,
         {
-            let mut map_serializer = serializer.serialize_seq(Some(self.store.size))?;
-            for (k, v) in &self.store.map {
-                map_serializer.serialize_element(&(k, v))?;
-            }
-            map_serializer.end()
+            self.store.serialize(serializer)
         }
     }
 
-    use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
     impl<'de, I, P, H> Deserialize<'de> for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
@@ -986,53 +983,7 @@ mod serde {
         where
             D: Deserializer<'de>,
         {
-            deserializer.deserialize_seq(PQVisitor {
-                marker: PhantomData,
-            })
-        }
-    }
-
-    struct PQVisitor<I, P, H = RandomState>
-    where
-        I: Hash + Eq,
-        P: Ord,
-    {
-        marker: PhantomData<PriorityQueue<I, P, H>>,
-    }
-    impl<'de, I, P, H> Visitor<'de> for PQVisitor<I, P, H>
-    where
-        I: Hash + Eq + Deserialize<'de>,
-        P: Ord + Deserialize<'de>,
-        H: BuildHasher + Default,
-    {
-        type Value = PriorityQueue<I, P, H>;
-
-        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-            write!(formatter, "A priority queue")
-        }
-
-        fn visit_unit<E>(self) -> Result<Self::Value, E> {
-            Ok(PriorityQueue::with_default_hasher())
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut pq: PriorityQueue<I, P, H> = if let Some(size) = seq.size_hint() {
-                PriorityQueue::with_capacity_and_default_hasher(size)
-            } else {
-                PriorityQueue::with_default_hasher()
-            };
-
-            while let Some((item, priority)) = seq.next_element()? {
-                pq.map.insert(item, priority);
-                pq.qp.push(pq.size);
-                pq.heap.push(pq.size);
-                pq.size += 1;
-            }
-            pq.heap_build();
-            Ok(pq)
+	    Store::deserialize(deserializer).map(|store| PriorityQueue{ store })
         }
     }
 }
