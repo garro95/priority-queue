@@ -469,6 +469,24 @@ where
     }
 }
 
+use std::fmt;
+impl<I, P, H> fmt::Debug for Store<I, P, H>
+where
+    I: fmt::Debug + Hash + Eq,
+    P: fmt::Debug + Ord,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_map()
+            .entries(
+                self
+                    .heap
+                    .iter()
+                    .map(|&i| self.map.get_index(i).unwrap()),
+            )
+            .finish()
+    }
+}
+
 #[cfg(feature = "serde")]
 mod serde {
     use crate::store::Store;

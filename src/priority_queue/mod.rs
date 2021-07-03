@@ -45,7 +45,7 @@ use std::mem::{replace, swap};
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg(has_std)]
 pub struct PriorityQueue<I, P, H = RandomState>
 where
@@ -55,9 +55,8 @@ where
     store: Store<I, P, H>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 #[cfg(not(has_std))]
-#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -801,24 +800,6 @@ where
                 self.push(item, priority);
             }
         }
-    }
-}
-
-use std::fmt;
-impl<I, P, H> fmt::Debug for PriorityQueue<I, P, H>
-where
-    I: fmt::Debug + Hash + Eq,
-    P: fmt::Debug + Ord,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_map()
-            .entries(
-                self.store
-                    .heap
-                    .iter()
-                    .map(|&i| self.store.map.get_index(i).unwrap()),
-            )
-            .finish()
     }
 }
 
