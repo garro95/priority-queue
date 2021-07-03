@@ -45,34 +45,34 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// to be able to retrieve them quickly.
 #[derive(Clone)]
 #[cfg(has_std)]
-pub struct PriorityQueue<I, P, H = RandomState>
+pub struct DoublePriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
 {
     pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    heap: Vec<usize>,                  // Implements the heap of indexes
+    heap: Vec<usize>,                  // Implements the min max heap of indexes
     qp: Vec<usize>,                    // Performs the translation from the index
-    // of the map to the index of the heap
-    size: usize, // The size of the heap
+                                       // of the map to the index of the heap
+    size: usize,                       // The size of the heap
 }
 
 #[derive(Clone)]
 #[cfg(not(has_std))]
-pub struct PriorityQueue<I, P, H>
+pub struct DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
 {
     pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    heap: Vec<usize>,                  // Implements the heap of indexes
+    heap: Vec<usize>,                  // Implements the min max heap of indexes
     qp: Vec<usize>,                    // Performs the translation from the index
-    // of the map to the index of the heap
-    size: usize, // The size of the heap
+                                       // of the map to the index of the heap
+    size: usize,                       // The size of the heap
 }
 
 // do not [derive(Eq)] to loosen up trait requirements for other types and impls
-impl<I, P, H> Eq for PriorityQueue<I, P, H>
+impl<I, P, H> Eq for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -80,7 +80,7 @@ where
 {
 }
 
-impl<I, P, H> Default for PriorityQueue<I, P, H>
+impl<I, P, H> Default for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -92,51 +92,51 @@ where
 }
 
 #[cfg(has_std)]
-impl<I, P> PriorityQueue<I, P>
+impl<I, P> DoublePriorityQueue<I, P>
 where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Creates an empty `PriorityQueue`
+    /// Creates an empty `DoublePriorityQueue`
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
-    /// Creates an empty `PriorityQueue` with the specified capacity.
+    /// Creates an empty `DoublePriorityQueue` with the specified capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self::with_capacity_and_default_hasher(capacity)
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
     H: BuildHasher + Default,
 {
-    /// Creates an empty `PriorityQueue` with the default hasher
+    /// Creates an empty `DoublePriorityQueue` with the default hasher
     pub fn with_default_hasher() -> Self {
         Self::with_capacity_and_default_hasher(0)
     }
 
-    /// Creates an empty `PriorityQueue` with the specified capacity and default hasher
+    /// Creates an empty `DoublePriorityQueue` with the specified capacity and default hasher
     pub fn with_capacity_and_default_hasher(capacity: usize) -> Self {
         Self::with_capacity_and_hasher(capacity, H::default())
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
     H: BuildHasher,
 {
-    /// Creates an empty `PriorityQueue` with the specified hasher
+    /// Creates an empty `DoublePriorityQueue` with the specified hasher
     pub fn with_hasher(hash_builder: H) -> Self {
         Self::with_capacity_and_hasher(0, hash_builder)
     }
 
-    /// Creates an empty `PriorityQueue` with the specified capacity and hasher
+    /// Creates an empty `DoublePriorityQueue` with the specified capacity and hasher
     ///
     /// The internal collections will be able to hold at least `capacity`
     /// elements without reallocating.
@@ -144,8 +144,10 @@ where
     pub fn with_capacity_and_hasher(capacity: usize, hash_builder: H) -> Self {
         Self {
             map: IndexMap::with_capacity_and_hasher(capacity, hash_builder),
-            heap: Vec::with_capacity(capacity),
-            qp: Vec::with_capacity(capacity),
+            min_heap: Vec::with_capacity(capacity),
+            min_qp: Vec::with_capacity(capacity),
+	    max_heap: Vec::with_capacity(capacity),
+	    max_qp: Vec::with_capacity(capacity),
             size: 0,
         }
     }
@@ -159,7 +161,7 @@ where
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -182,11 +184,22 @@ where
     /// priority in the queue, or None if it is empty.
     ///
     /// Computes in **O(1)** time
-    pub fn peek(&self) -> Option<(&I, &P)> {
+    pub fn peek_max(&self) -> Option<(&I, &P)> {
         if self.size == 0 {
             return None;
         }
-        self.map.get_index(unsafe { *self.heap.get_unchecked(0) })
+        self.map.get_index(unsafe { *self.max_heap.get_unchecked(0) })
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_min(&self) -> Option<(&I, &P)> {
+        if self.size == 0 {
+            return None;
+        }
+        self.map.get_index(unsafe { *self.min_heap.get_unchecked(0) })
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -200,12 +213,32 @@ where
     /// `change_priority_by`.
     ///
     /// Computes in **O(1)** time
-    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
+    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
         if self.size == 0 {
             return None;
         }
         self.map
-            .get_index_mut(unsafe { *self.heap.get_unchecked(0) })
+            .get_index_mut(unsafe { *self.max_heap.get_unchecked(0) })
+            .map(|(k, v)| (k, &*v))
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
+        if self.size == 0 {
+            return None;
+        }
+        self.map
+            .get_index_mut(unsafe { *self.min_heap.get_unchecked(0) })
             .map(|(k, v)| (k, &*v))
     }
 
@@ -219,7 +252,7 @@ where
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -228,7 +261,7 @@ where
     // reserve_exact -> IndexMap does not implement reserve_exact
 
     /// Reserves capacity for at least `additional` more elements to be inserted
-    /// in the given `PriorityQueue`. The collection may reserve more space to avoid
+    /// in the given `DoublePriorityQueue`. The collection may reserve more space to avoid
     /// frequent reallocations. After calling `reserve`, capacity will be
     /// greater than or equal to `self.len() + additional`. Does nothing if
     /// capacity is already sufficient.
@@ -238,12 +271,14 @@ where
     /// Panics if the new capacity overflows `usize`.
     pub fn reserve(&mut self, additional: usize) {
         self.map.reserve(additional);
-        self.heap.reserve(additional);
-        self.qp.reserve(additional);
+        self.min_heap.reserve(additional);
+        self.min_qp.reserve(additional);
+        self.max_heap.reserve(additional);
+        self.max_qp.reserve(additional);
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -251,14 +286,31 @@ where
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
     pub fn shrink_to_fit(&mut self) {
-        self.heap.shrink_to_fit();
-        self.qp.shrink_to_fit();
+        self.min_heap.shrink_to_fit();
+        self.min_qp.shrink_to_fit();
+        self.max_heap.shrink_to_fit();
+        self.max_qp.shrink_to_fit();
     }
 
     /// Removes the item with the greatest priority from
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
-    pub fn pop(&mut self) -> Option<(I, P)> {
+    pub fn pop_max(&mut self) -> Option<(I, P)> {
+        match self.size {
+            0 => None,
+            1 => self.swap_remove(),
+            _ => {
+                let r = self.swap_remove();
+                self.heapify(0);
+                r
+            }
+        }
+    }
+
+    /// Removes the item with the lowest priority from
+    /// the priority queue and returns the pair (item, priority),
+    /// or None if the queue is empty.
+    pub fn pop_min(&mut self) -> Option<(I, P)> {
         match self.size {
             0 => None,
             1 => self.swap_remove(),
@@ -271,7 +323,7 @@ where
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -511,15 +563,26 @@ where
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Implements a HeapSort
-    pub fn into_sorted_vec(mut self) -> Vec<I> {
+    /// Implements a HeapSort. Produces a vector where the elements are sorted
+    /// from the minimum priority to the maximum priority
+    pub fn into_ascending_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.size);
-        while let Some((i, _)) = self.pop() {
+        while let Some((i, _)) = self.pop_min() {
+            res.push(i);
+        }
+        res
+    }
+
+    /// Implements a HeapSort. Produces a vector where the elements are sorted
+    /// from the maximum priority to the minimum priority
+    pub fn into_descending_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.size);
+        while let Some((i, _)) = self.pop_max() {
             res.push(i);
         }
         res
@@ -536,7 +599,7 @@ where
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -544,8 +607,10 @@ where
 {
     /// Drops all items from the priority queue
     pub fn clear(&mut self) {
-        self.heap.clear();
-        self.qp.clear();
+        self.max_heap.clear();
+        self.max_qp.clear();
+        self.min_heap.clear();
+        self.min_qp.clear();
         self.map.clear();
         self.size = 0;
     }
@@ -555,8 +620,8 @@ where
     /// At the end, `other` will be empty.
     ///
     /// **Note** that at the end, the priority of the duplicated elements
-    /// inside self may be the one of the elements in other,
-    /// if other is longer than self
+    /// inside `self` may be the one of the elements in `other`,
+    /// if `other` is longer than `self`
     pub fn append(&mut self, other: &mut Self) {
         if other.size > self.size {
             std::mem::swap(self, other);
@@ -571,18 +636,22 @@ where
             if !self.map.contains_key(&k) {
                 let i = self.size;
                 self.map.insert(k, v);
-                self.heap.push(i);
-                self.qp.push(i);
+                self.min_heap.push(i);
+                self.min_qp.push(i);
+                self.max_heap.push(i);
+                self.max_qp.push(i);
                 self.size += 1;
             }
         }
-        other.heap.clear();
-        other.qp.clear();
+        other.min_heap.clear();
+        other.min_qp.clear();
+        other.max_heap.clear();
+        other.max_qp.clear();
         self.heap_build();
     }
 }
 
-impl<I, P, H> PriorityQueue<I, P, H>
+impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
@@ -733,7 +802,7 @@ where
 
 //FIXME: fails when the vector contains repeated items
 // FIXED: repeated items ignored
-impl<I, P, H> From<Vec<(I, P)>> for PriorityQueue<I, P, H>
+impl<I, P, H> From<Vec<(I, P)>> for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -759,7 +828,7 @@ where
 //FIXME: fails when the iterator contains repeated items
 // FIXED: the item inside the pq is updated
 // so there are two functions with different behaviours.
-impl<I, P, H> FromIterator<(I, P)> for PriorityQueue<I, P, H>
+impl<I, P, H> FromIterator<(I, P)> for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -795,7 +864,7 @@ where
     }
 }
 
-impl<I, P, H> IntoIterator for PriorityQueue<I, P, H>
+impl<I, P, H> IntoIterator for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -810,7 +879,7 @@ where
     }
 }
 
-impl<'a, I, P, H> IntoIterator for &'a PriorityQueue<I, P, H>
+impl<'a, I, P, H> IntoIterator for &'a DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -825,7 +894,7 @@ where
     }
 }
 
-impl<'a, I, P, H> IntoIterator for &'a mut PriorityQueue<I, P, H>
+impl<'a, I, P, H> IntoIterator for &'a mut DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -837,7 +906,7 @@ where
     }
 }
 
-impl<I, P, H> Extend<(I, P)> for PriorityQueue<I, P, H>
+impl<I, P, H> Extend<(I, P)> for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
@@ -877,7 +946,7 @@ where
 }
 
 use std::fmt;
-impl<I, P, H> fmt::Debug for PriorityQueue<I, P, H>
+impl<I, P, H> fmt::Debug for DoublePriorityQueue<I, P, H>
 where
     I: fmt::Debug + Hash + Eq,
     P: fmt::Debug + Ord,
@@ -891,7 +960,7 @@ where
 
 use std::cmp::PartialEq;
 
-impl<I, P1, H1, P2, H2> PartialEq<PriorityQueue<I, P2, H2>> for PriorityQueue<I, P1, H1>
+impl<I, P1, H1, P2, H2> DoublePartialEq<PriorityQueue<I, P2, H2>> for DoublePriorityQueue<I, P1, H1>
 where
     I: Hash + Eq,
     P1: Ord,
@@ -901,7 +970,7 @@ where
     H1: BuildHasher,
     H2: BuildHasher,
 {
-    fn eq(&self, other: &PriorityQueue<I, P2, H2>) -> bool {
+    fn eq(&self, other: &DoublePriorityQueue<I, P2, H2>) -> bool {
         self.map == other.map
     }
 }
@@ -941,7 +1010,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use crate::pqueue::PriorityQueue;
+    use crate::pqueue::DoublePriorityQueue;
 
     use std::cmp::{Eq, Ord};
     use std::collections::hash_map::RandomState;
@@ -949,7 +1018,7 @@ mod serde {
     use std::marker::PhantomData;
 
     use serde::ser::{Serialize, SerializeSeq, Serializer};
-    impl<I, P, H> Serialize for PriorityQueue<I, P, H>
+    impl<I, P, H> Serialize for DoublePriorityQueue<I, P, H>
     where
         I: Hash + Eq + Serialize,
         P: Ord + Serialize,
@@ -968,13 +1037,13 @@ mod serde {
     }
 
     use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
-    impl<'de, I, P, H> Deserialize<'de> for PriorityQueue<I, P, H>
+    impl<'de, I, P, H> Deserialize<'de> for DoublePriorityQueue<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
         P: Ord + Deserialize<'de>,
         H: BuildHasher + Default,
     {
-        fn deserialize<D>(deserializer: D) -> Result<PriorityQueue<I, P, H>, D::Error>
+        fn deserialize<D>(deserializer: D) -> Result<DoublePriorityQueue<I, P, H>, D::Error>
         where
             D: Deserializer<'de>,
         {
@@ -989,7 +1058,7 @@ mod serde {
         I: Hash + Eq,
         P: Ord,
     {
-        marker: PhantomData<PriorityQueue<I, P, H>>,
+        marker: PhantomData<DoublePriorityQueue<I, P, H>>,
     }
     impl<'de, I, P, H> Visitor<'de> for PQVisitor<I, P, H>
     where
@@ -997,30 +1066,32 @@ mod serde {
         P: Ord + Deserialize<'de>,
         H: BuildHasher + Default,
     {
-        type Value = PriorityQueue<I, P, H>;
+        type Value = DoublePriorityQueue<I, P, H>;
 
         fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
             write!(formatter, "A priority queue")
         }
 
         fn visit_unit<E>(self) -> Result<Self::Value, E> {
-            Ok(PriorityQueue::with_default_hasher())
+            Ok(DoublePriorityQueue::with_default_hasher())
         }
 
         fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
         where
             A: SeqAccess<'de>,
         {
-            let mut pq: PriorityQueue<I, P, H> = if let Some(size) = seq.size_hint() {
-                PriorityQueue::with_capacity_and_default_hasher(size)
+            let mut pq: DoublePriorityQueue<I, P, H> = if let Some(size) = seq.size_hint() {
+                DoublePriorityQueue::with_capacity_and_default_hasher(size)
             } else {
-                PriorityQueue::with_default_hasher()
+                DoublePriorityQueue::with_default_hasher()
             };
 
             while let Some((item, priority)) = seq.next_element()? {
                 pq.map.insert(item, priority);
-                pq.qp.push(pq.size);
-                pq.heap.push(pq.size);
+                pq.min_qp.push(pq.size);
+                pq.min_heap.push(pq.size);
+                pq.max_qp.push(pq.size);
+                pq.max_heap.push(pq.size);
                 pq.size += 1;
             }
             pq.heap_build();

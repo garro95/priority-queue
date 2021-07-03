@@ -36,26 +36,8 @@ use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
 
-use crate::pqueue::PriorityQueue;
-
-pub struct Iter<'a, I: 'a, P: 'a>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
-    pub(crate) iter: ::indexmap::map::Iter<'a, I, P>,
-}
-
-impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
-    type Item = (&'a I, &'a P);
-    fn next(&mut self) -> Option<(&'a I, &'a P)> {
-        self.iter.next()
-    }
-}
+use crate::PriorityQueue;
+use crate::store::Store;
 
 #[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
@@ -96,6 +78,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let r: Option<(&'a mut I, &'a mut P)> = self
             .pq
+            .store
             .map
             .get_index_mut(self.pos)
             .map(|(i, p)| (i as *mut I, p as *mut P))
@@ -112,25 +95,6 @@ where
 {
     fn drop(&mut self) {
         self.pq.heap_build();
-    }
-}
-
-pub struct IntoIter<I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
-    pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
-}
-
-impl<I, P> Iterator for IntoIter<I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
-    type Item = (I, P);
-    fn next(&mut self) -> Option<(I, P)> {
-        self.iter.next()
     }
 }
 
