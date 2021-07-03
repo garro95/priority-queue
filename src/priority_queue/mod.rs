@@ -983,7 +983,13 @@ mod serde {
         where
             D: Deserializer<'de>,
         {
-	    Store::deserialize(deserializer).map(|store| PriorityQueue{ store })
+	    Store::deserialize(deserializer)
+		.map(|store| {
+		    let mut pq = PriorityQueue{ store };
+		    pq.heap_build();
+		    pq
+		})
+		
         }
     }
 }
