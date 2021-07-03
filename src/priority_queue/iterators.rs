@@ -37,7 +37,6 @@ use std::hash::Hash;
 use std::iter::*;
 
 use crate::PriorityQueue;
-use crate::store::Store;
 
 #[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>

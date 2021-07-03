@@ -29,8 +29,7 @@ use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
-use std::mem::{replace, swap};
+use std::iter::{FromIterator, IntoIterator, Iterator};
 
 use indexmap::map::{IndexMap, MutableKeys};
 

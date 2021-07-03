@@ -36,7 +36,7 @@ use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::{replace, swap};
 
-use indexmap::map::{IndexMap, MutableKeys};
+use indexmap::map::MutableKeys;
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
