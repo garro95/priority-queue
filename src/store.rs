@@ -345,6 +345,40 @@ where
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
+    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P, usize)>
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash,
+    {
+	self.map.swap_remove_full(item).map(|(i, item, priority)| {
+            self.size -= 1;
+
+            let pos = self.qp.swap_remove(i);
+            self.heap.swap_remove(pos);
+            if i < self.size {
+                unsafe {
+                    let qpi = self.qp.get_unchecked_mut(i);
+                    if *qpi == self.size {
+                        *qpi = pos;
+                    } else {
+                        *self.heap.get_unchecked_mut(*qpi) = i;
+                    }
+                }
+            }
+            if pos < self.size {
+                unsafe {
+                    let heap_pos = self.heap.get_unchecked_mut(pos);
+                    if *heap_pos == self.size {
+                        *heap_pos = i;
+                    } else {
+                        *self.qp.get_unchecked_mut(*heap_pos) = pos;
+                    }
+                }
+            }
+	    (item, priority, pos)
+	})
+    }
+
     /// Returns the items not ordered
     pub fn into_vec(self) -> Vec<I> {
         self.map.into_iter().map(|(i, _)| i).collect()

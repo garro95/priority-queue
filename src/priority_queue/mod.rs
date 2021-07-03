@@ -466,36 +466,13 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        let element = self.store.map.swap_remove_full(item);
-        if let Some((i, _, _)) = element {
-            self.store.size -= 1;
+	self.store.remove(item).map(|(item, priority, pos)| {
+	    if pos < self.store.size {
+		self.up_heapify(pos);
+	    }
 
-            let pos = self.store.qp.swap_remove(i);
-            self.store.heap.swap_remove(pos);
-            if i < self.store.size {
-                unsafe {
-                    let qpi = self.store.qp.get_unchecked_mut(i);
-                    if *qpi == self.store.size {
-                        *qpi = pos;
-                    } else {
-                        *self.store.heap.get_unchecked_mut(*qpi) = i;
-                    }
-                }
-            }
-            if pos < self.store.size {
-                unsafe {
-                    let heap_pos = self.store.heap.get_unchecked_mut(pos);
-                    if *heap_pos == self.store.size {
-                        *heap_pos = i;
-                    } else {
-                        *self.store.qp.get_unchecked_mut(*heap_pos) = pos;
-                    }
-                }
-                self.up_heapify(pos);
-            }
-        }
-
-        element.map(|(_, i, p)| (i, p))
+	    (item, priority)
+	})
     }
 
     /// Returns the items not ordered
