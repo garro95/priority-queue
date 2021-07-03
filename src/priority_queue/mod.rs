@@ -36,8 +36,6 @@ use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::{replace, swap};
 
-use indexmap::map::MutableKeys;
-
 /// A priority queue with efficient change function to change the priority of an
 /// element.
 ///
@@ -253,9 +251,9 @@ where
     pub fn pop(&mut self) -> Option<(I, P)> {
         match self.store.size {
             0 => None,
-            1 => self.swap_remove(),
+            1 => self.store.swap_remove(0),
             _ => {
-                let r = self.swap_remove();
+                let r = self.store.swap_remove(0);
                 self.heapify(0);
                 r
             }
@@ -588,53 +586,6 @@ where
     /**************************************************************************/
     /*                            internal functions                          */
 
-    /// Remove and return the element with the max priority
-    /// and swap it with the last element keeping a consistent
-    /// state.
-    ///
-    /// Computes in **O(1)** time (average)
-    fn swap_remove(&mut self) -> Option<(I, P)> {
-        // swap_remove the head
-        let head = self.store.heap.swap_remove(0);
-        self.store.size -= 1;
-        // swap remove the old heap from the qp
-        if self.store.size == 0 {
-            self.store.qp.pop();
-            return self.store.map.swap_remove_index(head);
-        }
-        unsafe {
-            *self
-                .store
-                .qp
-                .get_unchecked_mut(*self.store.heap.get_unchecked(0)) = 0;
-        }
-        self.store.qp.swap_remove(head);
-        if head < self.store.size {
-            unsafe {
-                *self
-                    .store
-                    .heap
-                    .get_unchecked_mut(*self.store.qp.get_unchecked(head)) = head;
-            }
-        }
-        // swap remove from the map and return to the client
-        self.store.map.swap_remove_index(head)
-    }
-
-    /// Swap two elements keeping a consistent state.
-    ///
-    /// Computes in **O(1)** time
-    fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe {
-            (
-                *self.store.heap.get_unchecked(a),
-                *self.store.heap.get_unchecked(b),
-            )
-        };
-        self.store.heap.swap(a, b);
-        self.store.qp.swap(i, j);
-    }
-
     /// Internal function that restores the functional property of the sub-heap rooted in `i`
     ///
     /// Computes in **O(log(N))** time
@@ -678,7 +629,7 @@ where
         }
 
         while largest != i {
-            self.swap(i, largest);
+            self.store.swap(i, largest);
 
             i = largest;
             l = left(i);
@@ -850,27 +801,18 @@ where
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
-        let mut rebuild = false;
-        if let Some(max) = max {
-            self.reserve(max);
-            rebuild = better_to_rebuild(self.store.size, max);
-        } else if min != 0 {
-            self.reserve(min);
-            rebuild = better_to_rebuild(self.store.size, min);
-        }
+        let rebuild =
+            if let Some(max) = max {
+		self.reserve(max);
+		better_to_rebuild(self.store.size, max)
+            } else if min != 0 {
+		self.reserve(min);
+		better_to_rebuild(self.store.size, min)
+            } else {
+		false
+	    };
         if rebuild {
-            for (item, priority) in iter {
-                if self.store.map.contains_key(&item) {
-                    let (_, old_item, old_priority) = self.store.map.get_full_mut2(&item).unwrap();
-                    *old_item = item;
-                    *old_priority = priority;
-                } else {
-                    self.store.map.insert(item, priority);
-                    self.store.qp.push(self.store.size);
-                    self.store.heap.push(self.store.size);
-                    self.store.size += 1;
-                }
-            }
+	    self.store.extend(iter);
             self.heap_build();
         } else {
             for (item, priority) in iter {

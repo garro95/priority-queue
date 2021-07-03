@@ -218,6 +218,51 @@ where
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
+
+    /// Swap two elements keeping a consistent state.
+    ///
+    /// Computes in **O(1)** time
+    pub fn swap(&mut self, a: usize, b: usize) {
+        let (i, j) = unsafe {
+            (
+                *self.heap.get_unchecked(a),
+                *self.heap.get_unchecked(b),
+            )
+        };
+        self.heap.swap(a, b);
+        self.qp.swap(i, j);
+    }
+    
+    /// Remove and return the element with the max priority
+    /// and swap it with the last element keeping a consistent
+    /// state.
+    ///
+    /// Computes in **O(1)** time (average)
+    pub fn swap_remove(&mut self, index: usize) -> Option<(I, P)> {
+        // swap_remove the head
+        let head = self.heap.swap_remove(index);
+        self.size -= 1;
+        // swap remove the old heap head from the qp
+        if self.size == 0 {
+            self.qp.pop();
+            return self.map.swap_remove_index(head);
+        }
+        unsafe {
+            *self
+                .qp
+                .get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
+        }
+        self.qp.swap_remove(head);
+        if head < self.size {
+            unsafe {
+                *self
+                    .heap
+                    .get_unchecked_mut(*self.qp.get_unchecked(head)) = head;
+            }
+        }
+        // swap remove from the map and return to the client
+        self.map.swap_remove_index(head)
+    }
 }
 
 impl<I, P, H> Store<I, P, H>
@@ -377,6 +422,28 @@ where
             }
         }
         store
+    }
+}
+
+impl<I, P, H> Extend<(I, P)> for Store<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+    H: BuildHasher,
+{
+    fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
+            for (item, priority) in iter {
+                if self.map.contains_key(&item) {
+                    let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
+                    *old_item = item;
+                    *old_priority = priority;
+                } else {
+                    self.map.insert(item, priority);
+                    self.qp.push(self.size);
+                    self.heap.push(self.size);
+                    self.size += 1;
+                }
+            }
     }
 }
 
