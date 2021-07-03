@@ -358,6 +358,13 @@ where
         self.size = 0;
     }
 
+    /// Move all items of the `other` queue to `self`
+    /// ignoring the items Eq to elements already in `self`
+    /// At the end, `other` will be empty.
+    ///
+    /// **Note** that at the end, the priority of the duplicated elements
+    /// inside self may be the one of the elements in other,
+    /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
         if other.size > self.size {
             std::mem::swap(self, other);

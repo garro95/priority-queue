@@ -209,6 +209,53 @@ where
     pub fn capacity(&self) -> usize {
         self.store.capacity()
     }
+
+    /// Shrinks the capacity of the internal data structures
+    /// that support this operation as much as possible.
+    pub fn shrink_to_fit(&mut self) {
+        self.store.shrink_to_fit();
+    }
+
+    /// Removes the item with the greatest priority from
+    /// the priority queue and returns the pair (item, priority),
+    /// or None if the queue is empty.
+    pub fn pop(&mut self) -> Option<(I, P)> {
+        match self.store.size {
+            0 => None,
+            1 => self.store.swap_remove(0),
+            _ => {
+                let r = self.store.swap_remove(0);
+                self.heapify(0);
+                r
+            }
+        }
+    }
+
+    /// Implements a HeapSort
+    pub fn into_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.store.size);
+        while let Some((i, _)) = self.pop() {
+            res.push(i);
+        }
+        res
+    }
+
+    /// Returns the number of elements in the priority queue.
+    pub fn len(&self) -> usize {
+        self.store.len()
+    }
+
+    /// Returns true if the priority queue contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.store.is_empty()
+    }
+
+    /// Generates a new iterator from self that
+    /// will extract the elements from the one with the highest priority
+    /// to the lowest one.
+    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
+        IntoSortedIter { pq: self }
+    }
 }
 
 impl<I, P, H> PriorityQueue<I, P, H>
@@ -231,41 +278,7 @@ where
     pub fn reserve(&mut self, additional: usize) {
         self.store.reserve(additional);
     }
-}
 
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Shrinks the capacity of the internal data structures
-    /// that support this operation as much as possible.
-    pub fn shrink_to_fit(&mut self) {
-        self.store.shrink_to_fit();
-    }
-
-    /// Removes the item with the greatest priority from
-    /// the priority queue and returns the pair (item, priority),
-    /// or None if the queue is empty.
-    pub fn pop(&mut self) -> Option<(I, P)> {
-        match self.store.size {
-            0 => None,
-            1 => self.store.swap_remove(0),
-            _ => {
-                let r = self.store.swap_remove(0);
-                self.heapify(0);
-                r
-            }
-        }
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-    H: BuildHasher,
-{
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` was already into the queue,
@@ -489,39 +502,7 @@ where
     pub fn into_vec(self) -> Vec<I> {
         self.store.into_vec()
     }
-}
 
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Implements a HeapSort
-    pub fn into_sorted_vec(mut self) -> Vec<I> {
-        let mut res = Vec::with_capacity(self.store.size);
-        while let Some((i, _)) = self.pop() {
-            res.push(i);
-        }
-        res
-    }
-
-    /// Returns the number of elements in the priority queue.
-    pub fn len(&self) -> usize {
-        self.store.len()
-    }
-
-    /// Returns true if the priority queue contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.store.is_empty()
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-    H: BuildHasher,
-{
     /// Drops all items from the priority queue
     pub fn clear(&mut self) {
         self.store.clear();
@@ -545,12 +526,13 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Generates a new iterator from self that
-    /// will extract the elements from the one with the highest priority
-    /// to the lowest one.
-    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
-        IntoSortedIter { pq: self }
-    }
+}
+
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /**************************************************************************/
     /*                            internal functions                          */
 
