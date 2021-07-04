@@ -122,6 +122,16 @@ where
 {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
-        self.pq.pop()
+        self.pq.pop_min()
+    }
+}
+
+impl<I, P, H> DoubleEndedIterator for IntoSortedIter<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    fn next_back(&mut self) -> Option<(I, P)> {
+        self.pq.pop_max()
     }
 }
