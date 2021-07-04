@@ -84,10 +84,11 @@ pub(crate) mod std {
 #[macro_use]
 extern crate serde_derive;
 pub mod core_iterators;
+pub mod double_priority_queue;
 pub mod priority_queue;
-// pub mod double_priority_queue;
 mod store;
 
+pub use crate::double_priority_queue::DoublePriorityQueue;
 pub use crate::priority_queue::PriorityQueue;
 
 #[cfg(test)]
