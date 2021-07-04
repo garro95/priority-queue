@@ -314,15 +314,7 @@ where
         // from the leaf go up to root or until an element with priority greater
         // than the new element is found
         unsafe {
-            while (i > 0)
-                && (self
-                    .store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(parent(i)))
-                    .unwrap()
-                    .1
-                    < &priority)
-            {
+            while (i > 0) && (self.store.get_priority_from_heap_index(parent(i)) < &priority) {
                 *self.store.heap.get_unchecked_mut(i) = *self.store.heap.get_unchecked(parent(i));
                 *self
                     .store
@@ -396,12 +388,12 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-	if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
-	    self.up_heapify(pos);
-	    Some(r)
-	} else {
-	    None
-	}
+        if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
+            self.up_heapify(pos);
+            Some(r)
+        } else {
+            None
+        }
     }
 
     /// Change the priority of an Item using the provided function.
@@ -464,13 +456,13 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-	self.store.remove(item).map(|(item, priority, pos)| {
-	    if pos < self.store.size {
-		self.up_heapify(pos);
-	    }
+        self.store.remove(item).map(|(item, priority, pos)| {
+            if pos < self.store.size {
+                self.up_heapify(pos);
+            }
 
-	    (item, priority)
-	})
+            (item, priority)
+        })
     }
 
     /// Returns the items not ordered
@@ -491,7 +483,7 @@ where
     /// inside self may be the one of the elements in other,
     /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
-	self.store.append(&mut other.store);
+        self.store.append(&mut other.store);
         self.heap_build();
     }
 }
@@ -518,17 +510,8 @@ where
         let (mut l, mut r) = (left(i), right(i));
         let mut largest = if l < self.store.size
             && unsafe {
-                self.store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(l))
-                    .unwrap()
-                    .1
-                    > self
-                        .store
-                        .map
-                        .get_index(*self.store.heap.get_unchecked(i))
-                        .unwrap()
-                        .1
+                self.store.get_priority_from_heap_index(l)
+                    > self.store.get_priority_from_heap_index(i)
             } {
             l
         } else {
@@ -537,17 +520,8 @@ where
 
         if r < self.store.size
             && unsafe {
-                self.store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(r))
-                    .unwrap()
-                    .1
-                    > self
-                        .store
-                        .map
-                        .get_index(*self.store.heap.get_unchecked(largest))
-                        .unwrap()
-                        .1
+                self.store.get_priority_from_heap_index(r)
+                    > self.store.get_priority_from_heap_index(largest)
             }
         {
             largest = r;
@@ -561,17 +535,8 @@ where
             r = right(i);
             if l < self.store.size
                 && unsafe {
-                    self.store
-                        .map
-                        .get_index(*self.store.heap.get_unchecked(l))
-                        .unwrap()
-                        .1
-                        > self
-                            .store
-                            .map
-                            .get_index(*self.store.heap.get_unchecked(i))
-                            .unwrap()
-                            .1
+                    self.store.get_priority_from_heap_index(l)
+                        > self.store.get_priority_from_heap_index(i)
                 }
             {
                 largest = l;
@@ -580,17 +545,8 @@ where
             }
             if r < self.store.size
                 && unsafe {
-                    self.store
-                        .map
-                        .get_index(*self.store.heap.get_unchecked(r))
-                        .unwrap()
-                        .1
-                        > self
-                            .store
-                            .map
-                            .get_index(*self.store.heap.get_unchecked(largest))
-                            .unwrap()
-                            .1
+                    self.store.get_priority_from_heap_index(r)
+                        > self.store.get_priority_from_heap_index(largest)
                 }
             {
                 largest = r;
@@ -607,12 +563,7 @@ where
         unsafe {
             let tmp = *self.store.heap.get_unchecked(pos);
             while (pos > 0)
-                && (self
-                    .store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(parent(pos)))
-                    .unwrap()
-                    .1
+                && (self.store.get_priority_from_heap_index(parent(pos))
                     < self.store.map.get_index(tmp).unwrap().1)
             {
                 *self.store.heap.get_unchecked_mut(pos) =
@@ -726,18 +677,17 @@ where
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
-        let rebuild =
-            if let Some(max) = max {
-		self.reserve(max);
-		better_to_rebuild(self.store.size, max)
-            } else if min != 0 {
-		self.reserve(min);
-		better_to_rebuild(self.store.size, min)
-            } else {
-		false
-	    };
+        let rebuild = if let Some(max) = max {
+            self.reserve(max);
+            better_to_rebuild(self.store.size, max)
+        } else if min != 0 {
+            self.reserve(min);
+            better_to_rebuild(self.store.size, min)
+        } else {
+            false
+        };
         if rebuild {
-	    self.store.extend(iter);
+            self.store.extend(iter);
             self.heap_build();
         } else {
             for (item, priority) in iter {
@@ -802,8 +752,8 @@ mod serde {
     use std::cmp::{Eq, Ord};
     use std::hash::{BuildHasher, Hash};
 
-    use serde::ser::{Serialize, Serializer};
     use serde::de::{Deserialize, Deserializer};
+    use serde::ser::{Serialize, Serializer};
 
     use super::PriorityQueue;
     use crate::store::Store;
@@ -832,13 +782,11 @@ mod serde {
         where
             D: Deserializer<'de>,
         {
-	    Store::deserialize(deserializer)
-		.map(|store| {
-		    let mut pq = PriorityQueue{ store };
-		    pq.heap_build();
-		    pq
-		})
-		
+            Store::deserialize(deserializer).map(|store| {
+                let mut pq = PriorityQueue { store };
+                pq.heap_build();
+                pq
+            })
         }
     }
 }

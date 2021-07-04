@@ -224,16 +224,11 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe {
-            (
-                *self.heap.get_unchecked(a),
-                *self.heap.get_unchecked(b),
-            )
-        };
+        let (i, j) = unsafe { (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
         self.heap.swap(a, b);
         self.qp.swap(i, j);
     }
-    
+
     /// Remove and return the element with the max priority
     /// and swap it with the last element keeping a consistent
     /// state.
@@ -249,20 +244,23 @@ where
             return self.map.swap_remove_index(head);
         }
         unsafe {
-            *self
-                .qp
-                .get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
+            *self.qp.get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
         }
         self.qp.swap_remove(head);
         if head < self.size {
             unsafe {
-                *self
-                    .heap
-                    .get_unchecked_mut(*self.qp.get_unchecked(head)) = head;
+                *self.heap.get_unchecked_mut(*self.qp.get_unchecked(head)) = head;
             }
         }
         // swap remove from the map and return to the client
         self.map.swap_remove_index(head)
+    }
+
+    pub unsafe fn get_priority_from_heap_index(&self, index: usize) -> &P {
+        self.map
+            .get_index(*self.heap.get_unchecked(index))
+            .unwrap()
+            .1
     }
 }
 
@@ -280,33 +278,41 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, mut new_priority: P) -> Option<(P, usize)>
+    pub fn change_priority<Q: ?Sized>(
+        &mut self,
+        item: &Q,
+        mut new_priority: P,
+    ) -> Option<(P, usize)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-	let Store{map, qp, ..} = self;
-	map.get_full_mut(item).map(|(index, _, p)| {
+        let Store { map, qp, .. } = self;
+        map.get_full_mut(item).map(|(index, _, p)| {
             swap(p, &mut new_priority);
             let pos = unsafe { *qp.get_unchecked(index) };
             (new_priority, pos)
-	})
+        })
     }
 
     /// Change the priority of an Item using the provided function.
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F) -> Option<usize>
+    pub fn change_priority_by<Q: ?Sized, F>(
+        &mut self,
+        item: &Q,
+        priority_setter: F,
+    ) -> Option<usize>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
         F: FnOnce(&mut P),
     {
-	let Store{map, qp, ..} = self;
-	map.get_full_mut(item).map(|(index, _, mut p)| {
+        let Store { map, qp, .. } = self;
+        map.get_full_mut(item).map(|(index, _, mut p)| {
             priority_setter(&mut p);
-	    unsafe { *qp.get_unchecked(index) }
-	})
+            unsafe { *qp.get_unchecked(index) }
+        })
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
@@ -350,7 +356,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-	self.map.swap_remove_full(item).map(|(i, item, priority)| {
+        self.map.swap_remove_full(item).map(|(i, item, priority)| {
             self.size -= 1;
 
             let pos = self.qp.swap_remove(i);
@@ -375,8 +381,8 @@ where
                     }
                 }
             }
-	    (item, priority, pos)
-	})
+            (item, priority, pos)
+        })
     }
 
     /// Returns the items not ordered
@@ -533,18 +539,18 @@ where
     H: BuildHasher,
 {
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
-            for (item, priority) in iter {
-                if self.map.contains_key(&item) {
-                    let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
-                    *old_item = item;
-                    *old_priority = priority;
-                } else {
-                    self.map.insert(item, priority);
-                    self.qp.push(self.size);
-                    self.heap.push(self.size);
-                    self.size += 1;
-                }
+        for (item, priority) in iter {
+            if self.map.contains_key(&item) {
+                let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
+                *old_item = item;
+                *old_priority = priority;
+            } else {
+                self.map.insert(item, priority);
+                self.qp.push(self.size);
+                self.heap.push(self.size);
+                self.size += 1;
             }
+        }
     }
 }
 
@@ -556,12 +562,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
-            .entries(
-                self
-                    .heap
-                    .iter()
-                    .map(|&i| self.map.get_index(i).unwrap()),
-            )
+            .entries(self.heap.iter().map(|&i| self.map.get_index(i).unwrap()))
             .finish()
     }
 }
