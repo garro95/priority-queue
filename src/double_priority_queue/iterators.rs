@@ -36,7 +36,7 @@ use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
 
-use crate::PriorityQueue;
+use crate::DoublePriorityQueue;
 
 #[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
@@ -44,7 +44,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pq: &'a mut PriorityQueue<I, P, H>,
+    pq: &'a mut DoublePriorityQueue<I, P, H>,
     pos: usize,
 }
 
@@ -54,7 +54,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pq: &'a mut PriorityQueue<I, P, H>,
+    pq: &'a mut DoublePriorityQueue<I, P, H>,
     pos: usize,
 }
 
@@ -63,7 +63,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
+    pub(crate) fn new(pq: &'a mut DoublePriorityQueue<I, P, H>) -> Self {
         IterMut { pq, pos: 0 }
     }
 }
@@ -103,7 +103,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) pq: PriorityQueue<I, P, H>,
+    pub(crate) pq: DoublePriorityQueue<I, P, H>,
 }
 
 #[cfg(not(has_std))]
@@ -112,7 +112,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) pq: PriorityQueue<I, P, H>,
+    pub(crate) pq: DoublePriorityQueue<I, P, H>,
 }
 
 impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
