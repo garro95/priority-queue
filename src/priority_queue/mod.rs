@@ -17,13 +17,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-mod iterators;
+pub mod iterators;
 
 #[cfg(not(has_std))]
 use std::vec::Vec;
 
-// an improvement in terms of complexity would be to use a bare HashMap
-// as vec instead of the IndexMap
 use crate::core_iterators::{IntoIter, Iter};
 use crate::store::Store;
 use iterators::*;
