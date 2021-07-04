@@ -303,30 +303,12 @@ where
             self.up_heapify(pos);
             return oldp;
         }
-        // get a reference to the priority
-        let priority = self.store.map.get_index(self.store.size).unwrap().1;
         // copy the actual size of the heap
-        let mut i = self.store.size;
-        let k = i;
+        let i = self.store.size;
         // add the new element in the qp vector as the last in the heap
         self.store.qp.push(i);
         self.store.heap.push(0);
-        // from the leaf go up to root or until an element with priority greater
-        // than the new element is found
-        unsafe {
-            while (i > 0) && (self.store.get_priority_from_heap_index(parent(i)) < &priority) {
-                *self.store.heap.get_unchecked_mut(i) = *self.store.heap.get_unchecked(parent(i));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(i)) = i;
-                i = parent(i);
-            }
-            // put the new element into the heap and
-            // update the qp translation table and the size
-            *self.store.heap.get_unchecked_mut(i) = k;
-            *self.store.qp.get_unchecked_mut(k) = i;
-        }
+        self.bubble_up(i, i);
         self.store.size += 1;
         None
     }
@@ -554,29 +536,35 @@ where
         }
     }
 
+    /// from the leaf go up to root or until an element with priority greater
+    /// than the new element is found
+    fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
+        unsafe {
+            while (position > 0)
+                && (self.store.get_priority_from_heap_index(parent(position))
+                    < self.store.map.get_index(map_position).unwrap().1)
+            {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(position));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                position = parent(position);
+            }
+            *self.store.heap.get_unchecked_mut(position) = map_position;
+            *self.store.qp.get_unchecked_mut(map_position) = position;
+        }
+	position
+    }
+
     /// Internal function that moves a leaf in position `i` to its correct place in the heap
     /// and restores the functional property
     ///
     /// Computes in **O(log(N))**
     fn up_heapify(&mut self, i: usize) {
-        let mut pos = i;
-        unsafe {
-            let tmp = *self.store.heap.get_unchecked(pos);
-            while (pos > 0)
-                && (self.store.get_priority_from_heap_index(parent(pos))
-                    < self.store.map.get_index(tmp).unwrap().1)
-            {
-                *self.store.heap.get_unchecked_mut(pos) =
-                    *self.store.heap.get_unchecked(parent(pos));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(pos)) = pos;
-                pos = parent(pos);
-            }
-            *self.store.heap.get_unchecked_mut(pos) = tmp;
-            *self.store.qp.get_unchecked_mut(tmp) = pos;
-        }
+	let tmp = unsafe {*self.store.heap.get_unchecked(i)};
+        let pos = self.bubble_up(i, tmp);
         self.heapify(pos)
     }
 
