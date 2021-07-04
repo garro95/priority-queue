@@ -35,6 +35,8 @@ use std::mem::{replace, swap};
 
 use indexmap::map::{IndexMap, MutableKeys};
 
+pub mod iterators;
+
 /// A priority queue with efficient change function to change the priority of an
 /// element.
 ///
