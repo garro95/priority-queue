@@ -165,7 +165,7 @@ where
         IterMut::new(self)
     }
 
-    /// Returns the couple (item, priority) with the greatest
+    /// Returns the couple (item, priority) with the lowest
     /// priority in the queue, or None if it is empty.
     ///
     /// Computes in **O(1)** time
@@ -176,6 +176,24 @@ where
         self.store
             .map
             .get_index(unsafe { *self.store.heap.get_unchecked(0) })
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_max(&self) -> Option<(&I, &P)> {
+	match self.store.size {
+	    0 => None,
+	    1 => self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(0) }),
+	    2 => self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(1) }),
+	    _ => {
+		let i = *[1, 2].iter()
+		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
+		    .unwrap();
+		self.store.map.get_index(i)
+	    }
+        }
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -197,6 +215,31 @@ where
             .map
             .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) })
             .map(|(k, v)| (k, &*v))
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
+	match self.store.size {
+	    0 => None,
+	    1 => self.store.map.get_index_mut(unsafe { *self.store.heap.get_unchecked(0) }),
+	    2 => self.store.map.get_index_mut(unsafe { *self.store.heap.get_unchecked(1) }),
+	    _ => {
+		let i = *[1, 2].iter()
+		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
+		    .unwrap();
+		self.store.map.get_index_mut(i)
+	    }
+        }.map(|(k, v)| (k, &*v))
     }
 
     /// Returns the number of elements the internal map can hold without
