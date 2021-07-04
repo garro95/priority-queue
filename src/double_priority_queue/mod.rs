@@ -564,7 +564,7 @@ where
         }
     }
 
-    fn max_heapify(&mut self, i: usize) {
+    fn max_heapify(&mut self, mut i: usize) {
         while i <= self.store.size / 2 {
             let m = i;
 
