@@ -169,7 +169,7 @@ where
     /// priority in the queue, or None if it is empty.
     ///
     /// Computes in **O(1)** time
-    pub fn peek(&self) -> Option<(&I, &P)> {
+    pub fn peek_min(&self) -> Option<(&I, &P)> {
         if self.store.size == 0 {
             return None;
         }
@@ -189,7 +189,7 @@ where
     /// `change_priority_by`.
     ///
     /// Computes in **O(1)** time
-    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
+    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
         if self.store.size == 0 {
             return None;
         }
@@ -217,7 +217,7 @@ where
     /// Removes the item with the greatest priority from
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
-    pub fn pop(&mut self) -> Option<(I, P)> {
+    pub fn pop_min(&mut self) -> Option<(I, P)> {
         match self.store.size {
             0 => None,
             1 => self.store.swap_remove(0),
@@ -229,10 +229,38 @@ where
         }
     }
 
+    /// Removes the item with the greatest priority from
+    /// the priority queue and returns the pair (item, priority),
+    /// or None if the queue is empty.
+    pub fn pop_max(&mut self) -> Option<(I, P)> {
+        match self.store.size {
+            0 => None,
+            1 => self.store.swap_remove(0),
+	    2 => self.store.swap_remove(1),
+            _ => {
+		let i = *[1, 2].iter()
+		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
+		    .unwrap();
+                let r = self.store.swap_remove(i);
+                self.heapify(i);
+                r
+            }
+        }
+    }
+
     /// Implements a HeapSort
-    pub fn into_sorted_vec(mut self) -> Vec<I> {
+    pub fn into_ascending_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.store.size);
-        while let Some((i, _)) = self.pop() {
+        while let Some((i, _)) = self.pop_min() {
+            res.push(i);
+        }
+        res
+    }
+
+    /// Implements a HeapSort
+    pub fn into_descending_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.store.size);
+        while let Some((i, _)) = self.pop_max() {
             res.push(i);
         }
         res
@@ -513,13 +541,13 @@ where
 
     fn heapify(&mut self, i: usize) {
         if level(i) % 2 == 0 {
-            self.min_heapify(i)
+            self.heapify_min(i)
         } else {
-            self.max_heapify(i)
+            self.heapify_max(i)
         }
     }
 
-    fn min_heapify(&mut self, mut i: usize) {
+    fn heapify_min(&mut self, mut i: usize) {
         while i <= self.store.size / 2 {
             let m = i;
 
@@ -564,7 +592,7 @@ where
         }
     }
 
-    fn max_heapify(&mut self, mut i: usize) {
+    fn heapify_max(&mut self, mut i: usize) {
         while i <= self.store.size / 2 {
             let m = i;
 
@@ -609,35 +637,39 @@ where
         }
     }
 
-    /// Internal function that moves a leaf in position `i` to its correct place in the heap
-    /// and restores the functional property
-    ///
-    /// Computes in **O(log(N))**
     fn up_heapify(&mut self, i: usize) {
-        let mut pos = i;
-        unsafe {
-            let tmp = *self.store.heap.get_unchecked(pos);
-            while (pos > 0)
-                && (self
-                    .store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(parent(pos)))
-                    .unwrap()
-                    .1
-                    < self.store.map.get_index(tmp).unwrap().1)
-            {
-                *self.store.heap.get_unchecked_mut(pos) =
-                    *self.store.heap.get_unchecked(parent(pos));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(pos)) = pos;
-                pos = parent(pos);
-            }
-            *self.store.heap.get_unchecked_mut(pos) = tmp;
-            *self.store.qp.get_unchecked_mut(tmp) = pos;
+	if i == 0 {
+	    return
+	}
+        if level(i) % 2 == 0 {
+	    if unsafe {self.store.get_priority_from_heap_index(i) > self.store.get_priority_from_heap_index(parent(i))} {
+		self.store.swap(i, parent(i));
+		self.up_heapify_max(parent(i));
+	    } else {
+		self.up_heapify_min(i);
+	    }
+        } else {
+	    if unsafe {self.store.get_priority_from_heap_index(i) < self.store.get_priority_from_heap_index(parent(i))} {
+		self.store.swap(i, parent(i));
+		self.up_heapify_min(parent(i));
+	    } else {
+		self.up_heapify_max(i);
+	    }
         }
-        self.heapify(pos)
+    }
+
+    fn up_heapify_min(&mut self, mut i: usize) {
+	while i >= left(left(0)) && unsafe { self.store.get_priority_from_heap_index(i) < self.store.get_priority_from_heap_index(parent(parent(i))) } {
+	    self.store.swap(i, parent(parent(i)));
+	    i = parent(parent(i));
+	}
+    }
+
+    fn up_heapify_max(&mut self, mut i: usize) {
+	while i >= left(left(0)) && unsafe { self.store.get_priority_from_heap_index(i) > self.store.get_priority_from_heap_index(parent(parent(i))) } {
+	    self.store.swap(i, parent(parent(i)));
+	    i = parent(parent(i));
+	}
     }
 
     /// Internal function that transform the `heap`
