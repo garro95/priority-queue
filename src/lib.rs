@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Gianmarco Garrisi
+ *  Copyright 2017 Gianmarco Garrisi and contributors
  *
  *
  *  This program is free software: you can redistribute it and/or modify

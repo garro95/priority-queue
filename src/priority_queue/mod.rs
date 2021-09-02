@@ -303,7 +303,7 @@ where
             self.up_heapify(pos);
             return oldp;
         }
-        // copy the actual size of the heap
+        // copy the current size of the heap
         let i = self.store.size;
         // add the new element in the qp vector as the last in the heap
         self.store.qp.push(i);
@@ -555,7 +555,7 @@ where
             *self.store.heap.get_unchecked_mut(position) = map_position;
             *self.store.qp.get_unchecked_mut(map_position) = position;
         }
-	position
+        position
     }
 
     /// Internal function that moves a leaf in position `i` to its correct place in the heap
@@ -563,7 +563,7 @@ where
     ///
     /// Computes in **O(log(N))**
     fn up_heapify(&mut self, i: usize) {
-	let tmp = unsafe {*self.store.heap.get_unchecked(i)};
+        let tmp = unsafe { *self.store.heap.get_unchecked(i) };
         let pos = self.bubble_up(i, tmp);
         self.heapify(pos)
     }

@@ -43,7 +43,7 @@ use std::mem::replace;
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[cfg(has_std)]
 pub struct DoublePriorityQueue<I, P, H = RandomState>
 where
@@ -53,7 +53,7 @@ where
     store: Store<I, P, H>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[cfg(not(has_std))]
 pub struct DoublePriorityQueue<I, P, H>
 where
@@ -183,16 +183,23 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_max(&self) -> Option<(&I, &P)> {
-	match self.store.size {
-	    0 => None,
-	    1 => self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(0) }),
-	    2 => self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(1) }),
-	    _ => {
-		let i = *[1, 2].iter()
-		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
-		    .unwrap();
-		self.store.map.get_index(i)
-	    }
+        match self.store.size {
+            0 => None,
+            1 => self
+                .store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(0) }),
+            2 => self
+                .store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(1) }),
+            _ => {
+                let i = *[1, 2]
+                    .iter()
+                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
+                    .unwrap();
+                self.store.map.get_index(i)
+            }
         }
     }
 
@@ -229,17 +236,25 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
-	match self.store.size {
-	    0 => None,
-	    1 => self.store.map.get_index_mut(unsafe { *self.store.heap.get_unchecked(0) }),
-	    2 => self.store.map.get_index_mut(unsafe { *self.store.heap.get_unchecked(1) }),
-	    _ => {
-		let i = *[1, 2].iter()
-		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
-		    .unwrap();
-		self.store.map.get_index_mut(i)
-	    }
-        }.map(|(k, v)| (k, &*v))
+        match self.store.size {
+            0 => None,
+            1 => self
+                .store
+                .map
+                .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) }),
+            2 => self
+                .store
+                .map
+                .get_index_mut(unsafe { *self.store.heap.get_unchecked(1) }),
+            _ => {
+                let i = *[1, 2]
+                    .iter()
+                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
+                    .unwrap();
+                self.store.map.get_index_mut(i)
+            }
+        }
+        .map(|(k, v)| (k, &*v))
     }
 
     /// Returns the number of elements the internal map can hold without
@@ -279,11 +294,12 @@ where
         match self.store.size {
             0 => None,
             1 => self.store.swap_remove(0),
-	    2 => self.store.swap_remove(1),
+            2 => self.store.swap_remove(1),
             _ => {
-		let i = *[1, 2].iter()
-		    .max_by_key(|i| unsafe {self.store.get_priority_from_heap_index(**i)})
-		    .unwrap();
+                let i = *[1, 2]
+                    .iter()
+                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
+                    .unwrap();
                 let r = self.store.swap_remove(i);
                 self.heapify(i);
                 r
@@ -375,37 +391,12 @@ where
             return oldp;
         }
         // get a reference to the priority
-        let priority = self.store.map.get_index(self.store.size).unwrap().1;
-        // copy the actual size of the heap
-        let mut i = self.store.size;
-        let k = i;
+        // copy the current size of the heap
+        let i = self.store.size;
         // add the new element in the qp vector as the last in the heap
         self.store.qp.push(i);
         self.store.heap.push(0);
-        // from the leaf go up to root or until an element with priority greater
-        // than the new element is found
-        unsafe {
-            while (i > 0)
-                && (self
-                    .store
-                    .map
-                    .get_index(*self.store.heap.get_unchecked(parent(i)))
-                    .unwrap()
-                    .1
-                    < &priority)
-            {
-                *self.store.heap.get_unchecked_mut(i) = *self.store.heap.get_unchecked(parent(i));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(i)) = i;
-                i = parent(i);
-            }
-            // put the new element into the heap and
-            // update the qp translation table and the size
-            *self.store.heap.get_unchecked_mut(i) = k;
-            *self.store.qp.get_unchecked_mut(k) = i;
-        }
+        self.bubble_up(i, i);
         self.store.size += 1;
         None
     }
@@ -591,7 +582,10 @@ where
     }
 
     fn heapify_min(&mut self, mut i: usize) {
-        while i <= self.store.size / 2 {
+        if self.store.size <= 1 {
+            return;
+        }
+        while i <= parent(self.store.size - 1) {
             let m = i;
 
             // Minimum of childs and grandchilds
@@ -636,7 +630,10 @@ where
     }
 
     fn heapify_max(&mut self, mut i: usize) {
-        while i <= self.store.size / 2 {
+        if self.store.size <= 1 {
+            return;
+        }
+        while i <= parent(self.store.size - 1) {
             let m = i;
 
             // Minimum of childs and grandchilds
@@ -661,6 +658,8 @@ where
             .unwrap()
             .0;
 
+            dbg!(self.store.size, i, m);
+
             if unsafe {
                 self.store.get_priority_from_heap_index(i)
                     > self.store.get_priority_from_heap_index(m)
@@ -680,39 +679,157 @@ where
         }
     }
 
+    fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
+        if position > 0 {
+            if level(position) % 2 == 0 {
+                if self
+                    .store
+                    .map
+                    .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
+                    .unwrap()
+                    .1
+                    < self.store.map.get_index(map_position).unwrap().1
+                {
+                    unsafe {
+                        *self.store.heap.get_unchecked_mut(position) =
+                            *self.store.heap.get_unchecked(parent(position));
+                        *self
+                            .store
+                            .qp
+                            .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                    }
+                    position = self.bubble_up_max(parent(position), map_position);
+                } else {
+                    position = self.bubble_up_min(position, map_position);
+                }
+            } else {
+                if self
+                    .store
+                    .map
+                    .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
+                    .unwrap()
+                    .1
+                    > self.store.map.get_index(map_position).unwrap().1
+                {
+                    unsafe {
+                        *self.store.heap.get_unchecked_mut(position) =
+                            *self.store.heap.get_unchecked(parent(position));
+                        *self
+                            .store
+                            .qp
+                            .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                    }
+                    position = self.bubble_up_min(parent(position), map_position);
+                } else {
+                    position = self.bubble_up_max(position, map_position);
+                }
+            }
+        }
+
+        unsafe {
+            // put the new element into the heap and
+            // update the qp translation table and the size
+            *self.store.heap.get_unchecked_mut(position) = map_position;
+            *self.store.qp.get_unchecked_mut(map_position) = position;
+        }
+        position
+    }
+
+    fn bubble_up_min(&mut self, mut position: usize, map_position: usize) -> usize {
+        while (position > 0 && parent(position) > 0)
+            && (self
+                .store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(parent(parent(position))) })
+                .unwrap()
+                .1
+                > self.store.map.get_index(map_position).unwrap().1)
+        {
+            unsafe {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(parent(position)));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+            }
+            position = parent(parent(position));
+        }
+        position
+    }
+
+    fn bubble_up_max(&mut self, mut position: usize, map_position: usize) -> usize {
+        while (position > 0 && parent(position) > 0)
+            && (self
+                .store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(parent(parent(position))) })
+                .unwrap()
+                .1
+                < self.store.map.get_index(map_position).unwrap().1)
+        {
+            unsafe {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(parent(position)));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+            }
+            position = parent(parent(position));
+        }
+        position
+    }
+
     fn up_heapify(&mut self, i: usize) {
-	if i == 0 {
-	    return
-	}
+        if i == 0 {
+            return;
+        }
         if level(i) % 2 == 0 {
-	    if unsafe {self.store.get_priority_from_heap_index(i) > self.store.get_priority_from_heap_index(parent(i))} {
-		self.store.swap(i, parent(i));
-		self.up_heapify_max(parent(i));
-	    } else {
-		self.up_heapify_min(i);
-	    }
+            if unsafe {
+                self.store.get_priority_from_heap_index(i)
+                    > self.store.get_priority_from_heap_index(parent(i))
+            } {
+                self.store.swap(i, parent(i));
+                self.up_heapify_max(parent(i));
+            } else {
+                self.up_heapify_min(i);
+            }
         } else {
-	    if unsafe {self.store.get_priority_from_heap_index(i) < self.store.get_priority_from_heap_index(parent(i))} {
-		self.store.swap(i, parent(i));
-		self.up_heapify_min(parent(i));
-	    } else {
-		self.up_heapify_max(i);
-	    }
+            if unsafe {
+                self.store.get_priority_from_heap_index(i)
+                    < self.store.get_priority_from_heap_index(parent(i))
+            } {
+                self.store.swap(i, parent(i));
+                self.up_heapify_min(parent(i));
+            } else {
+                self.up_heapify_max(i);
+            }
         }
     }
 
     fn up_heapify_min(&mut self, mut i: usize) {
-	while i >= left(left(0)) && unsafe { self.store.get_priority_from_heap_index(i) < self.store.get_priority_from_heap_index(parent(parent(i))) } {
-	    self.store.swap(i, parent(parent(i)));
-	    i = parent(parent(i));
-	}
+        while i >= left(left(0))
+            && unsafe {
+                self.store.get_priority_from_heap_index(i)
+                    < self.store.get_priority_from_heap_index(parent(parent(i)))
+            }
+        {
+            self.store.swap(i, parent(parent(i)));
+            i = parent(parent(i));
+        }
     }
 
     fn up_heapify_max(&mut self, mut i: usize) {
-	while i >= left(left(0)) && unsafe { self.store.get_priority_from_heap_index(i) > self.store.get_priority_from_heap_index(parent(parent(i))) } {
-	    self.store.swap(i, parent(parent(i)));
-	    i = parent(parent(i));
-	}
+        while i >= left(left(0))
+            && unsafe {
+                self.store.get_priority_from_heap_index(i)
+                    > self.store.get_priority_from_heap_index(parent(parent(i)))
+            }
+        {
+            self.store.swap(i, parent(parent(i)));
+            i = parent(parent(i));
+        }
     }
 
     /// Internal function that transform the `heap`
@@ -832,6 +949,18 @@ where
     }
 }
 
+use std::fmt;
+
+impl<I, P, H> fmt::Debug for DoublePriorityQueue<I, P, H>
+where
+    I: Hash + Eq + fmt::Debug,
+    P: Ord + fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        self.store.fmt(f)
+    }
+}
+
 use std::cmp::PartialEq;
 
 impl<I, P1, H1, P2, H2> PartialEq<DoublePriorityQueue<I, P2, H2>> for DoublePriorityQueue<I, P1, H1>
@@ -864,7 +993,7 @@ fn parent(i: usize) -> usize {
 
 // Compute the level of a node from its index
 fn level(i: usize) -> usize {
-    log2_fast(i)
+    log2_fast(i + 1)
 }
 
 fn log2_fast(x: usize) -> usize {

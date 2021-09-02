@@ -41,7 +41,7 @@ mod doublepq_tests {
     fn push_pop() {
         let mut pq = DoublePriorityQueue::new();
         assert_eq!(pq.peek_max(), None);
-	assert_eq!(pq.peek_min(), None);	
+        assert_eq!(pq.peek_min(), None);
         pq.push("a", 1);
         pq.push("b", 2);
         pq.push("f", 7);
@@ -251,7 +251,10 @@ mod doublepq_tests {
         let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v.into_iter());
 
         pq.change_priority_by("b", |b| *b += 8);
-        assert_eq!(pq.into_descending_sorted_vec().as_slice(), &["b", "f", "g", "h", "a"]);
+        assert_eq!(
+            pq.into_descending_sorted_vec().as_slice(),
+            &["b", "f", "g", "h", "a"]
+        );
     }
 
     #[test]
@@ -283,7 +286,10 @@ mod doublepq_tests {
         pq.remove(&"b").unwrap();
         pq.push("b", 2);
         pq.remove(&"b");
-        assert_eq!(["f", "g", "h", "a"], pq.into_descending_sorted_vec().as_slice());
+        assert_eq!(
+            ["f", "g", "h", "a"],
+            pq.into_descending_sorted_vec().as_slice()
+        );
     }
 
     #[test]
@@ -391,6 +397,19 @@ mod doublepq_tests {
 
         assert_eq!(
             pq.into_sorted_iter().collect::<Vec<_>>(),
+            vec!(("a", 1), ("b", 2), ("f", 7))
+        );
+    }
+
+    #[test]
+    fn into_sorted_iter_reverse() {
+        let mut pq = DoublePriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        assert_eq!(
+            pq.into_sorted_iter().rev().collect::<Vec<_>>(),
             vec!(("f", 7), ("b", 2), ("a", 1))
         );
     }
