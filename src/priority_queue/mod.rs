@@ -307,7 +307,7 @@ where
         let i = self.store.size;
         // add the new element in the qp vector as the last in the heap
         self.store.qp.push(i);
-        self.store.heap.push(0);
+        self.store.heap.push(i);
         self.bubble_up(i, i);
         self.store.size += 1;
         None

@@ -235,21 +235,19 @@ where
     ///
     /// Computes in **O(1)** time (average)
     pub fn swap_remove(&mut self, index: usize) -> Option<(I, P)> {
-	dbg!(index, self.size);
-	dbg!(&self.heap, &self.qp);
         // swap_remove the head
         let head = dbg!(self.heap.swap_remove(index));
         self.size -= 1;
         // swap remove the old heap head from the qp
-	if self.size == index {
-	    let t = dbg!(self.qp.swap_remove(head));
-	    if let Some(i) = self.qp.get(head) {
-		unsafe{
-		*self.heap.get_unchecked_mut(*i) = head;
-		}
-	    }
+        if self.size == index {
+            self.qp.swap_remove(head);
+            if let Some(i) = self.qp.get(head) {
+                unsafe {
+                    *self.heap.get_unchecked_mut(*i) = head;
+                }
+            }
             return self.map.swap_remove_index(head);
-	}
+        }
         unsafe {
             *self.qp.get_unchecked_mut(*self.heap.get_unchecked(index)) = index;
         }
@@ -569,7 +567,11 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
-            .entries(self.heap.iter().map(|&i| (i, self.map.get_index(i).unwrap())))
+            .entries(
+                self.heap
+                    .iter()
+                    .map(|&i| (i, self.map.get_index(i).unwrap())),
+            )
             .finish()
     }
 }

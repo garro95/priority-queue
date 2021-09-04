@@ -19,7 +19,7 @@
  */
 
 #[cfg(test)]
-mod pq_tests {
+mod pqueue_tests {
     pub use priority_queue::PriorityQueue;
 
     #[test]

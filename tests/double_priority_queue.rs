@@ -99,7 +99,7 @@ mod doublepq_tests {
     }
 
     #[test]
-    fn change_priority() {
+    fn change_priority1() {
         let mut pq = DoublePriorityQueue::new();
         pq.push("Processor", 1);
         pq.push("Mainboard", 2);
@@ -305,7 +305,6 @@ mod doublepq_tests {
 
         let mut last_priority = *queue.peek_max().unwrap().1;
         while let Some((_, priority)) = queue.pop_max() {
-            dbg!(priority);
             assert!(last_priority >= priority);
             last_priority = priority;
         }
@@ -320,7 +319,6 @@ mod doublepq_tests {
 
         let mut last_priority = *queue.peek_max().unwrap().1;
         while let Some((_, priority)) = queue.pop_max() {
-            dbg!(priority);
             assert!(last_priority >= priority);
             last_priority = priority;
         }
