@@ -183,24 +183,9 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_max(&self) -> Option<(&I, &P)> {
-        match self.store.size {
-            0 => None,
-            1 => self
-                .store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(0) }),
-            2 => self
-                .store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(1) }),
-            _ => {
-                let i = *[1, 2]
-                    .iter()
-                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
-                    .unwrap();
-                self.store.map.get_index(i)
-            }
-        }
+	dbg!(&self.store.heap, &self.store.qp);
+        self.find_max().and_then(|i|
+	    self.store.map.get_index(unsafe { *self.store.heap.get_unchecked(i) }))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -236,24 +221,8 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
-        match self.store.size {
-            0 => None,
-            1 => self
-                .store
-                .map
-                .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) }),
-            2 => self
-                .store
-                .map
-                .get_index_mut(unsafe { *self.store.heap.get_unchecked(1) }),
-            _ => {
-                let i = *[1, 2]
-                    .iter()
-                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
-                    .unwrap();
-                self.store.map.get_index_mut(i)
-            }
-        }
+	self.find_max().and_then(move |i|
+		self.store.map.get_index_mut(unsafe{ *self.store.heap.get_unchecked(i) }))
         .map(|(k, v)| (k, &*v))
     }
 
@@ -291,20 +260,11 @@ where
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop_max(&mut self) -> Option<(I, P)> {
-        match self.store.size {
-            0 => None,
-            1 => self.store.swap_remove(0),
-            2 => self.store.swap_remove(1),
-            _ => {
-                let i = *[1, 2]
-                    .iter()
-                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
-                    .unwrap();
-                let r = self.store.swap_remove(i);
-                self.heapify(i);
-                r
-            }
-        }
+	self.find_max().and_then(|i| {
+	    let r = self.store.swap_remove(i);
+	    self.heapify(i);
+	    r
+	})
     }
 
     /// Implements a HeapSort
@@ -574,6 +534,9 @@ where
     /*                            internal functions                          */
 
     fn heapify(&mut self, i: usize) {
+        if self.store.size <= 1 {
+            return;
+        }
         if level(i) % 2 == 0 {
             self.heapify_min(i)
         } else {
@@ -582,9 +545,6 @@ where
     }
 
     fn heapify_min(&mut self, mut i: usize) {
-        if self.store.size <= 1 {
-            return;
-        }
         while i <= parent(self.store.size - 1) {
             let m = i;
 
@@ -611,14 +571,14 @@ where
             .0;
 
             if unsafe {
-                self.store.get_priority_from_heap_index(i)
+                self.store.get_priority_from_heap_index(dbg!(i))
                     < self.store.get_priority_from_heap_index(m)
             } {
                 self.store.swap(i, m);
                 if i > right(m)
                     && unsafe {
-                        self.store.get_priority_from_heap_index(i)
-                            > self.store.get_priority_from_heap_index(parent(i))
+                        dbg!(self.store.get_priority_from_heap_index(dbg!(i))
+                            > self.store.get_priority_from_heap_index(dbg!(parent(i))))
                     }
                 {
                     self.store.swap(i, parent(i));
@@ -630,9 +590,6 @@ where
     }
 
     fn heapify_max(&mut self, mut i: usize) {
-        if self.store.size <= 1 {
-            return;
-        }
         while i <= parent(self.store.size - 1) {
             let m = i;
 
@@ -658,6 +615,7 @@ where
             .unwrap()
             .0;
 
+	    dbg!(self.store.size, &self.store.heap, &self.store.qp);
             dbg!(self.store.size, i, m);
 
             if unsafe {
@@ -745,14 +703,7 @@ where
                 .1
                 > self.store.map.get_index(map_position).unwrap().1)
         {
-            unsafe {
-                *self.store.heap.get_unchecked_mut(position) =
-                    *self.store.heap.get_unchecked(parent(parent(position)));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
-            }
+	    self.store.swap(position, parent(parent(position)));
             position = parent(parent(position));
         }
         position
@@ -768,23 +719,19 @@ where
                 .1
                 < self.store.map.get_index(map_position).unwrap().1)
         {
-            unsafe {
-                *self.store.heap.get_unchecked_mut(position) =
-                    *self.store.heap.get_unchecked(parent(parent(position)));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
-            }
+	    self.store.swap(position, parent(parent(position)));
             position = parent(parent(position));
         }
         position
     }
 
     fn up_heapify(&mut self, i: usize) {
-        if i == 0 {
+        /* if i == 0 {
             return;
-        }
+        } */
+	let tmp = unsafe { *self.store.heap.get_unchecked(i) };
+	let pos = self.bubble_up(i, tmp);
+	/*
         if level(i) % 2 == 0 {
             if unsafe {
                 self.store.get_priority_from_heap_index(i)
@@ -805,7 +752,8 @@ where
             } else {
                 self.up_heapify_max(i);
             }
-        }
+        } */
+	self.heapify(pos);
     }
 
     fn up_heapify_min(&mut self, mut i: usize) {
@@ -843,6 +791,27 @@ where
         for i in (0..=parent(self.store.size)).rev() {
             self.heapify(i);
         }
+    }
+
+    /// Returns the index of the max element
+    fn find_max(&self) -> Option<usize> {
+        match self.store.size {
+            0 => None,
+            1 => Some(0),
+            2 => Some(1),
+            _ => Some(*[1, 2]
+                    .iter()
+                    .max_by_key(|i| unsafe { self.store.get_priority_from_heap_index(**i) })
+                    .unwrap())
+	}
+    }
+
+    /// Returns the index of the min element
+    fn find_min(&self) -> Option<usize> {
+	match self.store.size {
+	    0 => None,
+	    _ => Some(0)
+	}
     }
 }
 
