@@ -170,12 +170,11 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_min(&self) -> Option<(&I, &P)> {
-        if self.store.size == 0 {
-            return None;
-        }
-        self.store
-            .map
-            .get_index(unsafe { *self.store.heap.get_unchecked(0) })
+        self.find_min().and_then(|i| {
+            self.store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(i) })
+        })
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -202,12 +201,12 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
-        if self.store.size == 0 {
-            return None;
-        }
-        self.store
-            .map
-            .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) })
+        self.find_min()
+            .and_then(move |i| {
+                self.store
+                    .map
+                    .get_index_mut(unsafe { *self.store.heap.get_unchecked(i) })
+            })
             .map(|(k, v)| (k, &*v))
     }
 
@@ -251,15 +250,11 @@ where
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop_min(&mut self) -> Option<(I, P)> {
-        match self.store.size {
-            0 => None,
-            1 => self.store.swap_remove(0),
-            _ => {
-                let r = self.store.swap_remove(0);
-                self.heapify(0);
-                r
-            }
-        }
+        self.find_min().and_then(|i| {
+            let r = self.store.swap_remove(i);
+            self.heapify(i);
+            r
+        })
     }
 
     /// Removes the item with the greatest priority from
@@ -581,7 +576,7 @@ where
                     < self.store.get_priority_from_heap_index(m)
             } {
                 self.store.swap(i, m);
-                if i > right(m)
+                if i > right(m) // i is a grandchild of m
                     && unsafe {
                         self.store.get_priority_from_heap_index(i)
                             > self.store.get_priority_from_heap_index(parent(i))
@@ -626,7 +621,7 @@ where
                     > self.store.get_priority_from_heap_index(m)
             } {
                 self.store.swap(i, m);
-                if i > right(m)
+                if i > right(m) // i is a grandchild of m
                     && unsafe {
                         self.store.get_priority_from_heap_index(i)
                             < self.store.get_priority_from_heap_index(parent(i))
