@@ -236,7 +236,7 @@ where
     /// Computes in **O(1)** time (average)
     pub fn swap_remove(&mut self, index: usize) -> Option<(I, P)> {
         // swap_remove the head
-        let head = dbg!(self.heap.swap_remove(index));
+        let head = self.heap.swap_remove(index);
         self.size -= 1;
         // swap remove the old heap head from the qp
         if self.size == index {
