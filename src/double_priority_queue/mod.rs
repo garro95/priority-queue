@@ -85,7 +85,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    store: Store<I, P, H>,
+    pub(crate) store: Store<I, P, H>,
 }
 
 #[derive(Clone)]
@@ -820,6 +820,22 @@ where
         let mut pq = DoublePriorityQueue { store };
         pq.heap_build();
         pq
+    }
+}
+
+use crate::PriorityQueue;
+
+impl<I, P, H> From<PriorityQueue<I, P, H>> for DoublePriorityQueue<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+    H: BuildHasher,
+{
+    fn from(pq: PriorityQueue<I, P, H>) -> Self {
+	let store = pq.store;
+	let mut this = Self{store};
+	this.heap_build();
+	this
     }
 }
 
