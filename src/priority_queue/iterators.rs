@@ -17,6 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+//! This module defines iterator types that are used only with the [`PriorityQueue`].
+//!
+//! Usually you don't need to explicitly `use` any of the types declared here.
 
 #[cfg(not(has_std))]
 pub(crate) mod std {
@@ -38,6 +41,17 @@ use std::iter::*;
 
 use crate::PriorityQueue;
 
+/// A mutable iterator over the couples `(item, priority)` of the `PriorityQueue`
+/// in arbitrary order.
+///
+/// It can be obtained calling the `iter_mut` method.
+///
+/// It can be used to update the priorities of the elements in the queue.
+/// When the iterator goes out of scope, the heap is rebuilt to restore the
+/// structural properties.
+///
+/// The item is mutable too, but it is a logical error to modify it in a way that
+/// changes the result of any of `hash` or `eq`.
 #[cfg(has_std)]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
@@ -97,6 +111,10 @@ where
     }
 }
 
+/// A consuming iterator over the couples `(item, priority)` of the `PriorityQueue`
+/// ordered by priority, from the highest to the lowest.
+///
+/// It can be obtained calling the `into_sorted_iter` method.
 #[cfg(has_std)]
 pub struct IntoSortedIter<I, P, H = RandomState>
 where

@@ -17,6 +17,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+//! This module contains the [`PriorityQueue`] type and the related iterators.
+//!
+//! See the type level documentation for more details and examples.
+
 pub mod iterators;
 
 #[cfg(not(has_std))]
@@ -43,6 +48,27 @@ use std::mem::replace;
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
+///
+/// # Example
+/// ```rust
+/// use priority_queue::PriorityQueue;
+///
+/// let mut pq = PriorityQueue::new();
+///
+/// assert!(pq.is_empty());
+/// pq.push("Apples", 5);
+/// pq.push("Bananas", 8);
+/// pq.push("Strawberries", 23);
+///
+/// assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+///
+/// pq.change_priority("Bananas", 25);
+/// assert_eq!(pq.peek(), Some((&"Bananas", &25)));
+///
+/// for (item, _) in pq.into_sorted_iter() {
+///     println!("{}", item);
+/// }
+/// ```
 #[derive(Clone, Debug)]
 #[cfg(has_std)]
 pub struct PriorityQueue<I, P, H = RandomState>
@@ -151,7 +177,7 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Return an iterator in arbitrary order over the
+    /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
     ///
     /// The item and the priority are mutable references, but it's a logic error
@@ -229,7 +255,9 @@ where
         }
     }
 
-    /// Implements a HeapSort
+    /// Implements a HeapSort.
+    ///
+    /// Returns a `Vec<I>` sorted from the item associated to the highest priority to the lowest.
     pub fn into_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.store.size);
         while let Some((i, _)) = self.pop() {
@@ -281,7 +309,7 @@ where
     ///
     /// If an element equal to `item` was already into the queue,
     /// it is updated and the old value of its priority returned in `Some`;
-    /// otherwise, return `None`.
+    /// otherwise, returns `None`.
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {

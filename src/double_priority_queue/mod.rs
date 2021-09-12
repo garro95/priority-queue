@@ -17,6 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+//! This module contains the [`DoublePriorityQueue`] type and the related iterators.
+//!
+//! See the type level documentation for more details and examples.
+
 pub mod iterators;
 
 #[cfg(not(has_std))]
@@ -34,7 +38,7 @@ use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::replace;
 
-/// A priority queue with efficient change function to change the priority of an
+/// A double priority queue with efficient change function to change the priority of an
 /// element.
 ///
 /// The priority is of type P, that must implement `std::cmp::Ord`.
@@ -43,6 +47,37 @@ use std::mem::replace;
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
+///
+/// With this data structure it is possible to efficiently extract both
+/// the maximum and minimum elements arbitrarily.
+///
+/// If your need is to always extract the minimum, use a
+/// `PriorityQueue<I, Reverse<P>>` wrapping
+/// your priorities in the standard wrapper
+/// [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html).
+/// 
+///
+/// # Example
+/// ```rust
+/// use priority_queue::DoublePriorityQueue;
+///
+/// let mut pq = DoublePriorityQueue::new();
+///
+/// assert!(pq.is_empty());
+/// pq.push("Apples", 5);
+/// pq.push("Bananas", 8);
+/// pq.push("Strawberries", 23);
+///
+/// assert_eq!(pq.peek_max(), Some((&"Strawberries", &23)));
+/// assert_eq!(pq.peek_min(), Some((&"Apples", &5)));
+///
+/// pq.change_priority("Bananas", 25);
+/// assert_eq!(pq.peek_max(), Some((&"Bananas", &25)));
+///
+/// for (item, _) in pq.into_sorted_iter() {
+///     println!("{}", item);
+/// }
+/// ```
 #[derive(Clone)]
 #[cfg(has_std)]
 pub struct DoublePriorityQueue<I, P, H = RandomState>
@@ -246,7 +281,7 @@ where
         self.store.shrink_to_fit();
     }
 
-    /// Removes the item with the greatest priority from
+    /// Removes the item with the lowest priority from
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop_min(&mut self) -> Option<(I, P)> {
@@ -268,7 +303,11 @@ where
         })
     }
 
-    /// Implements a HeapSort
+    /// Implements a HeapSort.
+    ///
+    /// Consumes the PriorityQueue and returns a vector
+    /// with all the items sorted from the one associated to
+    /// the lowest priority to the highest.
     pub fn into_ascending_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.store.size);
         while let Some((i, _)) = self.pop_min() {
@@ -278,6 +317,10 @@ where
     }
 
     /// Implements a HeapSort
+    ///
+    /// Consumes the PriorityQueue and returns a vector
+    /// with all the items sorted from the one associated to
+    /// the highest priority to the lowest.
     pub fn into_descending_sorted_vec(mut self) -> Vec<I> {
         let mut res = Vec::with_capacity(self.store.size);
         while let Some((i, _)) = self.pop_max() {
@@ -296,9 +339,9 @@ where
         self.store.is_empty()
     }
 
-    /// Generates a new iterator from self that
-    /// will extract the elements from the one with the highest priority
-    /// to the lowest one.
+    /// Generates a new double ended iterator from self that
+    /// will extract the elements from the one with the lowest priority
+    /// to the highest one.
     pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
         IntoSortedIter { pq: self }
     }
@@ -328,8 +371,8 @@ where
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` was already into the queue,
-    /// it is updated and the old value of its priority returned in `Some`;
-    /// otherwise, return `None`.
+    /// it is updated and the old value of its priority is returned in `Some`;
+    /// otherwise, returns `None`.
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {

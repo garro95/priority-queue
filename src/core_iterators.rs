@@ -17,6 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+//! This module defines iterator types that are used with
+//! both the [`PriorityQueue`](super::PriorityQueue) and the [`DoublePriorityQueue`](super::DoublePriorityQueue)
+//!
+//! Usually you don't need to explicitly `use` any of the types declared here.
 
 #[cfg(not(has_std))]
 pub(crate) mod std {
@@ -32,6 +36,10 @@ pub(crate) mod std {
 
 use std::hash::Hash;
 
+/// An iterator in arbitrary order over the couples
+/// `(item, priority)` in the queue.
+///
+/// It can be obtained calling the `iter` method.
 pub struct Iter<'a, I: 'a, P: 'a>
 where
     I: Hash + Eq,
@@ -51,6 +59,10 @@ where
     }
 }
 
+/// An iterator in arbitrary order over the couples
+/// `(item, priority)` that consumes the queue.
+///
+/// It can be obtained calling the `into_iter` method from the `IntoIterator` trait.
 pub struct IntoIter<I, P>
 where
     I: Hash + Eq,

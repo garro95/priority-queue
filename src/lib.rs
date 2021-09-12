@@ -18,8 +18,12 @@
  *
  */
 
-//! This crate provide a priority queue backed by an hashmap
-//! with some efficient methods to change the priority of an element in
+//! This crate provides 2 main data structures:
+//!  *  a [priority queue](PriorityQueue)
+//!  *  a [double prioriy queue](DoublePriorityQueue).
+//!
+//! Both data structures are backed by an hashmap, allowing
+//! to change the priority of an element with some efficient methods in
 //! **O(log(N))** time (worst case).
 //!
 //! The elements (called `Item`s, of type `I`) must implement
@@ -44,22 +48,20 @@
 //! ```rust
 //! use priority_queue::PriorityQueue;
 //!
-//! fn main() {
-//!     let mut pq = PriorityQueue::new();
+//! let mut pq = PriorityQueue::new();
 //!
-//!     assert!(pq.is_empty());
-//!     pq.push("Apples", 5);
-//!     pq.push("Bananas", 8);
-//!     pq.push("Strawberries", 23);
+//! assert!(pq.is_empty());
+//! pq.push("Apples", 5);
+//! pq.push("Bananas", 8);
+//! pq.push("Strawberries", 23);
 //!
-//!     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+//! assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
 //!
-//!     pq.change_priority("Bananas", 25);
-//!     assert_eq!(pq.peek(), Some((&"Bananas", &25)));
+//! pq.change_priority("Bananas", 25);
+//! assert_eq!(pq.peek(), Some((&"Bananas", &25)));
 //!
-//!     for (item, _) in pq.into_sorted_iter() {
-//!         println!("{}", item);
-//!     }
+//! for (item, _) in pq.into_sorted_iter() {
+//!     println!("{}", item);
 //! }
 //! ```
 #![cfg_attr(not(has_std), no_std)]
