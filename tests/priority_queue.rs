@@ -458,17 +458,17 @@ mod pqueue_tests {
 
     #[test]
     fn conversion() {
-	use priority_queue::DoublePriorityQueue;
+        use priority_queue::DoublePriorityQueue;
 
-	let mut dpq = DoublePriorityQueue::new();
+        let mut dpq = DoublePriorityQueue::new();
 
-	dpq.push('a', 3);
-	dpq.push('b', 5);
-	dpq.push('c', 1);
+        dpq.push('a', 3);
+        dpq.push('b', 5);
+        dpq.push('c', 1);
 
-	let mut pq: PriorityQueue<_, _> = dpq.into();
+        let mut pq: PriorityQueue<_, _> = dpq.into();
 
-	assert_eq!(pq.pop(), Some(('b', 5)));
+        assert_eq!(pq.pop(), Some(('b', 5)));
     }
 }
 

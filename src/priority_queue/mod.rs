@@ -635,10 +635,10 @@ where
     H: BuildHasher,
 {
     fn from(pq: DoublePriorityQueue<I, P, H>) -> Self {
-	let store = pq.store;
-	let mut this = Self{store};
-	this.heap_build();
-	this
+        let store = pq.store;
+        let mut this = Self { store };
+        this.heap_build();
+        this
     }
 }
 

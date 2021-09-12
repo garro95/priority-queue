@@ -55,7 +55,7 @@ use std::mem::replace;
 /// `PriorityQueue<I, Reverse<P>>` wrapping
 /// your priorities in the standard wrapper
 /// [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html).
-/// 
+///
 ///
 /// # Example
 /// ```rust
@@ -832,10 +832,10 @@ where
     H: BuildHasher,
 {
     fn from(pq: PriorityQueue<I, P, H>) -> Self {
-	let store = pq.store;
-	let mut this = Self{store};
-	this.heap_build();
-	this
+        let store = pq.store;
+        let mut this = Self { store };
+        this.heap_build();
+        this
     }
 }
 
