@@ -701,27 +701,25 @@ where
                 } else {
                     self.bubble_up_min(position, map_position)
                 }
-            } else {
-                if self
-                    .store
-                    .map
-                    .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
-                    .unwrap()
-                    .1
-                    > self.store.map.get_index(map_position).unwrap().1
-                {
-                    unsafe {
-                        *self.store.heap.get_unchecked_mut(position) =
-                            *self.store.heap.get_unchecked(parent(position));
-                        *self
-                            .store
-                            .qp
-                            .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
-                    }
-                    self.bubble_up_min(parent(position), map_position)
-                } else {
-                    self.bubble_up_max(position, map_position)
+            } else if self
+                .store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
+                .unwrap()
+                .1
+                > self.store.map.get_index(map_position).unwrap().1
+            {
+                unsafe {
+                    *self.store.heap.get_unchecked_mut(position) =
+                        *self.store.heap.get_unchecked(parent(position));
+                    *self
+                        .store
+                        .qp
+                        .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
                 }
+                self.bubble_up_min(parent(position), map_position)
+            } else {
+                self.bubble_up_max(position, map_position)
             }
         }
 
