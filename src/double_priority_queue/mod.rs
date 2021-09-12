@@ -95,7 +95,7 @@ where
     I: Hash + Eq,
     P: Ord,
 {
-    store: Store<I, P, H>,
+    pub(crate) store: Store<I, P, H>,
 }
 
 // do not [derive(Eq)] to loosen up trait requirements for other types and impls
