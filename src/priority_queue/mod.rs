@@ -17,12 +17,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+//! This module contains the [`PriorityQueue`] type and the related iterators.
+//!
+//! See the type level documentation for more details and examples.
+
+pub mod iterators;
+
 #[cfg(not(has_std))]
 use std::vec::Vec;
 
-// an improvement in terms of complexity would be to use a bare HashMap
-// as vec instead of the IndexMap
-use crate::iterators::*;
+use crate::core_iterators::{IntoIter, Iter};
+use crate::store::Store;
+use iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -30,9 +37,7 @@ use std::cmp::{Eq, Ord};
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
-use std::mem::{replace, swap};
-
-use indexmap::map::{IndexMap, MutableKeys};
+use std::mem::replace;
 
 /// A priority queue with efficient change function to change the priority of an
 /// element.
@@ -43,32 +48,45 @@ use indexmap::map::{IndexMap, MutableKeys};
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
-#[derive(Clone)]
+///
+/// # Example
+/// ```rust
+/// use priority_queue::PriorityQueue;
+///
+/// let mut pq = PriorityQueue::new();
+///
+/// assert!(pq.is_empty());
+/// pq.push("Apples", 5);
+/// pq.push("Bananas", 8);
+/// pq.push("Strawberries", 23);
+///
+/// assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+///
+/// pq.change_priority("Bananas", 25);
+/// assert_eq!(pq.peek(), Some((&"Bananas", &25)));
+///
+/// for (item, _) in pq.into_sorted_iter() {
+///     println!("{}", item);
+/// }
+/// ```
+#[derive(Clone, Debug)]
 #[cfg(has_std)]
 pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    heap: Vec<usize>,                  // Implements the heap of indexes
-    qp: Vec<usize>,                    // Performs the translation from the index
-    // of the map to the index of the heap
-    size: usize, // The size of the heap
+    pub(crate) store: Store<I, P, H>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg(not(has_std))]
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
 {
-    pub(crate) map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    heap: Vec<usize>,                  // Implements the heap of indexes
-    qp: Vec<usize>,                    // Performs the translation from the index
-    // of the map to the index of the heap
-    size: usize, // The size of the heap
+    pub(crate) store: Store<I, P, H>,
 }
 
 // do not [derive(Eq)] to loosen up trait requirements for other types and impls
@@ -143,19 +161,14 @@ where
     /// If `capacity` is 0, there will be no allocation.
     pub fn with_capacity_and_hasher(capacity: usize, hash_builder: H) -> Self {
         Self {
-            map: IndexMap::with_capacity_and_hasher(capacity, hash_builder),
-            heap: Vec::with_capacity(capacity),
-            qp: Vec::with_capacity(capacity),
-            size: 0,
+            store: Store::with_capacity_and_hasher(capacity, hash_builder),
         }
     }
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter(&self) -> crate::pqueue::Iter<I, P> {
-        crate::pqueue::Iter {
-            iter: self.map.iter(),
-        }
+    pub fn iter(&self) -> Iter<I, P> {
+        self.store.iter()
     }
 }
 
@@ -164,7 +177,7 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Return an iterator in arbitrary order over the
+    /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
     ///
     /// The item and the priority are mutable references, but it's a logic error
@@ -174,8 +187,8 @@ where
     /// will be rebuilt once the `IterMut` goes out of scope. It would be
     /// rebuilt even if no priority value would have been modified, but the
     /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> crate::pqueue::IterMut<I, P, H> {
-        crate::pqueue::IterMut::new(self)
+    pub fn iter_mut(&mut self) -> IterMut<I, P, H> {
+        IterMut::new(self)
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -183,10 +196,12 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)> {
-        if self.size == 0 {
+        if self.store.size == 0 {
             return None;
         }
-        self.map.get_index(unsafe { *self.heap.get_unchecked(0) })
+        self.store
+            .map
+            .get_index(unsafe { *self.store.heap.get_unchecked(0) })
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -201,11 +216,12 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
-        if self.size == 0 {
+        if self.store.size == 0 {
             return None;
         }
-        self.map
-            .get_index_mut(unsafe { *self.heap.get_unchecked(0) })
+        self.store
+            .map
+            .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) })
             .map(|(k, v)| (k, &*v))
     }
 
@@ -215,7 +231,56 @@ where
     /// This number is a lower bound; the map might be able to hold more,
     /// but is guaranteed to be able to hold at least this many.
     pub fn capacity(&self) -> usize {
-        self.map.capacity()
+        self.store.capacity()
+    }
+
+    /// Shrinks the capacity of the internal data structures
+    /// that support this operation as much as possible.
+    pub fn shrink_to_fit(&mut self) {
+        self.store.shrink_to_fit();
+    }
+
+    /// Removes the item with the greatest priority from
+    /// the priority queue and returns the pair (item, priority),
+    /// or None if the queue is empty.
+    pub fn pop(&mut self) -> Option<(I, P)> {
+        match self.store.size {
+            0 => None,
+            1 => self.store.swap_remove(0),
+            _ => {
+                let r = self.store.swap_remove(0);
+                self.heapify(0);
+                r
+            }
+        }
+    }
+
+    /// Implements a HeapSort.
+    ///
+    /// Returns a `Vec<I>` sorted from the item associated to the highest priority to the lowest.
+    pub fn into_sorted_vec(mut self) -> Vec<I> {
+        let mut res = Vec::with_capacity(self.store.size);
+        while let Some((i, _)) = self.pop() {
+            res.push(i);
+        }
+        res
+    }
+
+    /// Returns the number of elements in the priority queue.
+    pub fn len(&self) -> usize {
+        self.store.len()
+    }
+
+    /// Returns true if the priority queue contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.store.is_empty()
+    }
+
+    /// Generates a new iterator from self that
+    /// will extract the elements from the one with the highest priority
+    /// to the lowest one.
+    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
+        IntoSortedIter { pq: self }
     }
 }
 
@@ -237,51 +302,14 @@ where
     ///
     /// Panics if the new capacity overflows `usize`.
     pub fn reserve(&mut self, additional: usize) {
-        self.map.reserve(additional);
-        self.heap.reserve(additional);
-        self.qp.reserve(additional);
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Shrinks the capacity of the internal data structures
-    /// that support this operation as much as possible.
-    pub fn shrink_to_fit(&mut self) {
-        self.heap.shrink_to_fit();
-        self.qp.shrink_to_fit();
+        self.store.reserve(additional);
     }
 
-    /// Removes the item with the greatest priority from
-    /// the priority queue and returns the pair (item, priority),
-    /// or None if the queue is empty.
-    pub fn pop(&mut self) -> Option<(I, P)> {
-        match self.size {
-            0 => None,
-            1 => self.swap_remove(),
-            _ => {
-                let r = self.swap_remove();
-                self.heapify(0);
-                r
-            }
-        }
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-    H: BuildHasher,
-{
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` was already into the queue,
     /// it is updated and the old value of its priority returned in `Some`;
-    /// otherwise, return `None`.
+    /// otherwise, returns `None`.
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {
@@ -289,10 +317,10 @@ where
         let mut pos = 0;
         let mut oldp = None;
 
-        match self.map.entry(item) {
+        match self.store.map.entry(item) {
             Occupied(mut e) => {
                 oldp = Some(replace(e.get_mut(), priority));
-                pos = unsafe { *self.qp.get_unchecked(e.index()) };
+                pos = unsafe { *self.store.qp.get_unchecked(e.index()) };
             }
             Vacant(e) => {
                 e.insert(priority);
@@ -303,35 +331,13 @@ where
             self.up_heapify(pos);
             return oldp;
         }
-        // get a reference to the priority
-        let priority = self.map.get_index(self.size).unwrap().1;
-        // copy the actual size of the heap
-        let mut i = self.size;
-        let k = i;
+        // copy the current size of the heap
+        let i = self.store.size;
         // add the new element in the qp vector as the last in the heap
-        self.qp.push(i);
-        self.heap.push(0);
-        // from the leaf go up to root or until an element with priority greater
-        // than the new element is found
-        unsafe {
-            while (i > 0)
-                && (self
-                    .map
-                    .get_index(*self.heap.get_unchecked(parent(i)))
-                    .unwrap()
-                    .1
-                    < priority)
-            {
-                *self.heap.get_unchecked_mut(i) = *self.heap.get_unchecked(parent(i));
-                *self.qp.get_unchecked_mut(*self.heap.get_unchecked(i)) = i;
-                i = parent(i);
-            }
-            // put the new element into the heap and
-            // update the qp translation table and the size
-            *self.heap.get_unchecked_mut(i) = k;
-            *self.qp.get_unchecked_mut(k) = i;
-        }
-        self.size += 1;
+        self.store.qp.push(i);
+        self.store.heap.push(i);
+        self.bubble_up(i, i);
+        self.store.size += 1;
         None
     }
 
@@ -387,23 +393,17 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, mut new_priority: P) -> Option<P>
+    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        let pos;
-        let r = if let Some((index, _, p)) = self.map.get_full_mut(item) {
-            swap(p, &mut new_priority);
-            pos = unsafe { *self.qp.get_unchecked(index) };
-            Some(new_priority)
-        } else {
-            return None;
-        };
-        if r.is_some() {
+        if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
             self.up_heapify(pos);
+            Some(r)
+        } else {
+            None
         }
-        r
     }
 
     /// Change the priority of an Item using the provided function.
@@ -415,14 +415,7 @@ where
         Q: Eq + Hash,
         F: FnOnce(&mut P),
     {
-        let mut pos = 0;
-        let mut found = false;
-        if let Some((index, _, mut p)) = self.map.get_full_mut(item) {
-            priority_setter(&mut p);
-            pos = unsafe { *self.qp.get_unchecked(index) };
-            found = true;
-        }
-        if found {
+        if let Some(pos) = self.store.change_priority_by(item, priority_setter) {
             self.up_heapify(pos);
         }
     }
@@ -433,7 +426,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map.get(item)
+        self.store.get_priority(item)
     }
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
@@ -443,7 +436,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map.get_full(item).map(|(_, k, v)| (k, v))
+        self.store.get(item)
     }
 
     /// Get the couple (item, priority) of an arbitrary element, or `None`
@@ -460,7 +453,7 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
+        self.store.get_mut(item)
     }
 
     /// Remove an arbitrary element from the priority queue.
@@ -473,81 +466,23 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        let element = self.map.swap_remove_full(item);
-        if let Some((i, _, _)) = element {
-            self.size -= 1;
-
-            let pos = self.qp.swap_remove(i);
-            self.heap.swap_remove(pos);
-            if i < self.size {
-                unsafe {
-                    let qpi = self.qp.get_unchecked_mut(i);
-                    if *qpi == self.size {
-                        *qpi = pos;
-                    } else {
-                        *self.heap.get_unchecked_mut(*qpi) = i;
-                    }
-                }
-            }
-            if pos < self.size {
-                unsafe {
-                    let heap_pos = self.heap.get_unchecked_mut(pos);
-                    if *heap_pos == self.size {
-                        *heap_pos = i;
-                    } else {
-                        *self.qp.get_unchecked_mut(*heap_pos) = pos;
-                    }
-                }
+        self.store.remove(item).map(|(item, priority, pos)| {
+            if pos < self.store.size {
                 self.up_heapify(pos);
             }
-        }
 
-        element.map(|(_, i, p)| (i, p))
+            (item, priority)
+        })
     }
 
     /// Returns the items not ordered
     pub fn into_vec(self) -> Vec<I> {
-        self.map.into_iter().map(|(i, _)| i).collect()
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Implements a HeapSort
-    pub fn into_sorted_vec(mut self) -> Vec<I> {
-        let mut res = Vec::with_capacity(self.size);
-        while let Some((i, _)) = self.pop() {
-            res.push(i);
-        }
-        res
+        self.store.into_vec()
     }
 
-    /// Returns the number of elements in the priority queue.
-    pub fn len(&self) -> usize {
-        self.size
-    }
-
-    /// Returns true if the priority queue contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.size == 0
-    }
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-    H: BuildHasher,
-{
     /// Drops all items from the priority queue
     pub fn clear(&mut self) {
-        self.heap.clear();
-        self.qp.clear();
-        self.map.clear();
-        self.size = 0;
+        self.store.clear();
     }
 
     /// Move all items of the `other` queue to `self`
@@ -558,26 +493,7 @@ where
     /// inside self may be the one of the elements in other,
     /// if other is longer than self
     pub fn append(&mut self, other: &mut Self) {
-        if other.size > self.size {
-            std::mem::swap(self, other);
-        }
-        if other.size == 0 {
-            return;
-        }
-        let drain = other.map.drain(..);
-        // what should we do for duplicated keys?
-        // ignore
-        for (k, v) in drain {
-            if !self.map.contains_key(&k) {
-                let i = self.size;
-                self.map.insert(k, v);
-                self.heap.push(i);
-                self.qp.push(i);
-                self.size += 1;
-            }
-        }
-        other.heap.clear();
-        other.qp.clear();
+        self.store.append(&mut other.store);
         self.heap_build();
     }
 }
@@ -587,103 +503,60 @@ where
     P: Ord,
     I: Hash + Eq,
 {
-    /// Generates a new iterator from self that
-    /// will extract the elements from the one with the highest priority
-    /// to the lowest one.
-    pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
-        IntoSortedIter { pq: self }
-    }
+}
+
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+    I: Hash + Eq,
+{
     /**************************************************************************/
     /*                            internal functions                          */
-
-    /// Remove and return the element with the max priority
-    /// and swap it with the last element keeping a consistent
-    /// state.
-    ///
-    /// Computes in **O(1)** time (average)
-    fn swap_remove(&mut self) -> Option<(I, P)> {
-        // swap_remove the head
-        let head = self.heap.swap_remove(0);
-        self.size -= 1;
-        // swap remove the old heap from the qp
-        if self.size == 0 {
-            self.qp.pop();
-            return self.map.swap_remove_index(head);
-        }
-        unsafe {
-            *self.qp.get_unchecked_mut(*self.heap.get_unchecked(0)) = 0;
-        }
-        self.qp.swap_remove(head);
-        if head < self.size {
-            unsafe {
-                *self.heap.get_unchecked_mut(*self.qp.get_unchecked(head)) = head;
-            }
-        }
-        // swap remove from the map and return to the client
-        self.map.swap_remove_index(head)
-    }
-
-    /// Swap two elements keeping a consistent state.
-    ///
-    /// Computes in **O(1)** time
-    fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe { (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
-        self.heap.swap(a, b);
-        self.qp.swap(i, j);
-    }
 
     /// Internal function that restores the functional property of the sub-heap rooted in `i`
     ///
     /// Computes in **O(log(N))** time
     fn heapify(&mut self, mut i: usize) {
         let (mut l, mut r) = (left(i), right(i));
-        let mut largest = if l < self.size
+        let mut largest = if l < self.store.size
             && unsafe {
-                self.map.get_index(*self.heap.get_unchecked(l)).unwrap().1
-                    > self.map.get_index(*self.heap.get_unchecked(i)).unwrap().1
+                self.store.get_priority_from_heap_index(l)
+                    > self.store.get_priority_from_heap_index(i)
             } {
             l
         } else {
             i
         };
 
-	if r < self.size
+        if r < self.store.size
             && unsafe {
-                self.map.get_index(*self.heap.get_unchecked(r)).unwrap().1
-                    > self
-                        .map
-                        .get_index(*self.heap.get_unchecked(largest))
-                        .unwrap()
-                        .1
+                self.store.get_priority_from_heap_index(r)
+                    > self.store.get_priority_from_heap_index(largest)
             }
         {
             largest = r;
         }
 
-	while largest != i {
-            self.swap(i, largest);
+        while largest != i {
+            self.store.swap(i, largest);
 
             i = largest;
             l = left(i);
             r = right(i);
-            if l < self.size
+            if l < self.store.size
                 && unsafe {
-                    self.map.get_index(*self.heap.get_unchecked(l)).unwrap().1
-                        > self.map.get_index(*self.heap.get_unchecked(i)).unwrap().1
+                    self.store.get_priority_from_heap_index(l)
+                        > self.store.get_priority_from_heap_index(i)
                 }
             {
                 largest = l;
             } else {
                 largest = i;
             }
-            if r < self.size
+            if r < self.store.size
                 && unsafe {
-                    self.map.get_index(*self.heap.get_unchecked(r)).unwrap().1
-                        > self
-                            .map
-                            .get_index(*self.heap.get_unchecked(largest))
-                            .unwrap()
-                            .1
+                    self.store.get_priority_from_heap_index(r)
+                        > self.store.get_priority_from_heap_index(largest)
                 }
             {
                 largest = r;
@@ -691,29 +564,35 @@ where
         }
     }
 
+    /// from the leaf go up to root or until an element with priority greater
+    /// than the new element is found
+    fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
+        unsafe {
+            while (position > 0)
+                && (self.store.get_priority_from_heap_index(parent(position))
+                    < self.store.map.get_index(map_position).unwrap().1)
+            {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(position));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                position = parent(position);
+            }
+            *self.store.heap.get_unchecked_mut(position) = map_position;
+            *self.store.qp.get_unchecked_mut(map_position) = position;
+        }
+        position
+    }
+
     /// Internal function that moves a leaf in position `i` to its correct place in the heap
     /// and restores the functional property
     ///
     /// Computes in **O(log(N))**
     fn up_heapify(&mut self, i: usize) {
-        let mut pos = i;
-        unsafe {
-            let tmp = *self.heap.get_unchecked(pos);
-            while (pos > 0)
-                && (self
-                    .map
-                    .get_index(*self.heap.get_unchecked(parent(pos)))
-                    .unwrap()
-                    .1
-                    < self.map.get_index(tmp).unwrap().1)
-            {
-                *self.heap.get_unchecked_mut(pos) = *self.heap.get_unchecked(parent(pos));
-                *self.qp.get_unchecked_mut(*self.heap.get_unchecked(pos)) = pos;
-                pos = parent(pos);
-            }
-            *self.heap.get_unchecked_mut(pos) = tmp;
-            *self.qp.get_unchecked_mut(tmp) = pos;
-        }
+        let tmp = unsafe { *self.store.heap.get_unchecked(i) };
+        let pos = self.bubble_up(i, tmp);
         self.heapify(pos)
     }
 
@@ -722,10 +601,10 @@ where
     ///
     /// Computes in **O(N)**
     pub(crate) fn heap_build(&mut self) {
-        if self.size == 0 {
+        if self.store.size == 0 {
             return;
         }
-        for i in (0..=parent(self.size)).rev() {
+        for i in (0..=parent(self.store.size)).rev() {
             self.heapify(i);
         }
     }
@@ -740,19 +619,26 @@ where
     H: BuildHasher + Default,
 {
     fn from(vec: Vec<(I, P)>) -> Self {
-        let mut pq = Self::with_capacity_and_hasher(vec.len(), <_>::default());
-        let mut i = 0;
-        for (item, priority) in vec {
-            if !pq.map.contains_key(&item) {
-                pq.map.insert(item, priority);
-                pq.qp.push(i);
-                pq.heap.push(i);
-                i += 1;
-            }
-        }
-        pq.size = i;
+        let store = Store::from(vec);
+        let mut pq = PriorityQueue { store };
         pq.heap_build();
         pq
+    }
+}
+
+use crate::DoublePriorityQueue;
+
+impl<I, P, H> From<DoublePriorityQueue<I, P, H>> for PriorityQueue<I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+    H: BuildHasher,
+{
+    fn from(pq: DoublePriorityQueue<I, P, H>) -> Self {
+        let store = pq.store;
+        let mut this = Self { store };
+        this.heap_build();
+        this
     }
 }
 
@@ -769,27 +655,8 @@ where
     where
         IT: IntoIterator<Item = (I, P)>,
     {
-        let iter = iter.into_iter();
-        let (min, max) = iter.size_hint();
-        let mut pq = if let Some(max) = max {
-            Self::with_capacity_and_hasher(max, <_>::default())
-        } else if min > 0 {
-            Self::with_capacity_and_hasher(min, <_>::default())
-        } else {
-            Self::with_hasher(<_>::default())
-        };
-        for (item, priority) in iter {
-            if pq.map.contains_key(&item) {
-                let (_, old_item, old_priority) = pq.map.get_full_mut2(&item).unwrap();
-                *old_item = item;
-                *old_priority = priority;
-            } else {
-                pq.map.insert(item, priority);
-                pq.qp.push(pq.size);
-                pq.heap.push(pq.size);
-                pq.size += 1;
-            }
-        }
+        let store = Store::from_iter(iter);
+        let mut pq = PriorityQueue { store };
         pq.heap_build();
         pq
     }
@@ -802,11 +669,9 @@ where
     H: BuildHasher,
 {
     type Item = (I, P);
-    type IntoIter = crate::pqueue::IntoIter<I, P>;
-    fn into_iter(self) -> crate::pqueue::IntoIter<I, P> {
-        crate::pqueue::IntoIter {
-            iter: self.map.into_iter(),
-        }
+    type IntoIter = IntoIter<I, P>;
+    fn into_iter(self) -> IntoIter<I, P> {
+        self.store.into_iter()
     }
 }
 
@@ -819,9 +684,7 @@ where
     type Item = (&'a I, &'a P);
     type IntoIter = Iter<'a, I, P>;
     fn into_iter(self) -> Iter<'a, I, P> {
-        Iter {
-            iter: self.map.iter(),
-        }
+        self.store.iter()
     }
 }
 
@@ -846,46 +709,23 @@ where
     fn extend<T: IntoIterator<Item = (I, P)>>(&mut self, iter: T) {
         let iter = iter.into_iter();
         let (min, max) = iter.size_hint();
-        let mut rebuild = false;
-        if let Some(max) = max {
+        let rebuild = if let Some(max) = max {
             self.reserve(max);
-            rebuild = better_to_rebuild(self.size, max);
+            better_to_rebuild(self.store.size, max)
         } else if min != 0 {
             self.reserve(min);
-            rebuild = better_to_rebuild(self.size, min);
-        }
+            better_to_rebuild(self.store.size, min)
+        } else {
+            false
+        };
         if rebuild {
-            for (item, priority) in iter {
-                if self.map.contains_key(&item) {
-                    let (_, old_item, old_priority) = self.map.get_full_mut2(&item).unwrap();
-                    *old_item = item;
-                    *old_priority = priority;
-                } else {
-                    self.map.insert(item, priority);
-                    self.qp.push(self.size);
-                    self.heap.push(self.size);
-                    self.size += 1;
-                }
-            }
+            self.store.extend(iter);
             self.heap_build();
         } else {
             for (item, priority) in iter {
                 self.push(item, priority);
             }
         }
-    }
-}
-
-use std::fmt;
-impl<I, P, H> fmt::Debug for PriorityQueue<I, P, H>
-where
-    I: fmt::Debug + Hash + Eq,
-    P: fmt::Debug + Ord,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_map()
-            .entries(self.heap.iter().map(|&i| self.map.get_index(i).unwrap()))
-            .finish()
     }
 }
 
@@ -902,7 +742,7 @@ where
     H2: BuildHasher,
 {
     fn eq(&self, other: &PriorityQueue<I, P2, H2>) -> bool {
-        self.map == other.map
+        self.store == other.store
     }
 }
 
@@ -941,14 +781,15 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use crate::pqueue::PriorityQueue;
-
     use std::cmp::{Eq, Ord};
-    use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hash};
-    use std::marker::PhantomData;
 
-    use serde::ser::{Serialize, SerializeSeq, Serializer};
+    use serde::de::{Deserialize, Deserializer};
+    use serde::ser::{Serialize, Serializer};
+
+    use super::PriorityQueue;
+    use crate::store::Store;
+
     impl<I, P, H> Serialize for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Serialize,
@@ -959,15 +800,10 @@ mod serde {
         where
             S: Serializer,
         {
-            let mut map_serializer = serializer.serialize_seq(Some(self.size))?;
-            for (k, v) in &self.map {
-                map_serializer.serialize_element(&(k, v))?;
-            }
-            map_serializer.end()
+            self.store.serialize(serializer)
         }
     }
 
-    use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
     impl<'de, I, P, H> Deserialize<'de> for PriorityQueue<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
@@ -978,53 +814,11 @@ mod serde {
         where
             D: Deserializer<'de>,
         {
-            deserializer.deserialize_seq(PQVisitor {
-                marker: PhantomData,
+            Store::deserialize(deserializer).map(|store| {
+                let mut pq = PriorityQueue { store };
+                pq.heap_build();
+                pq
             })
-        }
-    }
-
-    struct PQVisitor<I, P, H = RandomState>
-    where
-        I: Hash + Eq,
-        P: Ord,
-    {
-        marker: PhantomData<PriorityQueue<I, P, H>>,
-    }
-    impl<'de, I, P, H> Visitor<'de> for PQVisitor<I, P, H>
-    where
-        I: Hash + Eq + Deserialize<'de>,
-        P: Ord + Deserialize<'de>,
-        H: BuildHasher + Default,
-    {
-        type Value = PriorityQueue<I, P, H>;
-
-        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-            write!(formatter, "A priority queue")
-        }
-
-        fn visit_unit<E>(self) -> Result<Self::Value, E> {
-            Ok(PriorityQueue::with_default_hasher())
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut pq: PriorityQueue<I, P, H> = if let Some(size) = seq.size_hint() {
-                PriorityQueue::with_capacity_and_default_hasher(size)
-            } else {
-                PriorityQueue::with_default_hasher()
-            };
-
-            while let Some((item, priority)) = seq.next_element()? {
-                pq.map.insert(item, priority);
-                pq.qp.push(pq.size);
-                pq.heap.push(pq.size);
-                pq.size += 1;
-            }
-            pq.heap_build();
-            Ok(pq)
         }
     }
 }

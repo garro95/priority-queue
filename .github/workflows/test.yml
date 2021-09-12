@@ -1,4 +1,4 @@
-name: Rust
+name: Test
 
 on:
   push:
@@ -11,20 +11,6 @@ env:
   TARGET: thumbv6m-none-eabi
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: rustup target add $TARGET
-    - name: Build
-      run: cargo build --verbose
-    - name: Build with serde
-      run: cargo build --verbose --features serde
-    - name: Build for no-std
-      run: cargo build -v -p test-nostd --target=$TARGET
-
   test:
 
     runs-on: ubuntu-latest
