@@ -24,7 +24,7 @@
 mod benchmarks {
     extern crate test;
     use hashbrown::hash_map::DefaultHashBuilder;
-    use priority_queue::PriorityQueue;
+    use priority_queue::{PriorityQueue, DoublePriorityQueue};
     use test::{black_box, Bencher};
 
     #[bench]
@@ -38,11 +38,30 @@ mod benchmarks {
     }
 
     #[bench]
+    fn push_and_pop_double(b: &mut Bencher) {
+        type PqType = DoublePriorityQueue<usize, i32>;
+        let mut pq: PqType = DoublePriorityQueue::new();
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop_max().unwrap().1, 0];
+        });
+    }
+
+    #[bench]
     fn push_and_pop_fx(b: &mut Bencher) {
         let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
         b.iter(|| {
             pq.push(black_box(0), black_box(0));
             assert_eq![pq.pop().unwrap().1, 0];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_double_fx(b: &mut Bencher) {
+        let mut pq = DoublePriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop_max().unwrap().1, 0];
         });
     }
 
@@ -70,6 +89,33 @@ mod benchmarks {
             assert_eq![pq.pop().unwrap().1, black_box(100_000)];
         });
     }
+
+    #[bench]
+    fn push_and_pop_on_large_double_queue(b: &mut Bencher) {
+        type PqType = DoublePriorityQueue<usize, i32>;
+        let mut pq: PqType = DoublePriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(100_000), black_box(100_000));
+            assert_eq![pq.pop_max().unwrap().1, black_box(100_000)];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_min_on_large_double_queue(b: &mut Bencher) {
+        type PqType = DoublePriorityQueue<usize, i32>;
+        let mut pq: PqType = DoublePriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop_min().unwrap().1, black_box(0)];
+        });
+    }
+
     #[bench]
     fn push_and_pop_on_large_queue_fx(b: &mut Bencher) {
         let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
@@ -79,6 +125,30 @@ mod benchmarks {
         b.iter(|| {
             pq.push(black_box(100_000), black_box(100_000));
             assert_eq![pq.pop().unwrap().1, black_box(100_000)];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_on_large_double_queue_fx(b: &mut Bencher) {
+        let mut pq = DoublePriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(100_000), black_box(100_000));
+            assert_eq![pq.pop_max().unwrap().1, black_box(100_000)];
+        });
+    }
+
+    #[bench]
+    fn push_and_pop_min_on_large_double_queue_fx(b: &mut Bencher) {
+        let mut pq = DoublePriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.push(black_box(0), black_box(0));
+            assert_eq![pq.pop_min().unwrap().1, black_box(0)];
         });
     }
 
@@ -146,9 +216,33 @@ mod benchmarks {
             pq.change_priority_by(&50_000, |p| *p = *p / 2);
         });
     }
+
+    #[bench]
+    fn priority_change_on_large_double_queue(b: &mut Bencher) {
+        type PqType = DoublePriorityQueue<usize, i32>;
+        let mut pq: PqType = DoublePriorityQueue::new();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.change_priority_by(&50_000, |p| *p = *p / 2);
+        });
+    }
+
     #[bench]
     fn priority_change_on_large_queue_fx(b: &mut Bencher) {
         let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+        for i in 0..100_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.change_priority_by(&50_000, |p| *p = *p / 2);
+        });
+    }
+
+    #[bench]
+    fn priority_change_on_large_double_queue_fx(b: &mut Bencher) {
+        let mut pq = DoublePriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
         for i in 0..100_000 {
             pq.push(black_box(i as usize), black_box(i));
         }
@@ -207,9 +301,33 @@ mod benchmarks {
             pq.change_priority_by(&500, |p| *p = *p / 2);
         });
     }
+
+    #[bench]
+    fn priority_change_on_small_double_queue(b: &mut Bencher) {
+        type PqType = DoublePriorityQueue<usize, i32>;
+        let mut pq: PqType = DoublePriorityQueue::new();
+        for i in 0..1_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.change_priority_by(&500, |p| *p = *p / 2);
+        });
+    }
+
     #[bench]
     fn priority_change_on_small_queue_fx(b: &mut Bencher) {
         let mut pq = PriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
+        for i in 0..1_000 {
+            pq.push(black_box(i as usize), black_box(i));
+        }
+        b.iter(|| {
+            pq.change_priority_by(&500, |p| *p = *p / 2);
+        });
+    }
+
+    #[bench]
+    fn priority_change_on_small_double_queue_fx(b: &mut Bencher) {
+        let mut pq = DoublePriorityQueue::<_, _, DefaultHashBuilder>::with_default_hasher();
         for i in 0..1_000 {
             pq.push(black_box(i as usize), black_box(i));
         }
