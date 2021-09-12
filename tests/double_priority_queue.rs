@@ -42,6 +42,8 @@ mod doublepq_tests {
         let mut pq = DoublePriorityQueue::new();
         assert_eq!(pq.peek_max(), None);
         assert_eq!(pq.peek_min(), None);
+        assert_eq!(pq.pop_min(), None);
+        assert_eq!(pq.pop_max(), None);
         pq.push("a", 1);
         pq.push("b", 2);
         pq.push("f", 7);
@@ -51,6 +53,7 @@ mod doublepq_tests {
         assert_eq!(pq.pop_max(), Some(("f", 7)));
         println!("{:?}", pq);
         assert_eq!(pq.peek_max(), Some((&"g", &4)));
+        assert_eq!(pq.peek_min(), Some((&"a", &1)));
         assert_eq!(pq.pop_max(), Some(("g", 4)));
         assert_eq!(pq.len(), 3);
     }
@@ -67,7 +70,7 @@ mod doublepq_tests {
         pq.push("g", 10);
         pq.push("k", 11);
 
-        pq.push("d", 20);
+        assert_eq!(pq.push("d", 20), Some(6));
         assert_eq!(pq.peek_max(), Some((&"d", &20)));
         assert_eq!(pq.pop_max(), Some(("d", 20)));
     }
@@ -88,6 +91,9 @@ mod doublepq_tests {
                 .unwrap()
         };
 
+        pq.push_increase("SSD", 5);
+        assert_eq!(pq.get("SSD"), Some((&"SSD", &5)));
+
         pq.push_increase("Processor", 3);
         assert_eq!(processor_priority(&pq), 3);
 
@@ -101,15 +107,18 @@ mod doublepq_tests {
     #[test]
     fn change_priority1() {
         let mut pq = DoublePriorityQueue::new();
-        pq.push("Processor", 1);
-        pq.push("Mainboard", 2);
-        pq.push("RAM", 5);
-        pq.push("GPU", 4);
-        pq.push("Disk", 3);
-        pq.change_priority("Processor", 10);
+        assert_eq!(pq.push("Processor", 1), None);
+        assert_eq!(pq.push("Mainboard", 2), None);
+        assert_eq!(pq.push("RAM", 5), None);
+        assert_eq!(pq.push("GPU", 4), None);
+        assert_eq!(pq.push("Disk", 3), None);
+
+        assert_eq!(pq.change_priority("SSD", 12), None);
+
+        assert_eq!(pq.change_priority("Processor", 10), Some(1));
         assert_eq!(pq.peek_max(), Some((&"Processor", &10)));
 
-        pq.change_priority("RAM", 11);
+        assert_eq!(pq.change_priority("RAM", 11), Some(5));
         assert_eq!(pq.peek_max(), Some((&"RAM", &11)));
     }
 
@@ -250,6 +259,8 @@ mod doublepq_tests {
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
         let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v.into_iter());
 
+        pq.change_priority_by("z", |z| *z += 8);
+
         pq.change_priority_by("b", |b| *b += 8);
         assert_eq!(
             pq.into_descending_sorted_vec().as_slice(),
@@ -261,7 +272,7 @@ mod doublepq_tests {
     fn remove_empty() {
         let mut pq: DoublePriorityQueue<&str, i32> = DoublePriorityQueue::new();
 
-        pq.remove(&"b");
+        assert_eq!(pq.remove(&"b"), None);
         assert_eq!(pq.len(), 0);
     }
 
@@ -269,7 +280,7 @@ mod doublepq_tests {
     fn remove_one() {
         let mut pq = DoublePriorityQueue::new();
 
-        pq.push("b", 21);
+        assert_eq!(pq.push("b", 21), None);
 
         assert_eq!(Some(("b", 21)), pq.remove(&"b"));
         assert_eq!(pq.len(), 0);
@@ -284,6 +295,7 @@ mod doublepq_tests {
         let mut pq = Pq::from_iter(v.into_iter());
 
         pq.remove(&"b").unwrap();
+        assert!(pq.remove(&"b").is_none());
         pq.push("b", 2);
         pq.remove(&"b");
         assert_eq!(
@@ -472,6 +484,22 @@ mod doublepq_tests {
         use std::time::*;
         type PqType = DoublePriorityQueue<i32, Instant>;
         let _: PqType = DoublePriorityQueue::default();
+    }
+
+    #[test]
+    fn conversion() {
+	use priority_queue::PriorityQueue;
+
+	let mut pq = PriorityQueue::new();
+
+	pq.push('a', 3);
+	pq.push('b', 5);
+	pq.push('c', 1);
+
+	let mut dpq: DoublePriorityQueue<_, _> = pq.into();
+
+	assert_eq!(dpq.pop_max(), Some(('b', 5)));
+	assert_eq!(dpq.pop_min(), Some(('c', 1)));
     }
 }
 

@@ -455,6 +455,21 @@ mod pqueue_tests {
         type PqType = PriorityQueue<i32, Instant>;
         let _: PqType = PriorityQueue::default();
     }
+
+    #[test]
+    fn conversion() {
+	use priority_queue::DoublePriorityQueue;
+
+	let mut dpq = DoublePriorityQueue::new();
+
+	dpq.push('a', 3);
+	dpq.push('b', 5);
+	dpq.push('c', 1);
+
+	let mut pq: PriorityQueue<_, _> = dpq.into();
+
+	assert_eq!(pq.pop(), Some(('b', 5)));
+    }
 }
 
 #[cfg(all(feature = "serde", test))]
