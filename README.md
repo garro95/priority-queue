@@ -101,9 +101,9 @@ pq = pq.drain().map(|Entry(i, p)| {
 }).collect()
 ```
 
-The interpretation of the benchmarks is that the data structures provided by this crate is generally slightly slower then the standard Binary Heap.
+The interpretation of the benchmarks is that the data structures provided by this crate is generally slightly slower than the standard Binary Heap.
 
-On small queues (<10000 elements), the change_priority function, obtained on the standard Binary Heap with the code above, is way slower the one provided by `PriorityQueue` and `DoublePriorityQueue`.
+On small queues (<10000 elements), the change_priority function, obtained on the standard Binary Heap with the code above, is way slower than the one provided by `PriorityQueue` and `DoublePriorityQueue`.
 With the queue becoming bigger, the operation takes almost the same amount of time on `PriorityQueue` and `DoublePriorityQueue`, while it takes more and more time for the standard queue.
 
 It also emerges that the ability to arbitrarily pop the minimum or maximum element comes with a cost, that is visible in all the operations on `DoublePriorityQueue`, that are slower then the corresponding operations executed on the `PriorityQueue`.
