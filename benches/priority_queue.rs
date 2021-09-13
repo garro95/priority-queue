@@ -24,7 +24,7 @@
 mod benchmarks {
     extern crate test;
     use hashbrown::hash_map::DefaultHashBuilder;
-    use priority_queue::{PriorityQueue, DoublePriorityQueue};
+    use priority_queue::{DoublePriorityQueue, PriorityQueue};
     use test::{black_box, Bencher};
 
     #[bench]
