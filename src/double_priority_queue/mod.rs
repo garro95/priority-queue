@@ -681,6 +681,7 @@ where
     fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
         if position > 0 {
             position = if level(position) % 2 == 0 {
+                //on a min level
                 if self
                     .store
                     .map
@@ -701,7 +702,7 @@ where
                 } else {
                     self.bubble_up_min(position, map_position)
                 }
-            } else if self
+            } else /* on a max level */ if self
                 .store
                 .map
                 .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
@@ -742,7 +743,14 @@ where
                 .1
                 > self.store.map.get_index(map_position).unwrap().1)
         {
-            self.store.swap(position, parent(parent(position)));
+            unsafe {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(parent(position)));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+            }
             position = parent(parent(position));
         }
         position
@@ -758,7 +766,14 @@ where
                 .1
                 < self.store.map.get_index(map_position).unwrap().1)
         {
-            self.store.swap(position, parent(parent(position)));
+            unsafe {
+                *self.store.heap.get_unchecked_mut(position) =
+                    *self.store.heap.get_unchecked(parent(parent(position)));
+                *self
+                    .store
+                    .qp
+                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+            }
             position = parent(parent(position));
         }
         position
