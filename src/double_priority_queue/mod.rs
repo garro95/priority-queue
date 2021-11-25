@@ -690,6 +690,7 @@ where
                     .1
                     < self.store.map.get_index(map_position).unwrap().1
                 {
+                    // and greater then parent
                     unsafe {
                         *self.store.heap.get_unchecked_mut(position) =
                             *self.store.heap.get_unchecked(parent(position));
@@ -700,9 +701,10 @@ where
                     }
                     self.bubble_up_max(parent(position), map_position)
                 } else {
+                    // and less then parent
                     self.bubble_up_min(position, map_position)
                 }
-            } else /* on a max level */ if self
+            } else if self
                 .store
                 .map
                 .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
@@ -710,6 +712,7 @@ where
                 .1
                 > self.store.map.get_index(map_position).unwrap().1
             {
+                // on a max level and less then parent
                 unsafe {
                     *self.store.heap.get_unchecked_mut(position) =
                         *self.store.heap.get_unchecked(parent(position));
@@ -720,6 +723,7 @@ where
                 }
                 self.bubble_up_min(parent(position), map_position)
             } else {
+                // on a max level and greater then parent
                 self.bubble_up_max(position, map_position)
             }
         }
