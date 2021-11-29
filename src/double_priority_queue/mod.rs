@@ -224,7 +224,7 @@ where
         })
     }
 
-    /// Returns the couple (item, priority) with the greatest
+    /// Returns the couple (item, priority) with the lowest
     /// priority in the queue, or None if it is empty.
     ///
     /// The item is a mutable reference, but it's a logic error to modify it
