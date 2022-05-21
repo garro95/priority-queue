@@ -648,14 +648,13 @@ where
             ]
             .iter()
             .filter_map(|i| self.store.heap.get(*i).map(|index| (i, index)))
-            .map(|(i, index)| {
+            .max_by_key(|(i, index)| {
                 self.store
                     .map
-                    .get_index(*index)
-                    .map(|(item, priority)| (i, item, priority))
+                    .get_index(**index)
+                    .map(|(item, priority)| priority)
                     .unwrap()
             })
-            .max_by_key(|(_, _, priority)| *priority)
             .unwrap()
             .0;
 
