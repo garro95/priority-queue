@@ -398,12 +398,12 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
-            self.up_heapify(pos);
-            Some(r)
-        } else {
-            None
-        }
+        self.store
+            .change_priority(item, new_priority)
+            .map(|(r, pos)| {
+                self.up_heapify(pos);
+                r
+            })
     }
 
     /// Change the priority of an Item using the provided function.
