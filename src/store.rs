@@ -199,23 +199,27 @@ where
     ///
     /// This number is a lower bound; the map might be able to hold more,
     /// but is guaranteed to be able to hold at least this many.
+    #[inline(always)]
     pub fn capacity(&self) -> usize {
         self.map.capacity()
     }
 
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
+    #[inline(always)]
     pub fn shrink_to_fit(&mut self) {
         self.heap.shrink_to_fit();
         self.qp.shrink_to_fit();
     }
 
     /// Returns the number of elements in the priority queue.
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.size
     }
 
     /// Returns true if the priority queue contains no elements.
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
@@ -223,6 +227,7 @@ where
     /// Swap two elements keeping a consistent state.
     ///
     /// Computes in **O(1)** time
+    #[inline(always)]
     pub fn swap(&mut self, a: usize, b: usize) {
         self.qp
             .swap(unsafe { *self.heap.get_unchecked(a) }, unsafe {

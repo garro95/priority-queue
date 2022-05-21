@@ -738,21 +738,24 @@ where
 }
 
 /// Compute the index of the left child of an item from its index
-fn left(i: usize) -> usize {
+#[inline(always)]
+const fn left(i: usize) -> usize {
     (i * 2) + 1
 }
 /// Compute the index of the right child of an item from its index
-fn right(i: usize) -> usize {
+#[inline(always)]
+const fn right(i: usize) -> usize {
     (i * 2) + 2
 }
 /// Compute the index of the parent element in the heap from its index
-fn parent(i: usize) -> usize {
+#[inline(always)]
+const fn parent(i: usize) -> usize {
     (i - 1) / 2
 }
 
-fn log2_fast(x: usize) -> usize {
-    use std::mem::size_of;
-    8 * size_of::<usize>() - (x.leading_zeros() as usize) - 1
+#[inline(always)]
+const fn log2_fast(x: usize) -> usize {
+    (8 * usize::BITS - x.leading_zeros() - 1) as usize
 }
 
 // `rebuild` takes O(len1 + len2) operations
