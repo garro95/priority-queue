@@ -224,9 +224,11 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe { (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
+        self.qp
+            .swap(unsafe { *self.heap.get_unchecked(a) }, unsafe {
+                *self.heap.get_unchecked(b)
+            });
         self.heap.swap(a, b);
-        self.qp.swap(i, j);
     }
 
     /// Remove and return the element with the max priority
@@ -314,8 +316,8 @@ where
         F: FnOnce(&mut P),
     {
         let Store { map, qp, .. } = self;
-        map.get_full_mut(item).map(|(index, _, mut p)| {
-            priority_setter(&mut p);
+        map.get_full_mut(item).map(|(index, _, p)| {
+            priority_setter(p);
             unsafe { *qp.get_unchecked(index) }
         })
     }
