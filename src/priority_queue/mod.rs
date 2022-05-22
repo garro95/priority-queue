@@ -196,12 +196,10 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)> {
-        if self.store.size == 0 {
-            return None;
-        }
         self.store
-            .map
-            .get_index(unsafe { *self.store.heap.get_unchecked(0) })
+            .heap
+            .get(0)
+            .and_then(|index| self.store.map.get_index(*index))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -517,6 +515,10 @@ where
     ///
     /// Computes in **O(log(N))** time
     fn heapify(&mut self, mut i: usize) {
+        if self.store.size <= 1 {
+            return;
+        }
+
         let (mut l, mut r) = (left(i), right(i));
         let mut largest = i;
 
@@ -562,15 +564,21 @@ where
     /// than the new element is found
     fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
         let priority = self.store.map.get_index(map_position).unwrap().1;
-        unsafe {
-            while (position > 0)
-                && (self.store.get_priority_from_heap_index(parent(position)) < priority)
-            {
-                let parent_position = *self.store.heap.get_unchecked(parent(position));
+        let mut parent_index = 0;
+        while if position > 0 {
+            parent_index = parent(position);
+            (unsafe { self.store.get_priority_from_heap_index(parent_index) }) < priority
+        } else {
+            false
+        } {
+            unsafe {
+                let parent_position = *self.store.heap.get_unchecked(parent_index);
                 *self.store.heap.get_unchecked_mut(position) = parent_position;
                 *self.store.qp.get_unchecked_mut(parent_position) = position;
-                position = parent(position);
             }
+            position = parent_index;
+        }
+        unsafe {
             *self.store.heap.get_unchecked_mut(position) = map_position;
             *self.store.qp.get_unchecked_mut(map_position) = position;
         }
