@@ -268,6 +268,7 @@ where
         self.map.swap_remove_index(head)
     }
 
+    #[inline(always)]
     pub unsafe fn get_priority_from_heap_index(&self, index: usize) -> &P {
         self.map
             .get_index(*self.heap.get_unchecked(index))
