@@ -2,7 +2,7 @@
 [![crate](https://img.shields.io/crates/v/priority-queue.svg)](https://crates.io/crates/priority-queue)
 [![Build](https://github.com/garro95/priority-queue/actions/workflows/build.yml/badge.svg)](https://github.com/garro95/priority-queue/actions/workflows/build.yml)
 [![Test](https://github.com/garro95/priority-queue/actions/workflows/test.yml/badge.svg)](https://github.com/garro95/priority-queue/actions/workflows/test.yml)
-	   
+
 This crate implements a Priority Queue with a function to change the priority of an object.
 Priority and items are stored in an `IndexMap` and the queue is implemented as a Heap of indexes.
 
@@ -13,7 +13,7 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.2.1"
+priority-queue = "1.2.2"
 ```
 
 Version numbers follow the [semver](https://semver.org/) convention.
