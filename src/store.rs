@@ -199,23 +199,27 @@ where
     ///
     /// This number is a lower bound; the map might be able to hold more,
     /// but is guaranteed to be able to hold at least this many.
+    #[inline(always)]
     pub fn capacity(&self) -> usize {
         self.map.capacity()
     }
 
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
+    #[inline(always)]
     pub fn shrink_to_fit(&mut self) {
         self.heap.shrink_to_fit();
         self.qp.shrink_to_fit();
     }
 
     /// Returns the number of elements in the priority queue.
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.size
     }
 
     /// Returns true if the priority queue contains no elements.
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
@@ -223,10 +227,13 @@ where
     /// Swap two elements keeping a consistent state.
     ///
     /// Computes in **O(1)** time
+    #[inline(always)]
     pub fn swap(&mut self, a: usize, b: usize) {
-        let (i, j) = unsafe { (*self.heap.get_unchecked(a), *self.heap.get_unchecked(b)) };
+        self.qp
+            .swap(unsafe { *self.heap.get_unchecked(a) }, unsafe {
+                *self.heap.get_unchecked(b)
+            });
         self.heap.swap(a, b);
-        self.qp.swap(i, j);
     }
 
     /// Remove and return the element with the max priority
@@ -261,6 +268,7 @@ where
         self.map.swap_remove_index(head)
     }
 
+    #[inline(always)]
     pub unsafe fn get_priority_from_heap_index(&self, index: usize) -> &P {
         self.map
             .get_index(*self.heap.get_unchecked(index))
@@ -314,8 +322,8 @@ where
         F: FnOnce(&mut P),
     {
         let Store { map, qp, .. } = self;
-        map.get_full_mut(item).map(|(index, _, mut p)| {
-            priority_setter(&mut p);
+        map.get_full_mut(item).map(|(index, _, p)| {
+            priority_setter(p);
             unsafe { *qp.get_unchecked(index) }
         })
     }

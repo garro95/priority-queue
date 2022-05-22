@@ -603,14 +603,13 @@ where
             ]
             .iter()
             .filter_map(|i| self.store.heap.get(*i).map(|index| (i, index)))
-            .map(|(i, index)| {
+            .min_by_key(|(_, index)| {
                 self.store
                     .map
-                    .get_index(*index)
-                    .map(|(item, priority)| (i, item, priority))
+                    .get_index(**index)
+                    .map(|(_, priority)| priority)
                     .unwrap()
             })
-            .min_by_key(|(_, _, priority)| *priority)
             .unwrap()
             .0;
 
@@ -648,14 +647,13 @@ where
             ]
             .iter()
             .filter_map(|i| self.store.heap.get(*i).map(|index| (i, index)))
-            .map(|(i, index)| {
+            .max_by_key(|(_, index)| {
                 self.store
                     .map
-                    .get_index(*index)
-                    .map(|(item, priority)| (i, item, priority))
+                    .get_index(**index)
+                    .map(|(_, priority)| priority)
                     .unwrap()
             })
-            .max_by_key(|(_, _, priority)| *priority)
             .unwrap()
             .0;
 
@@ -679,52 +677,32 @@ where
     }
 
     fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
+        let priority = self.store.map.get_index(map_position).unwrap().1;
         if position > 0 {
-            position = if level(position) % 2 == 0 {
-                //on a min level
-                if self
-                    .store
-                    .map
-                    .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
-                    .unwrap()
-                    .1
-                    < self.store.map.get_index(map_position).unwrap().1
-                {
-                    // and greater then parent
+            let parent = parent(position);
+            let parent_priority = unsafe { self.store.get_priority_from_heap_index(parent) };
+            let parent_position = unsafe { *self.store.heap.get_unchecked(parent) };
+            position = match (level(position) % 2 == 0, parent_priority < priority) {
+                // on a min level and greater then parent
+                (true, true) => {
                     unsafe {
-                        *self.store.heap.get_unchecked_mut(position) =
-                            *self.store.heap.get_unchecked(parent(position));
-                        *self
-                            .store
-                            .qp
-                            .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                        *self.store.heap.get_unchecked_mut(position) = parent_position;
+                        *self.store.qp.get_unchecked_mut(parent_position) = position;
                     }
-                    self.bubble_up_max(parent(position), map_position)
-                } else {
-                    // and less then parent
-                    self.bubble_up_min(position, map_position)
+                    self.bubble_up_max(parent, map_position)
                 }
-            } else if self
-                .store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(parent(position)) })
-                .unwrap()
-                .1
-                > self.store.map.get_index(map_position).unwrap().1
-            {
-                // on a max level and less then parent
-                unsafe {
-                    *self.store.heap.get_unchecked_mut(position) =
-                        *self.store.heap.get_unchecked(parent(position));
-                    *self
-                        .store
-                        .qp
-                        .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
-                }
-                self.bubble_up_min(parent(position), map_position)
-            } else {
+                // on a min level and less then parent
+                (true, false) => self.bubble_up_min(position, map_position),
                 // on a max level and greater then parent
-                self.bubble_up_max(position, map_position)
+                (false, true) => self.bubble_up_max(position, map_position),
+                // on a max level and less then parent
+                (false, false) => {
+                    unsafe {
+                        *self.store.heap.get_unchecked_mut(position) = parent_position;
+                        *self.store.qp.get_unchecked_mut(parent_position) = position;
+                    }
+                    self.bubble_up_min(parent, map_position)
+                }
             }
         }
 
@@ -738,47 +716,39 @@ where
     }
 
     fn bubble_up_min(&mut self, mut position: usize, map_position: usize) -> usize {
-        while (position > 0 && parent(position) > 0)
-            && (self
-                .store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(parent(parent(position))) })
-                .unwrap()
-                .1
-                > self.store.map.get_index(map_position).unwrap().1)
-        {
+        let priority = self.store.map.get_index(map_position).unwrap().1;
+        let mut grand_parent = 0;
+        while if position > 0 && parent(position) > 0 {
+            grand_parent = parent(parent(position));
+            (unsafe { self.store.get_priority_from_heap_index(grand_parent) }) > priority
+        } else {
+            false
+        } {
             unsafe {
-                *self.store.heap.get_unchecked_mut(position) =
-                    *self.store.heap.get_unchecked(parent(parent(position)));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                let grand_parent_position = *self.store.heap.get_unchecked(grand_parent);
+                *self.store.heap.get_unchecked_mut(position) = grand_parent_position;
+                *self.store.qp.get_unchecked_mut(grand_parent_position) = position;
             }
-            position = parent(parent(position));
+            position = grand_parent;
         }
         position
     }
 
     fn bubble_up_max(&mut self, mut position: usize, map_position: usize) -> usize {
-        while (position > 0 && parent(position) > 0)
-            && (self
-                .store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(parent(parent(position))) })
-                .unwrap()
-                .1
-                < self.store.map.get_index(map_position).unwrap().1)
-        {
+        let priority = self.store.map.get_index(map_position).unwrap().1;
+        let mut grand_parent = 0;
+        while if position > 0 && parent(position) > 0 {
+            grand_parent = parent(parent(position));
+            (unsafe { self.store.get_priority_from_heap_index(grand_parent) }) < priority
+        } else {
+            false
+        } {
             unsafe {
-                *self.store.heap.get_unchecked_mut(position) =
-                    *self.store.heap.get_unchecked(parent(parent(position)));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
+                let grand_parent_position = *self.store.heap.get_unchecked(grand_parent);
+                *self.store.heap.get_unchecked_mut(position) = grand_parent_position;
+                *self.store.qp.get_unchecked_mut(grand_parent_position) = position;
             }
-            position = parent(parent(position));
+            position = grand_parent;
         }
         position
     }
@@ -975,27 +945,30 @@ where
 }
 
 /// Compute the index of the left child of an item from its index
-fn left(i: usize) -> usize {
+#[inline(always)]
+const fn left(i: usize) -> usize {
     (i * 2) + 1
 }
 /// Compute the index of the right child of an item from its index
-fn right(i: usize) -> usize {
+#[inline(always)]
+const fn right(i: usize) -> usize {
     (i * 2) + 2
 }
 /// Compute the index of the parent element in the heap from its index
-fn parent(i: usize) -> usize {
+#[inline(always)]
+const fn parent(i: usize) -> usize {
     (i - 1) / 2
 }
 
 // Compute the level of a node from its index
-fn level(i: usize) -> usize {
+#[inline(always)]
+const fn level(i: usize) -> usize {
     log2_fast(i + 1)
 }
 
-fn log2_fast(x: usize) -> usize {
-    use std::mem::size_of;
-
-    8 * size_of::<usize>() - (x.leading_zeros() as usize) - 1
+#[inline(always)]
+const fn log2_fast(x: usize) -> usize {
+    (8 * usize::BITS - x.leading_zeros() - 1) as usize
 }
 
 // `rebuild` takes O(len1 + len2) operations

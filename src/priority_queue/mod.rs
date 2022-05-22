@@ -196,12 +196,10 @@ where
     ///
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)> {
-        if self.store.size == 0 {
-            return None;
-        }
         self.store
-            .map
-            .get_index(unsafe { *self.store.heap.get_unchecked(0) })
+            .heap
+            .get(0)
+            .and_then(|index| self.store.map.get_index(*index))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -398,12 +396,12 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
-            self.up_heapify(pos);
-            Some(r)
-        } else {
-            None
-        }
+        self.store
+            .change_priority(item, new_priority)
+            .map(|(r, pos)| {
+                self.up_heapify(pos);
+                r
+            })
     }
 
     /// Change the priority of an Item using the provided function.
@@ -517,49 +515,47 @@ where
     ///
     /// Computes in **O(log(N))** time
     fn heapify(&mut self, mut i: usize) {
-        let (mut l, mut r) = (left(i), right(i));
-        let mut largest = if l < self.store.size
-            && unsafe {
-                self.store.get_priority_from_heap_index(l)
-                    > self.store.get_priority_from_heap_index(i)
-            } {
-            l
-        } else {
-            i
-        };
+        if self.store.size <= 1 {
+            return;
+        }
 
-        if r < self.store.size
-            && unsafe {
-                self.store.get_priority_from_heap_index(r)
-                    > self.store.get_priority_from_heap_index(largest)
+        let (mut l, mut r) = (left(i), right(i));
+        let mut largest = i;
+
+        let mut largestp = unsafe { self.store.get_priority_from_heap_index(i) };
+        if l < self.store.size {
+            let childp = unsafe { self.store.get_priority_from_heap_index(l) };
+            if childp > largestp {
+                largest = l;
+                largestp = childp;
             }
-        {
-            largest = r;
+
+            if r < self.store.size
+                && unsafe { self.store.get_priority_from_heap_index(r) } > largestp
+            {
+                largest = r;
+            }
         }
 
         while largest != i {
             self.store.swap(i, largest);
 
             i = largest;
+            let mut largestp = unsafe { self.store.get_priority_from_heap_index(i) };
             l = left(i);
-            r = right(i);
-            if l < self.store.size
-                && unsafe {
-                    self.store.get_priority_from_heap_index(l)
-                        > self.store.get_priority_from_heap_index(i)
+            if l < self.store.size {
+                let childp = unsafe { self.store.get_priority_from_heap_index(l) };
+                if childp > largestp {
+                    largest = l;
+                    largestp = childp;
                 }
-            {
-                largest = l;
-            } else {
-                largest = i;
-            }
-            if r < self.store.size
-                && unsafe {
-                    self.store.get_priority_from_heap_index(r)
-                        > self.store.get_priority_from_heap_index(largest)
+
+                r = right(i);
+                if r < self.store.size
+                    && unsafe { self.store.get_priority_from_heap_index(r) } > largestp
+                {
+                    largest = r;
                 }
-            {
-                largest = r;
             }
         }
     }
@@ -567,19 +563,22 @@ where
     /// from the leaf go up to root or until an element with priority greater
     /// than the new element is found
     fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
-        unsafe {
-            while (position > 0)
-                && (self.store.get_priority_from_heap_index(parent(position))
-                    < self.store.map.get_index(map_position).unwrap().1)
-            {
-                *self.store.heap.get_unchecked_mut(position) =
-                    *self.store.heap.get_unchecked(parent(position));
-                *self
-                    .store
-                    .qp
-                    .get_unchecked_mut(*self.store.heap.get_unchecked(position)) = position;
-                position = parent(position);
+        let priority = self.store.map.get_index(map_position).unwrap().1;
+        let mut parent_index = 0;
+        while if position > 0 {
+            parent_index = parent(position);
+            (unsafe { self.store.get_priority_from_heap_index(parent_index) }) < priority
+        } else {
+            false
+        } {
+            unsafe {
+                let parent_position = *self.store.heap.get_unchecked(parent_index);
+                *self.store.heap.get_unchecked_mut(position) = parent_position;
+                *self.store.qp.get_unchecked_mut(parent_position) = position;
             }
+            position = parent_index;
+        }
+        unsafe {
             *self.store.heap.get_unchecked_mut(position) = map_position;
             *self.store.qp.get_unchecked_mut(map_position) = position;
         }
@@ -747,21 +746,24 @@ where
 }
 
 /// Compute the index of the left child of an item from its index
-fn left(i: usize) -> usize {
+#[inline(always)]
+const fn left(i: usize) -> usize {
     (i * 2) + 1
 }
 /// Compute the index of the right child of an item from its index
-fn right(i: usize) -> usize {
+#[inline(always)]
+const fn right(i: usize) -> usize {
     (i * 2) + 2
 }
 /// Compute the index of the parent element in the heap from its index
-fn parent(i: usize) -> usize {
+#[inline(always)]
+const fn parent(i: usize) -> usize {
     (i - 1) / 2
 }
 
-fn log2_fast(x: usize) -> usize {
-    use std::mem::size_of;
-    8 * size_of::<usize>() - (x.leading_zeros() as usize) - 1
+#[inline(always)]
+const fn log2_fast(x: usize) -> usize {
+    (8 * usize::BITS - x.leading_zeros() - 1) as usize
 }
 
 // `rebuild` takes O(len1 + len2) operations
