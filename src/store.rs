@@ -23,6 +23,7 @@ use std::vec::Vec;
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
 use crate::core_iterators::*;
+use crate::heap_common::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -33,13 +34,6 @@ use std::iter::{FromIterator, IntoIterator, Iterator};
 use std::mem::swap;
 
 use indexmap::map::{IndexMap, MutableKeys};
-
-/// The Index of the element in the Map
-#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub(crate) struct Index(pub usize);
-/// The Position of the element in the Heap
-#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub(crate) struct Position(pub usize);
 
 /// Internal storage of PriorityQueue and DoublePriorityQueue
 #[derive(Clone)]
@@ -261,6 +255,34 @@ where
             .get_index(self.heap.get_unchecked(position.0).0)
             .unwrap()
             .1
+    }
+
+    #[inline(always)]
+    pub fn get_priority_from_index(&self, index: Index) -> &P {
+        self.map
+            .get_index(index.0)
+            .unwrap()
+            .1
+    }
+
+    #[inline(always)]
+    pub unsafe fn get_from_position(&self, position: Position) -> (&I, &P) {
+        self.map
+            .get_index(self.heap.get_unchecked(position.0).0)
+            .unwrap()
+    }
+
+    #[inline(always)]
+    pub fn get_index(&self, index: Index) -> Option<(&I, &P)> {
+        self.map
+            .get_index(index.0)
+    }
+
+    #[inline(always)]
+    pub unsafe fn get_position_mut_item(&mut self, position: Position) -> Option<(&mut I, &P)> {
+        self.map
+            .get_index_mut(self.heap.get_unchecked(position.0).0)
+            .map(|(k, v)| (k, &*v))
     }
 }
 

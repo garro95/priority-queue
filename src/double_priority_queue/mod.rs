@@ -27,7 +27,8 @@ pub mod iterators;
 use std::vec::Vec;
 
 use crate::core_iterators::{IntoIter, Iter};
-use crate::store::{Index, Position, Store};
+use crate::store::Store;
+use crate::heap_common::*;
 use iterators::*;
 
 use std::borrow::Borrow;
@@ -941,48 +942,6 @@ where
     fn eq(&self, other: &DoublePriorityQueue<I, P2, H2>) -> bool {
         self.store == other.store
     }
-}
-
-/// Compute the index of the left child of an item from its index
-#[inline(always)]
-const fn left(i: Position) -> Position {
-    Position((i.0 * 2) + 1)
-}
-/// Compute the index of the right child of an item from its index
-#[inline(always)]
-const fn right(i: Position) -> Position {
-    Position((i.0 * 2) + 2)
-}
-/// Compute the index of the parent element in the heap from its index
-#[inline(always)]
-const fn parent(i: Position) -> Position {
-    Position((i.0 - 1) / 2)
-}
-
-// Compute the level of a node from its index
-#[inline(always)]
-const fn level(i: Position) -> usize {
-    log2_fast(i.0 + 1)
-}
-
-#[inline(always)]
-const fn log2_fast(x: usize) -> usize {
-    (8 * usize::BITS - x.leading_zeros() - 1) as usize
-}
-
-// `rebuild` takes O(len1 + len2) operations
-// and about 2 * (len1 + len2) comparisons in the worst case
-// while `extend` takes O(len2 * log_2(len1)) operations
-// and about 1 * len2 * log_2(len1) comparisons in the worst case,
-// assuming len1 >= len2.
-fn better_to_rebuild(len1: usize, len2: usize) -> bool {
-    // log(1) == 0, so the inequation always falsy
-    // log(0) is inapplicable and produces panic
-    if len1 <= 1 {
-        return false;
-    }
-
-    2 * (len1 + len2) < len2 * log2_fast(len1)
 }
 
 #[cfg(feature = "serde")]
