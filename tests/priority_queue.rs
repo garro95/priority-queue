@@ -425,6 +425,34 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn iter_over() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        for (_, v) in pq.iter_over(&2) {
+            assert!(v > &2);
+        }
+        assert_eq!(pq.iter_over(&0).count(), 3);
+        assert_eq!(pq.iter_over(&1).count(), 2);
+        assert_eq!(pq.iter_over(&2).count(), 1);
+        assert_eq!(pq.iter_over(&7).count(), 0);
+    }
+
+    #[test]
+    fn iter_over_mut() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        {
+            pq.iter_over_mut(&1).for_each(|(_, v)| *v = 0);
+        }
+        assert_eq!(pq.peek().unwrap(), (&"a", &1));
+    }
+    #[test]
     fn eq() {
         let mut a = PriorityQueue::new();
         let mut b = PriorityQueue::new();

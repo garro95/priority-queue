@@ -40,6 +40,7 @@ use std::hash::Hash;
 use std::iter::*;
 
 use crate::PriorityQueue;
+use crate::heap_common::*;
 
 /// A mutable iterator over the couples `(item, priority)` of the `PriorityQueue`
 /// in arbitrary order.
@@ -71,7 +72,6 @@ where
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
 }
-
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
@@ -141,5 +141,139 @@ where
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
         self.pq.pop()
+    }
+}
+
+#[cfg(has_std)]
+pub struct IterOver<'a, I: 'a, P: 'a, H: 'a = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a PriorityQueue<I, P, H>,
+    next_pos: Vec<Position>,
+    min_priority: &'a P,
+}
+
+#[cfg(not(has_std))]
+pub struct IterOver<'a, I: 'a, P: 'a, H: 'a>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a PriorityQueue<I, P, H>,
+    next_pos: Vec<Position>,
+    min_priority: &'a P,
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> IterOver<'a, I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) fn new(pq: &'a PriorityQueue<I, P, H>, min_priority: &'a P) -> Self {
+        IterOver{
+            pq,
+            next_pos: pq.peek().and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)])).unwrap_or(vec![]),
+            min_priority,
+        }
+    }
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> Iterator for IterOver<'a, I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    type Item = (&'a I, &'a P);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next_pos.pop().map(|pos| {
+            let l = left(pos);
+            if l.0 < self.pq.len() {
+                if unsafe { self.pq.store.get_priority_from_position(l) } > self.min_priority {
+                    self.next_pos.push(l);
+                }
+                let r = right(pos);
+                if r.0 < self.pq.len() && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority {
+                    self.next_pos.push(r);
+                }
+            }
+            unsafe { self.pq.store.get_from_position(pos) }
+        })
+    }
+}
+
+#[cfg(has_std)]
+pub struct IterOverMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a mut PriorityQueue<I, P, H>,
+    next_pos: Vec<Position>,
+    min_priority: &'a P,
+}
+
+#[cfg(not(has_std))]
+pub struct IterOverMut<'a, I: 'a, P: 'a, H: 'a>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pq: &'a mut PriorityQueue<I, P, H>,
+    next_pos: Vec<Position>,
+    min_priority: &'a P,
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> IterOverMut<'a, I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>, min_priority: &'a P) -> Self {
+        IterOverMut {
+            next_pos: pq.peek().and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)])).unwrap_or(vec![]),
+            pq,
+            min_priority,
+        }
+    }
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> Iterator for IterOverMut<'a, I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    type Item = (&'a mut I, &'a mut P);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next_pos.pop().and_then(|pos| {
+            let l = left(pos);
+            if dbg!(l.0 < self.pq.len()) {
+                if unsafe { self.pq.store.get_priority_from_position(l) } > self.min_priority {
+                    self.next_pos.push(l);
+                }
+                let r = right(pos);
+                if r.0 < self.pq.len() && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority {
+                    self.next_pos.push(r);
+                }
+            }
+            self
+                .pq
+                .store
+                .map
+                .get_index_mut(unsafe { self.pq.store.heap.get_unchecked(pos.0) }.0)
+                .map(|(i, p)| (i as *mut I, p as *mut P))
+                .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) })
+        })
+    }
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterOverMut<'a, I, P, H>
+where
+    I: Hash + Eq,
+    P: Ord,
+{
+    fn drop(&mut self) {
+        self.pq.heap_build();
     }
 }

@@ -192,6 +192,38 @@ where
         IterMut::new(self)
     }
 
+    /// Returns an iterator in arbitrary order over the
+    /// `(item, priority)` elements in the queue with `priority > min_priority`.
+    ///
+    /// This iterator is not in place, as it uses an internal stack to keep track
+    /// of the positions that have to be visited, storing up to O(log(N)) additional `usize`s.
+    ///
+    /// Each call to `next()` causes at most 2 comparisons between priorities and two `push`es
+    /// in a `Vec` that may cause its reallocation.
+    pub fn iter_over<'a>(&'a self, min_priority: &'a P) -> IterOver<'a, I, P, H> {
+        IterOver::new(self, min_priority)
+    }
+
+    /// Returns an iterator in arbitrary order over the
+    /// `(item, priority)` elements in the queue with `priority > min_priority`.
+    ///
+    /// The item and the priority are mutable references, but it's a logic error
+    /// to modify the item in a way that changes the result of `Hash` or `Eq`.
+    ///
+    /// It's *not* an error, instead, to modify the priorities, because the heap
+    /// will be rebuilt once the `IterMut` goes out of scope. It would be
+    /// rebuilt even if no priority value would have been modified, but the
+    /// procedure will not move anything, but just compare the priorities.
+    ///
+    /// This iterator is not in place, as it uses an internal stack to keep track
+    /// of the positions that have to be visited, storing up to O(log(N)) additional `usize`s.
+    ///
+    /// Each call to `next()` causes at most 2 comparisons between priorities and two `push`es
+    /// in a `Vec` that may cause its reallocation.
+    pub fn iter_over_mut<'a>(&'a mut self, min_priority: &'a P) -> IterOverMut<'a, I, P, H> {
+        IterOverMut::new(self, min_priority)
+    }
+
     /// Returns the couple (item, priority) with the greatest
     /// priority in the queue, or None if it is empty.
     ///
