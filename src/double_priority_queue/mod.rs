@@ -592,17 +592,19 @@ where
         while i <= parent(self.store.size - 1) {
             let m = i;
 
+            let l = left(i);
+            let r = right(i);
             // Minimum of childs and grandchilds
             i = *[
-                left(i),
-                right(i),
-                left(left(i)),
-                right(left(i)),
-                left(right(i)),
-                right(right(i)),
+                l,
+                r,
+                left(l),
+                right(l),
+                left(r),
+                right(r),
             ]
             .iter()
-            .filter_map(|i| self.store.heap.get(*i).map(|index| (i, index)))
+            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
             .min_by_key(|(_, index)| {
                 self.store
                     .map
@@ -636,17 +638,19 @@ where
         while i <= parent(self.store.size - 1) {
             let m = i;
 
+            let l = left(i);
+            let r = right(i);
             // Minimum of childs and grandchilds
             i = *[
-                left(i),
-                right(i),
-                left(left(i)),
-                right(left(i)),
-                left(right(i)),
-                right(right(i)),
+                l,
+                r,
+                left(l),
+                right(l),
+                left(r),
+                right(r),
             ]
             .iter()
-            .filter_map(|i| self.store.heap.get(*i).map(|index| (i, index)))
+            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
             .max_by_key(|(_, index)| {
                 self.store
                     .map
