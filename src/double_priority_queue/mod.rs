@@ -620,13 +620,15 @@ where
                 self.store.get_priority_from_position(i) < self.store.get_priority_from_position(m)
             } {
                 self.store.swap(i, m);
-                if i > right(m) // i is a grandchild of m
-                    && unsafe {
+                if i > r { // i is a grandchild of m
+                    let p = parent(i);
+                    if unsafe {
                         self.store.get_priority_from_position(i)
-                            > self.store.get_priority_from_position(parent(i))
+                            > self.store.get_priority_from_position(p)
                     }
-                {
-                    self.store.swap(i, parent(i));
+                    {
+                        self.store.swap(i, p);
+                    }
                 }
             } else {
                 break;
@@ -668,8 +670,8 @@ where
                 if i > r { // i is a grandchild of m
                     let p = parent(i);
                     if unsafe {
-                        self.store.get_priority_from_heap_index(i)
-                            < self.store.get_priority_from_heap_index(p)
+                        self.store.get_priority_from_position(i)
+                            < self.store.get_priority_from_position(p)
                     }
                     {
                         self.store.swap(i, p);
