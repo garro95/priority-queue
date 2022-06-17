@@ -28,7 +28,7 @@ pub mod iterators;
 use std::vec::Vec;
 
 use crate::core_iterators::{IntoIter, Iter};
-use crate::store::Store;
+use crate::store::{Index, Position, Store};
 use iterators::*;
 
 use std::borrow::Borrow;
@@ -199,7 +199,7 @@ where
         self.store
             .heap
             .get(0)
-            .and_then(|index| self.store.map.get_index(*index))
+            .and_then(|index| self.store.map.get_index(index.0))
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -219,7 +219,7 @@ where
         }
         self.store
             .map
-            .get_index_mut(unsafe { *self.store.heap.get_unchecked(0) })
+            .get_index_mut(unsafe { self.store.heap.get_unchecked(0) }.0)
             .map(|(k, v)| (k, &*v))
     }
 
@@ -242,12 +242,12 @@ where
     /// the priority queue and returns the pair (item, priority),
     /// or None if the queue is empty.
     pub fn pop(&mut self) -> Option<(I, P)> {
-        match self.store.size {
+        match self.len() {
             0 => None,
-            1 => self.store.swap_remove(0),
+            1 => self.store.swap_remove(Position(0)),
             _ => {
-                let r = self.store.swap_remove(0);
-                self.heapify(0);
+                let r = self.store.swap_remove(Position(0));
+                self.heapify(Position(0));
                 r
             }
         }
@@ -265,6 +265,7 @@ where
     }
 
     /// Returns the number of elements in the priority queue.
+    #[inline]
     pub fn len(&self) -> usize {
         self.store.len()
     }
@@ -312,7 +313,7 @@ where
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {
         use indexmap::map::Entry::*;
-        let mut pos = 0;
+        let mut pos = Position(0);
         let mut oldp = None;
 
         match self.store.map.entry(item) {
@@ -330,11 +331,11 @@ where
             return oldp;
         }
         // copy the current size of the heap
-        let i = self.store.size;
+        let i = self.len();
         // add the new element in the qp vector as the last in the heap
-        self.store.qp.push(i);
-        self.store.heap.push(i);
-        self.bubble_up(i, i);
+        self.store.qp.push(Position(i));
+        self.store.heap.push(Index(i));
+        self.bubble_up(Position(i), Index(i));
         self.store.size += 1;
         None
     }
@@ -465,7 +466,7 @@ where
         Q: Eq + Hash,
     {
         self.store.remove(item).map(|(item, priority, pos)| {
-            if pos < self.store.size {
+            if pos.0 < self.len() {
                 self.up_heapify(pos);
             }
 
@@ -514,25 +515,23 @@ where
     /// Internal function that restores the functional property of the sub-heap rooted in `i`
     ///
     /// Computes in **O(log(N))** time
-    fn heapify(&mut self, mut i: usize) {
-        if self.store.size <= 1 {
+    fn heapify(&mut self, mut i: Position) {
+        if self.len() <= 1 {
             return;
         }
 
         let (mut l, mut r) = (left(i), right(i));
         let mut largest = i;
 
-        let mut largestp = unsafe { self.store.get_priority_from_heap_index(i) };
-        if l < self.store.size {
-            let childp = unsafe { self.store.get_priority_from_heap_index(l) };
+        let mut largestp = unsafe { self.store.get_priority_from_position(i) };
+        if l.0 < self.len() {
+            let childp = unsafe { self.store.get_priority_from_position(l) };
             if childp > largestp {
                 largest = l;
                 largestp = childp;
             }
 
-            if r < self.store.size
-                && unsafe { self.store.get_priority_from_heap_index(r) } > largestp
-            {
+            if r.0 < self.len() && unsafe { self.store.get_priority_from_position(r) } > largestp {
                 largest = r;
             }
         }
@@ -541,18 +540,18 @@ where
             self.store.swap(i, largest);
 
             i = largest;
-            let mut largestp = unsafe { self.store.get_priority_from_heap_index(i) };
+            let mut largestp = unsafe { self.store.get_priority_from_position(i) };
             l = left(i);
-            if l < self.store.size {
-                let childp = unsafe { self.store.get_priority_from_heap_index(l) };
+            if l.0 < self.len() {
+                let childp = unsafe { self.store.get_priority_from_position(l) };
                 if childp > largestp {
                     largest = l;
                     largestp = childp;
                 }
 
                 r = right(i);
-                if r < self.store.size
-                    && unsafe { self.store.get_priority_from_heap_index(r) } > largestp
+                if r.0 < self.len()
+                    && unsafe { self.store.get_priority_from_position(r) } > largestp
                 {
                     largest = r;
                 }
@@ -562,25 +561,25 @@ where
 
     /// from the leaf go up to root or until an element with priority greater
     /// than the new element is found
-    fn bubble_up(&mut self, mut position: usize, map_position: usize) -> usize {
-        let priority = self.store.map.get_index(map_position).unwrap().1;
-        let mut parent_index = 0;
-        while if position > 0 {
-            parent_index = parent(position);
-            (unsafe { self.store.get_priority_from_heap_index(parent_index) }) < priority
+    fn bubble_up(&mut self, mut position: Position, map_position: Index) -> Position {
+        let priority = self.store.map.get_index(map_position.0).unwrap().1;
+        let mut parent_position = Position(0);
+        while if position.0 > 0 {
+            parent_position = parent(position);
+            (unsafe { self.store.get_priority_from_position(parent_position) }) < priority
         } else {
             false
         } {
             unsafe {
-                let parent_position = *self.store.heap.get_unchecked(parent_index);
-                *self.store.heap.get_unchecked_mut(position) = parent_position;
-                *self.store.qp.get_unchecked_mut(parent_position) = position;
+                let parent_index = *self.store.heap.get_unchecked(parent_position.0);
+                *self.store.heap.get_unchecked_mut(position.0) = parent_index;
+                *self.store.qp.get_unchecked_mut(parent_index.0) = position;
             }
-            position = parent_index;
+            position = parent_position;
         }
         unsafe {
-            *self.store.heap.get_unchecked_mut(position) = map_position;
-            *self.store.qp.get_unchecked_mut(map_position) = position;
+            *self.store.heap.get_unchecked_mut(position.0) = map_position;
+            *self.store.qp.get_unchecked_mut(map_position.0) = position;
         }
         position
     }
@@ -589,8 +588,8 @@ where
     /// and restores the functional property
     ///
     /// Computes in **O(log(N))**
-    fn up_heapify(&mut self, i: usize) {
-        let tmp = unsafe { *self.store.heap.get_unchecked(i) };
+    fn up_heapify(&mut self, i: Position) {
+        let tmp = unsafe { *self.store.heap.get_unchecked(i.0) };
         let pos = self.bubble_up(i, tmp);
         self.heapify(pos)
     }
@@ -600,11 +599,11 @@ where
     ///
     /// Computes in **O(N)**
     pub(crate) fn heap_build(&mut self) {
-        if self.store.size == 0 {
+        if self.len() == 0 {
             return;
         }
-        for i in (0..=parent(self.store.size)).rev() {
-            self.heapify(i);
+        for i in (0..=parent(Position(self.len())).0).rev() {
+            self.heapify(Position(i));
         }
     }
 }
@@ -710,10 +709,10 @@ where
         let (min, max) = iter.size_hint();
         let rebuild = if let Some(max) = max {
             self.reserve(max);
-            better_to_rebuild(self.store.size, max)
+            better_to_rebuild(self.len(), max)
         } else if min != 0 {
             self.reserve(min);
-            better_to_rebuild(self.store.size, min)
+            better_to_rebuild(self.len(), min)
         } else {
             false
         };
@@ -747,18 +746,18 @@ where
 
 /// Compute the index of the left child of an item from its index
 #[inline(always)]
-const fn left(i: usize) -> usize {
-    (i * 2) + 1
+const fn left(i: Position) -> Position {
+    Position((i.0 * 2) + 1)
 }
 /// Compute the index of the right child of an item from its index
 #[inline(always)]
-const fn right(i: usize) -> usize {
-    (i * 2) + 2
+const fn right(i: Position) -> Position {
+    Position((i.0 * 2) + 2)
 }
 /// Compute the index of the parent element in the heap from its index
 #[inline(always)]
-const fn parent(i: usize) -> usize {
-    (i - 1) / 2
+const fn parent(i: Position) -> Position {
+    Position((i.0 - 1) / 2)
 }
 
 #[inline(always)]

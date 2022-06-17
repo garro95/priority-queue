@@ -20,7 +20,7 @@
 
 //! This crate provides 2 main data structures:
 //!  *  a [priority queue](PriorityQueue)
-//!  *  a [double prioriy queue](DoublePriorityQueue).
+//!  *  a [double priority queue](DoublePriorityQueue).
 //!
 //! Both data structures are backed by an hashmap, allowing
 //! to change the priority of an element with some efficient methods in

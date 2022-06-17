@@ -34,6 +34,13 @@ use std::mem::swap;
 
 use indexmap::map::{IndexMap, MutableKeys};
 
+/// The Index of the element in the Map
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub(crate) struct Index(pub usize);
+/// The Position of the element in the Heap
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub(crate) struct Position(pub usize);
+
 /// Internal storage of PriorityQueue and DoublePriorityQueue
 #[derive(Clone)]
 #[cfg(has_std)]
@@ -43,8 +50,8 @@ where
     P: Ord,
 {
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    pub heap: Vec<usize>,       // Implements the heap of indexes
-    pub qp: Vec<usize>,         // Performs the translation from the index
+    pub heap: Vec<Index>,       // Implements the heap of indexes
+    pub qp: Vec<Position>,      // Performs the translation from the index
     // of the map to the index of the heap
     pub size: usize, // The size of the heap
 }
@@ -57,8 +64,8 @@ where
     P: Ord,
 {
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    pub heap: Vec<usize>,       // Implements the heap of indexes
-    pub qp: Vec<usize>,         // Performs the translation from the index
+    pub heap: Vec<Index>,       // Implements the heap of indexes
+    pub qp: Vec<Position>,      // Performs the translation from the index
     // of the map to the index of the heap
     pub size: usize, // The size of the heap
 }
@@ -167,28 +174,6 @@ where
     }
 }
 
-/*
-impl<I, P, H> Store<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Return an iterator in arbitrary order over the
-    /// (item, priority) elements in the queue.
-    ///
-    /// The item and the priority are mutable references, but it's a logic error
-    /// to modify the item in a way that change the result of `Hash` or `Eq`.
-    ///
-    /// It's *not* an error, instead, to modify the priorities, because the heap
-    /// will be rebuilt once the `IterMut` goes out of scope. It would be
-    /// rebuilt even if no priority value would have been modified, but the
-    /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> crate::pqueue::IterMut<I, P, H> {
-        crate::pqueue::IterMut::new(self)
-    }
-}
-*/
-
 impl<I, P, H> Store<I, P, H>
 where
     P: Ord,
@@ -228,12 +213,12 @@ where
     ///
     /// Computes in **O(1)** time
     #[inline(always)]
-    pub fn swap(&mut self, a: usize, b: usize) {
-        self.qp
-            .swap(unsafe { *self.heap.get_unchecked(a) }, unsafe {
-                *self.heap.get_unchecked(b)
-            });
-        self.heap.swap(a, b);
+    pub fn swap(&mut self, a: Position, b: Position) {
+        self.qp.swap(
+            unsafe { self.heap.get_unchecked(a.0) }.0,
+            unsafe { self.heap.get_unchecked(b.0) }.0,
+        );
+        self.heap.swap(a.0, b.0);
     }
 
     /// Remove and return the element with the max priority
@@ -241,37 +226,39 @@ where
     /// state.
     ///
     /// Computes in **O(1)** time (average)
-    pub fn swap_remove(&mut self, index: usize) -> Option<(I, P)> {
+    pub fn swap_remove(&mut self, position: Position) -> Option<(I, P)> {
         // swap_remove the head
-        let head = self.heap.swap_remove(index);
+        let head: Index = self.heap.swap_remove(position.0);
         self.size -= 1;
         // swap remove the old heap head from the qp
-        if self.size == index {
-            self.qp.swap_remove(head);
-            if let Some(i) = self.qp.get(head) {
+        if self.size == position.0 {
+            self.qp.swap_remove(head.0);
+            if let Some(i) = self.qp.get(head.0) {
                 unsafe {
-                    *self.heap.get_unchecked_mut(*i) = head;
+                    *self.heap.get_unchecked_mut(i.0) = head;
                 }
             }
-            return self.map.swap_remove_index(head);
+            return self.map.swap_remove_index(head.0);
         }
         unsafe {
-            *self.qp.get_unchecked_mut(*self.heap.get_unchecked(index)) = index;
+            *self
+                .qp
+                .get_unchecked_mut(self.heap.get_unchecked(position.0).0) = position;
         }
-        self.qp.swap_remove(head);
-        if head < self.size {
+        self.qp.swap_remove(head.0);
+        if head.0 < self.size {
             unsafe {
-                *self.heap.get_unchecked_mut(*self.qp.get_unchecked(head)) = head;
+                *self.heap.get_unchecked_mut(self.qp.get_unchecked(head.0).0) = head;
             }
         }
         // swap remove from the map and return to the client
-        self.map.swap_remove_index(head)
+        self.map.swap_remove_index(head.0)
     }
 
     #[inline(always)]
-    pub unsafe fn get_priority_from_heap_index(&self, index: usize) -> &P {
+    pub unsafe fn get_priority_from_position(&self, position: Position) -> &P {
         self.map
-            .get_index(*self.heap.get_unchecked(index))
+            .get_index(self.heap.get_unchecked(position.0).0)
             .unwrap()
             .1
     }
@@ -295,7 +282,7 @@ where
         &mut self,
         item: &Q,
         mut new_priority: P,
-    ) -> Option<(P, usize)>
+    ) -> Option<(P, Position)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -315,7 +302,7 @@ where
         &mut self,
         item: &Q,
         priority_setter: F,
-    ) -> Option<usize>
+    ) -> Option<Position>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
@@ -364,33 +351,34 @@ where
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
-    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P, usize)>
+    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P, Position)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
         self.map.swap_remove_full(item).map(|(i, item, priority)| {
+            let i = Index(i);
             self.size -= 1;
 
-            let pos = self.qp.swap_remove(i);
-            self.heap.swap_remove(pos);
-            if i < self.size {
+            let pos: Position = self.qp.swap_remove(i.0);
+            self.heap.swap_remove(pos.0);
+            if i.0 < self.size {
                 unsafe {
-                    let qpi = self.qp.get_unchecked_mut(i);
-                    if *qpi == self.size {
+                    let qpi = self.qp.get_unchecked_mut(i.0);
+                    if qpi.0 == self.size {
                         *qpi = pos;
                     } else {
-                        *self.heap.get_unchecked_mut(*qpi) = i;
+                        *self.heap.get_unchecked_mut(qpi.0) = i;
                     }
                 }
             }
-            if pos < self.size {
+            if pos.0 < self.size {
                 unsafe {
-                    let heap_pos = self.heap.get_unchecked_mut(pos);
-                    if *heap_pos == self.size {
+                    let heap_pos = self.heap.get_unchecked_mut(pos.0);
+                    if heap_pos.0 == self.size {
                         *heap_pos = i;
                     } else {
-                        *self.qp.get_unchecked_mut(*heap_pos) = pos;
+                        *self.qp.get_unchecked_mut(heap_pos.0) = pos;
                     }
                 }
             }
@@ -432,8 +420,8 @@ where
             if !self.map.contains_key(&k) {
                 let i = self.size;
                 self.map.insert(k, v);
-                self.heap.push(i);
-                self.qp.push(i);
+                self.heap.push(Index(i));
+                self.qp.push(Position(i));
                 self.size += 1;
             }
         }
@@ -500,8 +488,8 @@ where
         for (item, priority) in vec {
             if !store.map.contains_key(&item) {
                 store.map.insert(item, priority);
-                store.qp.push(i);
-                store.heap.push(i);
+                store.qp.push(Position(i));
+                store.heap.push(Index(i));
                 i += 1;
             }
         }
@@ -536,8 +524,8 @@ where
                 *old_priority = priority;
             } else {
                 store.map.insert(item, priority);
-                store.qp.push(store.size);
-                store.heap.push(store.size);
+                store.qp.push(Position(store.size));
+                store.heap.push(Index(store.size));
                 store.size += 1;
             }
         }
@@ -559,8 +547,8 @@ where
                 *old_priority = priority;
             } else {
                 self.map.insert(item, priority);
-                self.qp.push(self.size);
-                self.heap.push(self.size);
+                self.qp.push(Position(self.size));
+                self.heap.push(Index(self.size));
                 self.size += 1;
             }
         }
@@ -578,7 +566,7 @@ where
             .entries(
                 self.heap
                     .iter()
-                    .map(|&i| (i, self.map.get_index(i).unwrap())),
+                    .map(|&i| (i, self.map.get_index(i.0).unwrap())),
             )
             .finish()
     }
@@ -586,7 +574,7 @@ where
 
 #[cfg(feature = "serde")]
 mod serde {
-    use crate::store::Store;
+    use crate::store::{Index, Position, Store};
 
     use std::cmp::{Eq, Ord};
     use std::collections::hash_map::RandomState;
@@ -665,8 +653,8 @@ mod serde {
 
             while let Some((item, priority)) = seq.next_element()? {
                 store.map.insert(item, priority);
-                store.qp.push(store.size);
-                store.heap.push(store.size);
+                store.qp.push(Position(store.size));
+                store.heap.push(Index(store.size));
                 store.size += 1;
             }
             Ok(store)
