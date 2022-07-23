@@ -593,38 +593,35 @@ where
         while i <= parent(Position(self.len() - 1)) {
             let m = i;
 
+            let l = left(i);
+            let r = right(i);
             // Minimum of childs and grandchilds
-            i = *[
-                left(i),
-                right(i),
-                left(left(i)),
-                right(left(i)),
-                left(right(i)),
-                right(right(i)),
-            ]
-            .iter()
-            .filter_map(|i| self.store.heap.get(i.0).map(|index| (i, index)))
-            .min_by_key(|(_, index)| {
-                self.store
-                    .map
-                    .get_index(index.0)
-                    .map(|(_, priority)| priority)
-                    .unwrap()
-            })
-            .unwrap()
-            .0;
+            i = *[l, r, left(l), right(l), left(r), right(r)]
+                .iter()
+                .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+                .min_by_key(|(_, index)| {
+                    self.store
+                        .map
+                        .get_index(index.0)
+                        .map(|(_, priority)| priority)
+                        .unwrap()
+                })
+                .unwrap()
+                .0;
 
             if unsafe {
                 self.store.get_priority_from_position(i) < self.store.get_priority_from_position(m)
             } {
                 self.store.swap(i, m);
-                if i > right(m) // i is a grandchild of m
-                    && unsafe {
+                if i > r {
+                    // i is a grandchild of m
+                    let p = parent(i);
+                    if unsafe {
                         self.store.get_priority_from_position(i)
-                            > self.store.get_priority_from_position(parent(i))
+                            > self.store.get_priority_from_position(p)
+                    } {
+                        self.store.swap(i, p);
                     }
-                {
-                    self.store.swap(i, parent(i));
                 }
             } else {
                 break;
@@ -636,38 +633,35 @@ where
         while i <= parent(Position(self.len() - 1)) {
             let m = i;
 
+            let l = left(i);
+            let r = right(i);
             // Minimum of childs and grandchilds
-            i = *[
-                left(i),
-                right(i),
-                left(left(i)),
-                right(left(i)),
-                left(right(i)),
-                right(right(i)),
-            ]
-            .iter()
-            .filter_map(|i| self.store.heap.get(i.0).map(|index| (i, index)))
-            .max_by_key(|(_, index)| {
-                self.store
-                    .map
-                    .get_index(index.0)
-                    .map(|(_, priority)| priority)
-                    .unwrap()
-            })
-            .unwrap()
-            .0;
+            i = *[l, r, left(l), right(l), left(r), right(r)]
+                .iter()
+                .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+                .max_by_key(|(_, index)| {
+                    self.store
+                        .map
+                        .get_index(index.0)
+                        .map(|(_, priority)| priority)
+                        .unwrap()
+                })
+                .unwrap()
+                .0;
 
             if unsafe {
                 self.store.get_priority_from_position(i) > self.store.get_priority_from_position(m)
             } {
                 self.store.swap(i, m);
-                if i > right(m) // i is a grandchild of m
-                    && unsafe {
+                if i > r {
+                    // i is a grandchild of m
+                    let p = parent(i);
+                    if unsafe {
                         self.store.get_priority_from_position(i)
-                            < self.store.get_priority_from_position(parent(i))
+                            < self.store.get_priority_from_position(p)
+                    } {
+                        self.store.swap(i, p);
                     }
-                {
-                    self.store.swap(i, parent(i));
                 }
             } else {
                 break;
