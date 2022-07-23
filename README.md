@@ -13,7 +13,7 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.2.2"
+priority-queue = "1.2.3"
 ```
 
 Version numbers follow the [semver](https://semver.org/) convention.
@@ -114,6 +114,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.2.3 Further performance optimizations (mainly on `DoublePriorityQueue`)
 * 1.2.2 Performance optimizations
 * 1.2.1 Bug fix: [#34](https://github.com/garro95/priority-queue/issues/34)
 * 1.2.0 Implement DoublePriorityQueue data structure
