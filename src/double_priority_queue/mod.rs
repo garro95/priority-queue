@@ -596,37 +596,30 @@ where
             let l = left(i);
             let r = right(i);
             // Minimum of childs and grandchilds
-            i = *[
-                l,
-                r,
-                left(l),
-                right(l),
-                left(r),
-                right(r),
-            ]
-            .iter()
-            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
-            .min_by_key(|(_, index)| {
-                self.store
-                    .map
-                    .get_index(index.0)
-                    .map(|(_, priority)| priority)
-                    .unwrap()
-            })
-            .unwrap()
-            .0;
+            i = *[l, r, left(l), right(l), left(r), right(r)]
+                .iter()
+                .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+                .min_by_key(|(_, index)| {
+                    self.store
+                        .map
+                        .get_index(index.0)
+                        .map(|(_, priority)| priority)
+                        .unwrap()
+                })
+                .unwrap()
+                .0;
 
             if unsafe {
                 self.store.get_priority_from_position(i) < self.store.get_priority_from_position(m)
             } {
                 self.store.swap(i, m);
-                if i > r { // i is a grandchild of m
+                if i > r {
+                    // i is a grandchild of m
                     let p = parent(i);
                     if unsafe {
                         self.store.get_priority_from_position(i)
                             > self.store.get_priority_from_position(p)
-                    }
-                    {
+                    } {
                         self.store.swap(i, p);
                     }
                 }
@@ -643,37 +636,30 @@ where
             let l = left(i);
             let r = right(i);
             // Minimum of childs and grandchilds
-            i = *[
-                l,
-                r,
-                left(l),
-                right(l),
-                left(r),
-                right(r),
-            ]
-            .iter()
-            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
-            .max_by_key(|(_, index)| {
-                self.store
-                    .map
-                    .get_index(index.0)
-                    .map(|(_, priority)| priority)
-                    .unwrap()
-            })
-            .unwrap()
-            .0;
+            i = *[l, r, left(l), right(l), left(r), right(r)]
+                .iter()
+                .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+                .max_by_key(|(_, index)| {
+                    self.store
+                        .map
+                        .get_index(index.0)
+                        .map(|(_, priority)| priority)
+                        .unwrap()
+                })
+                .unwrap()
+                .0;
 
             if unsafe {
                 self.store.get_priority_from_position(i) > self.store.get_priority_from_position(m)
             } {
                 self.store.swap(i, m);
-                if i > r { // i is a grandchild of m
+                if i > r {
+                    // i is a grandchild of m
                     let p = parent(i);
                     if unsafe {
                         self.store.get_priority_from_position(i)
                             < self.store.get_priority_from_position(p)
-                    }
-                    {
+                    } {
                         self.store.swap(i, p);
                     }
                 }
