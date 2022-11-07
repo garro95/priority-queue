@@ -472,17 +472,24 @@ where
     }
 
     /// Change the priority of an Item using the provided function.
+    /// or `None` if the item wasn't in the queue.
+    ///
+    /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
+    /// in the priority queue.
+    ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F)
+    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F) -> Option<()>
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
         F: FnOnce(&mut P),
     {
-        if let Some(pos) = self.store.change_priority_by(item, priority_setter) {
-            self.up_heapify(pos);
-        }
+        self.store
+            .change_priority_by(item, priority_setter)
+            .map(|pos| {
+                self.up_heapify(pos);
+            })
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
