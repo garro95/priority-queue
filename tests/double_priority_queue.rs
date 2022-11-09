@@ -259,9 +259,9 @@ mod doublepq_tests {
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
         let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v.into_iter());
 
-        pq.change_priority_by("z", |z| *z += 8);
+        assert!(!pq.change_priority_by("z", |z| *z += 8));
 
-        pq.change_priority_by("b", |b| *b += 8);
+        assert!(pq.change_priority_by("b", |b| *b += 8));
         assert_eq!(
             pq.into_descending_sorted_vec().as_slice(),
             &["b", "f", "g", "h", "a"]
