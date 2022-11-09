@@ -489,7 +489,8 @@ where
             .change_priority_by(item, priority_setter)
             .map(|pos| {
                 self.up_heapify(pos);
-            }).is_some()
+            })
+            .is_some()
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
