@@ -13,7 +13,7 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.2.3"
+priority-queue = "1.3.0"
 ```
 
 Version numbers follow the [semver](https://semver.org/) convention.
@@ -114,12 +114,13 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.3.0 Return bool from `change_priority_by` (Merged [#41](https://github.com/garro95/priority-queue/pull/41))
 * 1.2.3 Further performance optimizations (mainly on `DoublePriorityQueue`)
 * 1.2.2 Performance optimizations
 * 1.2.1 Bug fix: [#34](https://github.com/garro95/priority-queue/issues/34)
 * 1.2.0 Implement DoublePriorityQueue data structure
 * 1.1.1 Convert documentation to Markdown
-* 1.1.0 Smooth `Q: Sized` requirement on some methods (fix [#32](https://github.com/garro95/priority-queue/issues/32>))
+* 1.1.0 Smooth `Q: Sized` requirement on some methods (fix [#32](https://github.com/garro95/priority-queue/issues/32))
 * 1.0.5 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
 * 1.0.4 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
 * 1.0.3 Bug fix: [#26](https://github.com/garro95/priority-queue/issues/26)
