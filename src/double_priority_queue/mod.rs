@@ -463,12 +463,12 @@ where
         I: Borrow<Q>,
         Q: Eq + Hash,
     {
-        if let Some((r, pos)) = self.store.change_priority(item, new_priority) {
-            self.up_heapify(pos);
-            Some(r)
-        } else {
-            None
-        }
+        self.store
+            .change_priority(item, new_priority)
+            .map(|(r, pos)| {
+                self.up_heapify(pos);
+                r
+            })
     }
 
     /// Change the priority of an Item using the provided function.
@@ -597,6 +597,55 @@ where
         }
     }
 
+    pub fn verify_property(&self) {
+        if self.len() == 0 { return }
+        for i in 0..self.len() {
+            if level(Position(i)) % 2 == 0 {
+                self.verify_min(Position(i))
+            } else {
+                self.verify_max(Position(i))
+            }
+        }
+    }
+
+    fn verify_min(&self, i: Position) {
+        let l = left(i);
+        let r = right(i);
+        let min = *[i, l, r, left(l), right(l), left(r), right(r)]
+            .iter()
+            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+            .min_by_key(|(_, index)| {
+                self.store
+                    .map
+                    .get_index(index.0)
+                    .map(|(_, priority)| priority)
+                    .unwrap()
+            })
+            .unwrap()
+            .0;
+
+        assert_eq!(min, i);
+    }
+
+    fn verify_max(&self, i: Position) {
+        let l = left(i);
+        let r = right(i);
+        let max = *[i, l, i, r, i, left(l), i, right(l), i, left(r), i, right(r), i]
+            .iter()
+            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+            .max_by_key(|(_, index)| {
+                self.store
+                    .map
+                    .get_index(index.0)
+                    .map(|(_, priority)| priority)
+                    .unwrap()
+            })
+            .unwrap()
+            .0;
+
+        assert_eq!(max, i);
+    }
+
     fn heapify_min(&mut self, mut i: Position) {
         while i <= parent(Position(self.len() - 1)) {
             let m = i;
@@ -630,6 +679,8 @@ where
                     } {
                         self.store.swap(i, p);
                     }
+                } else {
+                    break
                 }
             } else {
                 break;
@@ -670,6 +721,8 @@ where
                     } {
                         self.store.swap(i, p);
                     }
+                } else {
+                    break;
                 }
             } else {
                 break;
@@ -757,6 +810,7 @@ where
     fn up_heapify(&mut self, i: Position) {
         let tmp = unsafe { *self.store.heap.get_unchecked(i.0) };
         let pos = self.bubble_up(i, tmp);
+        if i != pos { self.heapify(i) }
         self.heapify(pos);
     }
 
