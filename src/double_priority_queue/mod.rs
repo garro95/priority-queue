@@ -598,7 +598,9 @@ where
     }
 
     pub fn verify_property(&self) {
-        if self.len() == 0 { return }
+        if self.len() == 0 {
+            return;
+        }
         for i in 0..self.len() {
             if level(Position(i)) % 2 == 0 {
                 self.verify_min(Position(i))
@@ -630,18 +632,32 @@ where
     fn verify_max(&self, i: Position) {
         let l = left(i);
         let r = right(i);
-        let max = *[i, l, i, r, i, left(l), i, right(l), i, left(r), i, right(r), i]
-            .iter()
-            .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
-            .max_by_key(|(_, index)| {
-                self.store
-                    .map
-                    .get_index(index.0)
-                    .map(|(_, priority)| priority)
-                    .unwrap()
-            })
-            .unwrap()
-            .0;
+        let max = *[
+            i,
+            l,
+            i,
+            r,
+            i,
+            left(l),
+            i,
+            right(l),
+            i,
+            left(r),
+            i,
+            right(r),
+            i,
+        ]
+        .iter()
+        .map_while(|i| self.store.heap.get(i.0).map(|index| (i, index)))
+        .max_by_key(|(_, index)| {
+            self.store
+                .map
+                .get_index(index.0)
+                .map(|(_, priority)| priority)
+                .unwrap()
+        })
+        .unwrap()
+        .0;
 
         assert_eq!(max, i);
     }
@@ -680,7 +696,7 @@ where
                         self.store.swap(i, p);
                     }
                 } else {
-                    break
+                    break;
                 }
             } else {
                 break;
@@ -810,7 +826,9 @@ where
     fn up_heapify(&mut self, i: Position) {
         let tmp = unsafe { *self.store.heap.get_unchecked(i.0) };
         let pos = self.bubble_up(i, tmp);
-        if i != pos { self.heapify(i) }
+        if i != pos {
+            self.heapify(i)
+        }
         self.heapify(pos);
     }
 
