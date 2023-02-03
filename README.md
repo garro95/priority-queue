@@ -114,6 +114,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.3.1 Bug fix: [#42](https://github.com/garro95/priority-queue/issues/42)
 * 1.3.0 Return bool from `change_priority_by` (Merged [#41](https://github.com/garro95/priority-queue/pull/41))
 * 1.2.3 Further performance optimizations (mainly on `DoublePriorityQueue`)
 * 1.2.2 Performance optimizations
