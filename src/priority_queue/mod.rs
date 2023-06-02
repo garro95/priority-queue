@@ -607,7 +607,7 @@ where
     ///
     /// Computes in **O(N)**
     pub(crate) fn heap_build(&mut self) {
-        if self.len() == 0 {
+        if self.is_empty() {
             return;
         }
         for i in (0..=parent(Position(self.len())).0).rev() {
