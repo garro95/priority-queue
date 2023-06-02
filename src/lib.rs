@@ -111,7 +111,7 @@ pub(crate) mod heap_common {
     #[inline(always)]
     pub const fn parent(i: Position) -> Position {
         Position((i.0 - 1) / 2)
-    }// Compute the level of a node from its index
+    } // Compute the level of a node from its index
 
     #[inline(always)]
     pub const fn level(i: Position) -> usize {

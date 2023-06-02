@@ -39,8 +39,8 @@ use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
 
-use crate::PriorityQueue;
 use crate::heap_common::*;
+use crate::PriorityQueue;
 
 /// A mutable iterator over the couples `(item, priority)` of the `PriorityQueue`
 /// in arbitrary order.
@@ -172,9 +172,12 @@ where
     P: Ord,
 {
     pub(crate) fn new(pq: &'a PriorityQueue<I, P, H>, min_priority: &'a P) -> Self {
-        IterOver{
+        IterOver {
             pq,
-            next_pos: pq.peek().and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)])).unwrap_or(vec![]),
+            next_pos: pq
+                .peek()
+                .and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)]))
+                .unwrap_or(vec![]),
             min_priority,
         }
     }
@@ -194,7 +197,9 @@ where
                     self.next_pos.push(l);
                 }
                 let r = right(pos);
-                if r.0 < self.pq.len() && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority {
+                if r.0 < self.pq.len()
+                    && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority
+                {
                     self.next_pos.push(r);
                 }
             }
@@ -232,7 +237,10 @@ where
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>, min_priority: &'a P) -> Self {
         IterOverMut {
-            next_pos: pq.peek().and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)])).unwrap_or(vec![]),
+            next_pos: pq
+                .peek()
+                .and_then(|top_p| (top_p.1 > min_priority).then(|| vec![Position(0)]))
+                .unwrap_or(vec![]),
             pq,
             min_priority,
         }
@@ -253,12 +261,13 @@ where
                     self.next_pos.push(l);
                 }
                 let r = right(pos);
-                if r.0 < self.pq.len() && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority {
+                if r.0 < self.pq.len()
+                    && unsafe { self.pq.store.get_priority_from_position(r) } > self.min_priority
+                {
                     self.next_pos.push(r);
                 }
             }
-            self
-                .pq
+            self.pq
                 .store
                 .map
                 .get_index_mut(unsafe { self.pq.store.heap.get_unchecked(pos.0) }.0)

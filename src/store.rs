@@ -259,10 +259,7 @@ where
 
     #[inline(always)]
     pub fn get_priority_from_index(&self, index: Index) -> &P {
-        self.map
-            .get_index(index.0)
-            .unwrap()
-            .1
+        self.map.get_index(index.0).unwrap().1
     }
 
     #[inline(always)]
@@ -274,8 +271,7 @@ where
 
     #[inline(always)]
     pub fn get_index(&self, index: Index) -> Option<(&I, &P)> {
-        self.map
-            .get_index(index.0)
+        self.map.get_index(index.0)
     }
 
     #[inline(always)]

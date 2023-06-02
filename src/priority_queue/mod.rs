@@ -28,8 +28,8 @@ pub mod iterators;
 use std::vec::Vec;
 
 use crate::core_iterators::{IntoIter, Iter};
-use crate::store::Store;
 use crate::heap_common::*;
+use crate::store::Store;
 use iterators::*;
 
 use std::borrow::Borrow;
