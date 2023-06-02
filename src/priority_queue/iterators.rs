@@ -20,7 +20,6 @@
 //! This module defines iterator types that are used only with the [`PriorityQueue`].
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
-
 #[cfg(not(has_std))]
 pub(crate) mod std {
     pub use core::*;
@@ -33,6 +32,8 @@ pub(crate) mod std {
     pub use ::alloc::vec;
 }
 
+use std::vec;
+use std::vec::Vec;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
@@ -256,7 +257,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.next_pos.pop().and_then(|pos| {
             let l = left(pos);
-            if dbg!(l.0 < self.pq.len()) {
+            if l.0 < self.pq.len() {
                 if unsafe { self.pq.store.get_priority_from_position(l) } > self.min_priority {
                     self.next_pos.push(l);
                 }
