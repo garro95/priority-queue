@@ -32,13 +32,13 @@ pub(crate) mod std {
     pub use ::alloc::vec;
 }
 
-use std::vec;
-use std::vec::Vec;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
+use std::vec;
+use std::vec::Vec;
 
 use crate::heap_common::*;
 use crate::PriorityQueue;
