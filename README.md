@@ -13,7 +13,7 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.2.3"
+priority-queue = "1.3.0"
 ```
 
 Version numbers follow the [semver](https://semver.org/) convention.
@@ -65,27 +65,27 @@ Attention: FxHash does not offer any protection for dos attacks. This means that
 Some benchmarks have been run to compare the performances of this priority queue to the standard BinaryHeap, also using the FxHash hasher.
 On a Ryzen 9 3900X, the benchmarks produced the following results:
 ```
-test benchmarks::priority_change_on_large_double_queue     ... bench:          55 ns/iter (+/- 0)
-test benchmarks::priority_change_on_large_double_queue_fx  ... bench:          51 ns/iter (+/- 0)
-test benchmarks::priority_change_on_large_queue            ... bench:          16 ns/iter (+/- 0)
-test benchmarks::priority_change_on_large_queue_fx         ... bench:           9 ns/iter (+/- 0)
-test benchmarks::priority_change_on_large_queue_std        ... bench:     160,648 ns/iter (+/- 1,999)
-test benchmarks::priority_change_on_small_double_queue     ... bench:          56 ns/iter (+/- 0)
-test benchmarks::priority_change_on_small_double_queue_fx  ... bench:          51 ns/iter (+/- 0)
-test benchmarks::priority_change_on_small_queue            ... bench:          16 ns/iter (+/- 0)
-test benchmarks::priority_change_on_small_queue_fx         ... bench:           9 ns/iter (+/- 0)
-test benchmarks::priority_change_on_small_queue_std        ... bench:       1,619 ns/iter (+/- 14)
-test benchmarks::push_and_pop                              ... bench:          30 ns/iter (+/- 0)
-test benchmarks::push_and_pop_double                       ... bench:          29 ns/iter (+/- 0)
-test benchmarks::push_and_pop_double_fx                    ... bench:          26 ns/iter (+/- 0)
-test benchmarks::push_and_pop_fx                           ... bench:          25 ns/iter (+/- 0)
-test benchmarks::push_and_pop_min_on_large_double_queue    ... bench:         388 ns/iter (+/- 7)
-test benchmarks::push_and_pop_min_on_large_double_queue_fx ... bench:         387 ns/iter (+/- 3)
-test benchmarks::push_and_pop_on_large_double_queue        ... bench:         396 ns/iter (+/- 2)
-test benchmarks::push_and_pop_on_large_double_queue_fx     ... bench:         397 ns/iter (+/- 4)
+test benchmarks::priority_change_on_large_double_queue     ... bench:          25 ns/iter (+/- 1)
+test benchmarks::priority_change_on_large_double_queue_fx  ... bench:          21 ns/iter (+/- 1)
+test benchmarks::priority_change_on_large_queue            ... bench:          15 ns/iter (+/- 0)
+test benchmarks::priority_change_on_large_queue_fx         ... bench:          11 ns/iter (+/- 0)
+test benchmarks::priority_change_on_large_queue_std        ... bench:     190,345 ns/iter (+/- 4,976)
+test benchmarks::priority_change_on_small_double_queue     ... bench:          26 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_double_queue_fx  ... bench:          20 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_queue            ... bench:          15 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_queue_fx         ... bench:          10 ns/iter (+/- 0)
+test benchmarks::priority_change_on_small_queue_std        ... bench:       1,694 ns/iter (+/- 21)
+test benchmarks::push_and_pop                              ... bench:          31 ns/iter (+/- 0)
+test benchmarks::push_and_pop_double                       ... bench:          31 ns/iter (+/- 0)
+test benchmarks::push_and_pop_double_fx                    ... bench:          24 ns/iter (+/- 1)
+test benchmarks::push_and_pop_fx                           ... bench:          26 ns/iter (+/- 0)
+test benchmarks::push_and_pop_min_on_large_double_queue    ... bench:         101 ns/iter (+/- 2)
+test benchmarks::push_and_pop_min_on_large_double_queue_fx ... bench:          98 ns/iter (+/- 0)
+test benchmarks::push_and_pop_on_large_double_queue        ... bench:         107 ns/iter (+/- 2)
+test benchmarks::push_and_pop_on_large_double_queue_fx     ... bench:         106 ns/iter (+/- 2)
 test benchmarks::push_and_pop_on_large_queue               ... bench:          84 ns/iter (+/- 1)
-test benchmarks::push_and_pop_on_large_queue_fx            ... bench:          74 ns/iter (+/- 1)
-test benchmarks::push_and_pop_on_large_queue_std           ... bench:          70 ns/iter (+/- 1)
+test benchmarks::push_and_pop_on_large_queue_fx            ... bench:          78 ns/iter (+/- 2)
+test benchmarks::push_and_pop_on_large_queue_std           ... bench:          71 ns/iter (+/- 1)
 test benchmarks::push_and_pop_std                          ... bench:           4 ns/iter (+/- 0)
 ```
 
@@ -114,12 +114,14 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.3.1 Bug fix: [#42](https://github.com/garro95/priority-queue/issues/42)
+* 1.3.0 Return bool from `change_priority_by` (Merged [#41](https://github.com/garro95/priority-queue/pull/41))
 * 1.2.3 Further performance optimizations (mainly on `DoublePriorityQueue`)
 * 1.2.2 Performance optimizations
 * 1.2.1 Bug fix: [#34](https://github.com/garro95/priority-queue/issues/34)
 * 1.2.0 Implement DoublePriorityQueue data structure
 * 1.1.1 Convert documentation to Markdown
-* 1.1.0 Smooth `Q: Sized` requirement on some methods (fix [#32](https://github.com/garro95/priority-queue/issues/32>))
+* 1.1.0 Smooth `Q: Sized` requirement on some methods (fix [#32](https://github.com/garro95/priority-queue/issues/32))
 * 1.0.5 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
 * 1.0.4 Bug fix: [#28](https://github.com/garro95/priority-queue/issues/28)
 * 1.0.3 Bug fix: [#26](https://github.com/garro95/priority-queue/issues/26)

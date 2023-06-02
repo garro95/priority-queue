@@ -436,17 +436,25 @@ where
     }
 
     /// Change the priority of an Item using the provided function.
+    /// Return a boolean value where `true` means the item was in the queue and update was successful
+    ///
+    /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
+    /// in the priority queue.
+    ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F)
+    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F) -> bool
     where
         I: Borrow<Q>,
         Q: Eq + Hash,
         F: FnOnce(&mut P),
     {
-        if let Some(pos) = self.store.change_priority_by(item, priority_setter) {
-            self.up_heapify(pos);
-        }
+        self.store
+            .change_priority_by(item, priority_setter)
+            .map(|pos| {
+                self.up_heapify(pos);
+            })
+            .is_some()
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
@@ -629,7 +637,7 @@ where
     ///
     /// Computes in **O(N)**
     pub(crate) fn heap_build(&mut self) {
-        if self.len() == 0 {
+        if self.is_empty() {
             return;
         }
         for i in (0..=parent(Position(self.len())).0).rev() {
