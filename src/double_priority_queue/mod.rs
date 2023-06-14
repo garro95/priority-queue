@@ -976,7 +976,7 @@ const fn level(i: Position) -> usize {
 
 #[inline(always)]
 const fn log2_fast(x: usize) -> usize {
-    (8 * usize::BITS - x.leading_zeros() - 1) as usize
+    (usize::BITS - x.leading_zeros() - 1) as usize
 }
 
 // `rebuild` takes O(len1 + len2) operations
