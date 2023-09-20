@@ -8,8 +8,20 @@ documentation = "https://docs.rs/priority-queue"
 readme = "README.md"
 keywords = ["priority", "queue", "heap"]
 categories = ["data-structures", "algorithms"]
-license = "LGPL-3.0 OR MPL-2.0"
 edition = "2018"
+
+license = "LGPL-3.0 OR MPL-2.0"
+# The following notice applies to all the files in this source tree:
+#
+#     This Source Code Form is subject to the terms of the Mozilla Public
+#     License, v. 2.0. If a copy of the MPL was not distributed with this
+#     file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Note that this is *in additionn* to your option to use these files
+# according to the GNU LGPL version 3.0.
+#
+# (If you copy files from this project into another program which is not
+# licenced MPL-2.0, you should add that notice to each copied file.)
 
 build = "build.rs"
 
