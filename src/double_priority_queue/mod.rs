@@ -179,6 +179,12 @@ where
     pub fn iter(&self) -> Iter<I, P> {
         self.store.iter()
     }
+
+    /// Shrinks the capacity of the internal data structures
+    /// that support this operation as much as possible.
+    pub fn shrink_to_fit(&mut self) {
+        self.store.shrink_to_fit();
+    }
 }
 
 impl<I, P, H> DoublePriorityQueue<I, P, H>
@@ -273,12 +279,6 @@ where
     /// but is guaranteed to be able to hold at least this many.
     pub fn capacity(&self) -> usize {
         self.store.capacity()
-    }
-
-    /// Shrinks the capacity of the internal data structures
-    /// that support this operation as much as possible.
-    pub fn shrink_to_fit(&mut self) {
-        self.store.shrink_to_fit();
     }
 
     /// Removes the item with the lowest priority from

@@ -158,6 +158,15 @@ where
     }
     // reserve_exact -> IndexMap does not implement reserve_exact
 
+    /// Shrinks the capacity of the internal data structures
+    /// that support this operation as much as possible.
+    #[inline(always)]
+    pub fn shrink_to_fit(&mut self) {
+        self.heap.shrink_to_fit();
+        self.qp.shrink_to_fit();
+        self.map.shrink_to_fit();
+    }
+
     /// Reserves capacity for at least `additional` more elements to be inserted
     /// in the given `PriorityQueue`. The collection may reserve more space to avoid
     /// frequent reallocations. After calling `reserve`, capacity will be
@@ -187,14 +196,6 @@ where
     #[inline(always)]
     pub fn capacity(&self) -> usize {
         self.map.capacity()
-    }
-
-    /// Shrinks the capacity of the internal data structures
-    /// that support this operation as much as possible.
-    #[inline(always)]
-    pub fn shrink_to_fit(&mut self) {
-        self.heap.shrink_to_fit();
-        self.qp.shrink_to_fit();
     }
 
     /// Returns the number of elements in the priority queue.

@@ -82,8 +82,7 @@ mod pqueue_tests {
 
         let processor_priority = |pq: &PriorityQueue<&str, i32>| {
             *pq.iter()
-                .filter_map(|(i, p)| if *i == "Processor" { Some(p) } else { None })
-                .next()
+                .find_map(|(i, p)| if *i == "Processor" { Some(p) } else { None })
                 .unwrap()
         };
 
