@@ -13,7 +13,7 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.3.2"
+priority-queue = "1.4.0"
 ```
 
 Version numbers follow the [semver](https://semver.org/) convention.
@@ -25,8 +25,6 @@ Remember that, if you need serde support, you should compile using `--features s
 ## Example
 
 ```rust
-extern crate priority_queue; // not necessary in Rust edition 2018
-
 use priority_queue::PriorityQueue;
 
 fn main() {
@@ -44,8 +42,6 @@ fn main() {
     }
 }
 ```
-
-Note: in recent versions of Rust (edition 2018) the `extern crate priority_queue` is not necessary anymore!
 
 ## Speeding up
 
@@ -114,6 +110,7 @@ Feel free to contribute to this project with pull requests and/or issues. All co
 
 ## Changes
 
+* 1.4.0 Improve `shrink_to_fit` to also shrink the internal IndexMap ([#50](https://github.com/garro95/priority-queue/issues/50))
 * 1.3.2 Bug fix in the `log2_fast` internal function
 * 1.3.1 Bug fix: [#42](https://github.com/garro95/priority-queue/issues/42)
 * 1.3.0 Return bool from `change_priority_by` (Merged [#41](https://github.com/garro95/priority-queue/pull/41))
