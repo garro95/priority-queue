@@ -33,11 +33,14 @@ pub(crate) mod std {
     pub use ::alloc::vec;
 }
 
+use core::hash::BuildHasher;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
+
+use indexmap::map::MutableKeys;
 
 use crate::PriorityQueue;
 
@@ -57,6 +60,7 @@ pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
@@ -76,6 +80,7 @@ impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
         IterMut { pq, pos: 0 }
@@ -86,6 +91,7 @@ impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     fn next(&mut self) -> Option<Self::Item> {
@@ -93,7 +99,7 @@ where
             .pq
             .store
             .map
-            .get_index_mut(self.pos)
+            .get_index_mut2(self.pos)
             .map(|(i, p)| (i as *mut I, p as *mut P))
             .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
         self.pos += 1;
@@ -105,6 +111,7 @@ impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     fn drop(&mut self) {
         self.pq.heap_build();
@@ -120,6 +127,7 @@ pub struct IntoSortedIter<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
@@ -137,6 +145,7 @@ impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {

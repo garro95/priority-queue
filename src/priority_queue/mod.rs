@@ -39,6 +39,8 @@ use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::replace;
 
+use indexmap::map::MutableKeys;
+
 /// A priority queue with efficient change function to change the priority of an
 /// element.
 ///
@@ -75,6 +77,7 @@ pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     pub(crate) store: Store<I, P, H>,
 }
@@ -176,6 +179,7 @@ impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
@@ -198,7 +202,7 @@ where
     pub fn peek(&self) -> Option<(&I, &P)> {
         self.store
             .heap
-            .get(0)
+            .first()
             .and_then(|index| self.store.map.get_index(index.0))
     }
 
@@ -219,7 +223,7 @@ where
         }
         self.store
             .map
-            .get_index_mut(unsafe { self.store.heap.get_unchecked(0) }.0)
+            .get_index_mut2(unsafe { self.store.heap.get_unchecked(0) }.0)
             .map(|(k, v)| (k, &*v))
     }
 
@@ -509,6 +513,7 @@ impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
 }
 
@@ -516,6 +521,7 @@ impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
     /**************************************************************************/
     /*                            internal functions                          */
@@ -698,6 +704,7 @@ impl<'a, I, P, H> IntoIterator for &'a mut PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     type IntoIter = IterMut<'a, I, P, H>;

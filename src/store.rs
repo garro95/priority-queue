@@ -24,11 +24,11 @@ use std::vec::Vec;
 // as vec instead of the IndexMap
 use crate::core_iterators::*;
 
+use core::hash::{BuildHasher, Hash};
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
-use std::hash::{BuildHasher, Hash};
 use std::iter::{FromIterator, IntoIterator, Iterator};
 use std::mem::swap;
 
@@ -48,12 +48,17 @@ pub(crate) struct Store<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
-    pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
-    pub heap: Vec<Index>,       // Implements the heap of indexes
-    pub qp: Vec<Position>,      // Performs the translation from the index
+    /// Stores the items and assign them an index
+    pub map: IndexMap<I, P, H>,
+    /// Implements the heap of indexes
+    pub heap: Vec<Index>,
+    /// Performs the translation from the index
+    pub qp: Vec<Position>,
     // of the map to the index of the heap
-    pub size: usize, // The size of the heap
+    /// The size of the heap
+    pub size: usize,
 }
 
 #[derive(Clone)]
@@ -97,11 +102,13 @@ where
     I: Hash + Eq,
 {
     /// Creates an empty `Store`
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
     /// Creates an empty `Store` with the specified capacity.
+    #[allow(dead_code)]
     pub fn with_capacity(capacity: usize) -> Self {
         Self::with_capacity_and_default_hasher(capacity)
     }
@@ -178,6 +185,7 @@ impl<I, P, H> Store<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
     /// Returns the number of elements the internal map can hold without
     /// reallocating.
@@ -560,6 +568,7 @@ impl<I, P, H> fmt::Debug for Store<I, P, H>
 where
     I: fmt::Debug + Hash + Eq,
     P: fmt::Debug + Ord,
+    H: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
@@ -622,6 +631,7 @@ mod serde {
     where
         I: Hash + Eq,
         P: Ord,
+        H: BuildHasher,
     {
         marker: PhantomData<Store<I, P, H>>,
     }

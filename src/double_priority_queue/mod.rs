@@ -30,13 +30,15 @@ use crate::core_iterators::{IntoIter, Iter};
 use crate::store::{Index, Position, Store};
 use iterators::*;
 
+use core::hash::{BuildHasher, Hash};
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
-use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
 use std::mem::replace;
+
+use indexmap::map::MutableKeys;
 
 /// A double priority queue with efficient change function to change the priority of an
 /// element.
@@ -84,6 +86,7 @@ pub struct DoublePriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     pub(crate) store: Store<I, P, H>,
 }
@@ -185,6 +188,7 @@ impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
     /// Return an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
@@ -240,7 +244,7 @@ where
             .and_then(move |i| {
                 self.store
                     .map
-                    .get_index_mut(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
             })
             .map(|(k, v)| (k, &*v))
     }
@@ -261,7 +265,7 @@ where
             .and_then(move |i| {
                 self.store
                     .map
-                    .get_index_mut(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
             })
             .map(|(k, v)| (k, &*v))
     }
@@ -575,6 +579,7 @@ impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
 }
 
@@ -582,6 +587,7 @@ impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
     I: Hash + Eq,
+    H: BuildHasher,
 {
     /**************************************************************************/
     /*                            internal functions                          */
@@ -886,6 +892,7 @@ impl<'a, I, P, H> IntoIterator for &'a mut DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     type IntoIter = IterMut<'a, I, P, H>;
@@ -929,6 +936,7 @@ impl<I, P, H> fmt::Debug for DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq + fmt::Debug,
     P: Ord + fmt::Debug,
+    H: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         self.store.fmt(f)
