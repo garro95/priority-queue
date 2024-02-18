@@ -1,6 +1,6 @@
 [package]
 name = "priority-queue"
-version = "1.4.0"
+version = "2.0.0"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"
@@ -17,7 +17,7 @@ build = "build.rs"
 autocfg = "1"
 
 [dependencies]
-indexmap = "2"
+indexmap = {version = "2", features = [], default-features = false}
 serde = { version = "1", optional = true }
 
 [dev-dependencies]
@@ -28,6 +28,8 @@ uuid = {version= "1", features = ["v4", "serde"] }
 hashbrown = "0.14"
 
 [features]
+default = ["std"]
+std = ["indexmap/std"]
 benchmarks = []
 
 [workspace]
