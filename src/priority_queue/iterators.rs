@@ -33,6 +33,7 @@ pub(crate) mod std {
     pub use ::alloc::vec;
 }
 
+use core::hash::BuildHasher;
 use std::cmp::{Eq, Ord};
 #[cfg(has_std)]
 use std::collections::hash_map::RandomState;
@@ -86,14 +87,17 @@ impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     fn next(&mut self) -> Option<Self::Item> {
+        use indexmap::map::MutableKeys;
+
         let r: Option<(&'a mut I, &'a mut P)> = self
             .pq
             .store
             .map
-            .get_index_mut(self.pos)
+            .get_index_mut2(self.pos)
             .map(|(i, p)| (i as *mut I, p as *mut P))
             .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
         self.pos += 1;

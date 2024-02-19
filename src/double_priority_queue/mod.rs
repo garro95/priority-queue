@@ -230,48 +230,6 @@ where
         })
     }
 
-    /// Returns the couple (item, priority) with the lowest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
-        self.find_min()
-            .and_then(move |i| {
-                self.store
-                    .map
-                    .get_index_mut(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
-            })
-            .map(|(k, v)| (k, &*v))
-    }
-
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
-        self.find_max()
-            .and_then(move |i| {
-                self.store
-                    .map
-                    .get_index_mut(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
-            })
-            .map(|(k, v)| (k, &*v))
-    }
-
     /// Returns the number of elements the internal map can hold without
     /// reallocating.
     ///
@@ -469,6 +427,51 @@ where
                 self.up_heapify(pos);
                 r
             })
+    }
+
+    /// Returns the couple (item, priority) with the lowest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
+        use indexmap::map::MutableKeys;
+
+        self.find_min()
+            .and_then(move |i| {
+                self.store
+                    .map
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+            })
+            .map(|(k, v)| (k, &*v))
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
+        use indexmap::map::MutableKeys;
+        self.find_max()
+            .and_then(move |i| {
+                self.store
+                    .map
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+            })
+            .map(|(k, v)| (k, &*v))
     }
 
     /// Change the priority of an Item using the provided function.
@@ -886,6 +889,7 @@ impl<'a, I, P, H> IntoIterator for &'a mut DoublePriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     type IntoIter = IterMut<'a, I, P, H>;

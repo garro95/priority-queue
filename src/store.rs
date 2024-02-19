@@ -90,23 +90,6 @@ where
     }
 }
 
-#[cfg(has_std)]
-impl<I, P> Store<I, P>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Creates an empty `Store`
-    pub fn new() -> Self {
-        Self::with_capacity(0)
-    }
-
-    /// Creates an empty `Store` with the specified capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::with_capacity_and_default_hasher(capacity)
-    }
-}
-
 impl<I, P, H> Store<I, P, H>
 where
     P: Ord,
