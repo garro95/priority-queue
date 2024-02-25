@@ -24,7 +24,7 @@
 
 pub mod iterators;
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
 use crate::core_iterators::{IntoIter, Iter};
@@ -33,7 +33,7 @@ use iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
@@ -70,7 +70,7 @@ use std::mem::replace;
 /// }
 /// ```
 #[derive(Clone, Debug)]
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
@@ -80,7 +80,7 @@ where
 }
 
 #[derive(Clone, Debug)]
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -109,7 +109,7 @@ where
     }
 }
 
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 impl<I, P> PriorityQueue<I, P>
 where
     P: Ord,

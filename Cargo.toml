@@ -11,8 +11,6 @@ categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0 OR MPL-2.0"
 edition = "2021"
 
-build = "build.rs"
-
 [build-dependencies]
 autocfg = "1"
 

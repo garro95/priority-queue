@@ -21,7 +21,7 @@
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) mod std {
     pub use core::*;
     pub use ::alloc::vec;
@@ -29,7 +29,7 @@ pub(crate) mod std {
 
 use core::hash::BuildHasher;
 use std::cmp::{Eq, Ord};
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
@@ -47,7 +47,7 @@ use crate::PriorityQueue;
 ///
 /// The item is mutable too, but it is a logical error to modify it in a way that
 /// changes the result of any of `hash` or `eq`.
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
     I: Hash + Eq,
@@ -57,7 +57,7 @@ where
     pos: usize,
 }
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
     I: Hash + Eq,
@@ -113,7 +113,7 @@ where
 /// ordered by priority, from the highest to the lowest.
 ///
 /// It can be obtained calling the `into_sorted_iter` method.
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct IntoSortedIter<I, P, H = RandomState>
 where
     I: Hash + Eq,
@@ -122,7 +122,7 @@ where
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,

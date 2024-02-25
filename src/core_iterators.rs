@@ -22,7 +22,7 @@
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) mod std {
     pub use core::*;
     pub use ::alloc::vec;
