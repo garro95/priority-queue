@@ -24,8 +24,8 @@
 
 #[cfg(not(feature = "std"))]
 pub(crate) mod std {
-    pub use core::*;
     pub use ::alloc::vec;
+    pub use core::*;
 }
 
 use std::hash::Hash;
