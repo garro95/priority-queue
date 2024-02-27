@@ -64,21 +64,14 @@
 //!     println!("{}", item);
 //! }
 //! ```
-#![cfg_attr(not(has_std), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) mod std {
     pub use core::*;
-    pub mod alloc {
-        pub use ::alloc::*;
-    }
-    pub mod collections {
-        pub use ::alloc::collections::*;
-    }
-    pub use ::alloc::vec;
 }
 
 pub mod core_iterators;

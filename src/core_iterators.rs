@@ -22,16 +22,10 @@
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) mod std {
-    pub use core::*;
-    pub mod alloc {
-        pub use ::alloc::*;
-    }
-    pub mod collections {
-        pub use ::alloc::collections::*;
-    }
     pub use ::alloc::vec;
+    pub use core::*;
 }
 
 use std::hash::Hash;

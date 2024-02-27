@@ -24,7 +24,7 @@
 
 pub mod iterators;
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
 use crate::core_iterators::{IntoIter, Iter};
@@ -33,7 +33,7 @@ use iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Extend, FromIterator, IntoIterator, Iterator};
@@ -70,7 +70,7 @@ use std::mem::replace;
 /// }
 /// ```
 #[derive(Clone, Debug)]
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct PriorityQueue<I, P, H = RandomState>
 where
     I: Hash + Eq,
@@ -80,7 +80,7 @@ where
 }
 
 #[derive(Clone, Debug)]
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
@@ -109,7 +109,7 @@ where
     }
 }
 
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 impl<I, P> PriorityQueue<I, P>
 where
     P: Ord,
@@ -204,29 +204,8 @@ where
     pub fn peek(&self) -> Option<(&I, &P)> {
         self.store
             .heap
-            .get(0)
+            .first()
             .and_then(|index| self.store.map.get_index(index.0))
-    }
-
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
-        if self.store.size == 0 {
-            return None;
-        }
-        self.store
-            .map
-            .get_index_mut(unsafe { self.store.heap.get_unchecked(0) }.0)
-            .map(|(k, v)| (k, &*v))
     }
 
     /// Returns the number of elements the internal map can hold without
@@ -461,6 +440,28 @@ where
         Q: Eq + Hash,
     {
         self.store.get_mut(item)
+    }
+
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {
+        use indexmap::map::MutableKeys;
+        if self.store.size == 0 {
+            return None;
+        }
+        self.store
+            .map
+            .get_index_mut2(unsafe { self.store.heap.get_unchecked(0) }.0)
+            .map(|(k, v)| (k, &*v))
     }
 
     /// Remove an arbitrary element from the priority queue.
@@ -698,6 +699,7 @@ impl<'a, I, P, H> IntoIterator for &'a mut PriorityQueue<I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     type IntoIter = IterMut<'a, I, P, H>;

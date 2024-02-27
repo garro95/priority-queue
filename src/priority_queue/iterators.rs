@@ -21,20 +21,15 @@
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) mod std {
-    pub use core::*;
-    pub mod alloc {
-        pub use ::alloc::*;
-    }
-    pub mod collections {
-        pub use ::alloc::collections::*;
-    }
     pub use ::alloc::vec;
+    pub use core::*;
 }
 
+use core::hash::BuildHasher;
 use std::cmp::{Eq, Ord};
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
 use std::hash::Hash;
 use std::iter::*;
@@ -52,7 +47,7 @@ use crate::PriorityQueue;
 ///
 /// The item is mutable too, but it is a logical error to modify it in a way that
 /// changes the result of any of `hash` or `eq`.
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
     I: Hash + Eq,
@@ -62,7 +57,7 @@ where
     pos: usize,
 }
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
     I: Hash + Eq,
@@ -86,14 +81,17 @@ impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     I: Hash + Eq,
     P: Ord,
+    H: BuildHasher,
 {
     type Item = (&'a mut I, &'a mut P);
     fn next(&mut self) -> Option<Self::Item> {
+        use indexmap::map::MutableKeys;
+
         let r: Option<(&'a mut I, &'a mut P)> = self
             .pq
             .store
             .map
-            .get_index_mut(self.pos)
+            .get_index_mut2(self.pos)
             .map(|(i, p)| (i as *mut I, p as *mut P))
             .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
         self.pos += 1;
@@ -115,7 +113,7 @@ where
 /// ordered by priority, from the highest to the lowest.
 ///
 /// It can be obtained calling the `into_sorted_iter` method.
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub struct IntoSortedIter<I, P, H = RandomState>
 where
     I: Hash + Eq,
@@ -124,7 +122,7 @@ where
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
 
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub struct IntoSortedIter<I, P, H>
 where
     I: Hash + Eq,

@@ -17,7 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
@@ -26,7 +26,7 @@ use crate::core_iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{FromIterator, IntoIterator, Iterator};
@@ -43,7 +43,7 @@ pub(crate) struct Position(pub usize);
 
 /// Internal storage of PriorityQueue and DoublePriorityQueue
 #[derive(Clone)]
-#[cfg(has_std)]
+#[cfg(feature = "std")]
 pub(crate) struct Store<I, P, H = RandomState>
 where
     I: Hash + Eq,
@@ -57,7 +57,7 @@ where
 }
 
 #[derive(Clone)]
-#[cfg(not(has_std))]
+#[cfg(not(feature = "std"))]
 pub(crate) struct Store<I, P, H>
 where
     I: Hash + Eq,
@@ -87,23 +87,6 @@ where
 {
     fn default() -> Self {
         Self::with_default_hasher()
-    }
-}
-
-#[cfg(has_std)]
-impl<I, P> Store<I, P>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Creates an empty `Store`
-    pub fn new() -> Self {
-        Self::with_capacity(0)
-    }
-
-    /// Creates an empty `Store` with the specified capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::with_capacity_and_default_hasher(capacity)
     }
 }
 

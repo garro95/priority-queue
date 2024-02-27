@@ -6,7 +6,7 @@ publish = false
 edition = "2018"
 
 [dependencies]
-priority-queue = { path = ".." }
+priority-queue = { path = "..", default-features = false }
 # no-std compatible hasher
 twox-hash = { version = "1.5", default-features = false }
 
