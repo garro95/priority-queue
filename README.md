@@ -23,8 +23,7 @@ Then use the data structure inside your Rust source code as in the following Exa
 
 Remember that, if you need serde support, you should compile using `--features serde`.
 
-## Example
-
+## Examples
 ```rust
 use priority_queue::PriorityQueue;
 
@@ -37,6 +36,26 @@ fn main() {
     pq.push("Strawberries", 23);
 
     assert_eq!(pq.peek(), Some((&"Strawberries", &23)));
+
+    for (item, _) in pq.into_sorted_iter() {
+        println!("{}", item);
+    }
+}
+```
+By default, the highest priority element will be extracted first. The order can be easily reversed using the standard wrapper [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html).
+```rust
+use priority_queue::PriorityQueue;
+use std::cmp::Reverse;
+
+fn main() {
+    let mut pq = PriorityQueue::new();
+
+    assert!(pq.is_empty());
+    pq.push("Apples", Reverse(5));
+    pq.push("Bananas", Reverse(8));
+    pq.push("Strawberries", Reverse(23));
+
+    assert_eq!(pq.peek(), Some((&"Apples", &Reverse(5))));
 
     for (item, _) in pq.into_sorted_iter() {
         println!("{}", item);

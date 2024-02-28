@@ -44,7 +44,7 @@
 //! For reverse order remember the standard wrapper
 //! [`Reverse<T>`](https://doc.rust-lang.org/std/cmp/struct.Reverse.html)
 //!
-//! # Example
+//! # Examples
 //! ```rust
 //! use priority_queue::PriorityQueue;
 //!
@@ -64,6 +64,28 @@
 //!     println!("{}", item);
 //! }
 //! ```
+//!
+//! Reverse ordering
+//! ```rust
+//! use priority_queue::PriorityQueue;
+//! use std::cmp::Reverse;
+//!
+//! fn main() {
+//!     let mut pq = PriorityQueue::new();
+//!
+//!     assert!(pq.is_empty());
+//!     pq.push("Apples", Reverse(5));
+//!     pq.push("Bananas", Reverse(8));
+//!     pq.push("Strawberries", Reverse(23));
+//!
+//!     assert_eq!(pq.peek(), Some((&"Apples", &Reverse(5))));
+//!
+//!     for (item, _) in pq.into_sorted_iter() {
+//!         println!("{}", item);
+//!     }
+//! }
+//! ```
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(not(feature = "std"))]
