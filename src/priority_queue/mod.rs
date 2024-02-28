@@ -791,7 +791,7 @@ fn better_to_rebuild(len1: usize, len2: usize) -> bool {
 }
 
 #[cfg(feature = "serde")]
-#![cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 mod serde {
     use std::cmp::{Eq, Ord};
     use std::hash::{BuildHasher, Hash};
