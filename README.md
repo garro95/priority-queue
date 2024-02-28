@@ -129,6 +129,7 @@ It also emerges that the ability to arbitrarily pop the minimum or maximum eleme
 Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL and with the MPL.
 
 ## Changes
+* 2.0.1 Documentation improvements
 * 2.0.0 This release contains **breaking changes**
     * Some methods now require the trait bound `H: BuildHasher`. 
       This change will likely have a small impact or none.
