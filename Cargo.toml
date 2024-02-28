@@ -15,6 +15,7 @@ edition = "2021"
 autocfg = "1"
 
 [dependencies]
+equivalent = "1.0.1"
 indexmap = {version = "2", features = [], default-features = false}
 serde = { version = "1", optional = true }
 
@@ -32,3 +33,7 @@ benchmarks = []
 
 [workspace]
 members = ["test-nostd"]
+
+[package.metadata.docs.rs]
+features = ["serde"]
+rustdoc-args = ["--cfg", "docsrs"]
