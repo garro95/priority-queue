@@ -13,8 +13,9 @@ Please read the [API documentation here](https://docs.rs/priority-queue/)
 
 To use this crate, simply add the following string to your `Cargo.toml`:
 ```
-priority-queue = "1.4.0"
+priority-queue = "2.0.0"
 ```
+or use the command `cargo add priority-queue`
 
 Version numbers follow the [semver](https://semver.org/) convention.
 
@@ -109,7 +110,10 @@ It also emerges that the ability to arbitrarily pop the minimum or maximum eleme
 Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL and with the MPL.
 
 ## Changes
-
+* 2.0.0 This release contains **breaking changes**
+    * Some methods now require the trait bound `H: BuildHasher`. 
+      This change will likely have a small impact or none.
+    * The standard library support is no longer auto-detected. The feature "std" is included in the default feature set, or else can be enabled like any other Cargo feature. Users that need to support `no_std` targets will have to disable default features.
 * 1.4.0 Improve `shrink_to_fit` to also shrink the internal IndexMap ([#50](https://github.com/garro95/priority-queue/issues/50))
 * 1.3.2 Bug fix in the `log2_fast` internal function
 * 1.3.1 Bug fix: [#42](https://github.com/garro95/priority-queue/issues/42)
