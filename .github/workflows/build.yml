@@ -26,7 +26,7 @@ jobs:
             features:
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
@@ -35,7 +35,8 @@ jobs:
 
   nostd_build:
     runs-on: ubuntu-latest
-    - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
@@ -45,7 +46,8 @@ jobs:
 
   docs_rs_build:
     runs-on: ubuntu-latest
-    - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: nightly
