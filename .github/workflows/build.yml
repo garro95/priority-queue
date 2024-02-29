@@ -12,15 +12,42 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            features: std
+          - rust: stable
+            features: serde
+          - rust: beta
+            features:
+          - rust: nightly
+            features:
 
     steps:
     - uses: actions/checkout@v2
-    - run: rustup target add $TARGET
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
     - name: Build
-      run: cargo build --verbose
-    - name: Build with serde
-      run: cargo build --verbose --features serde
-    - name: Build for no-std
+      run: cargo build --verbose --features "${{ matrix.features }}"
+
+  nostd_build:
+    runs-on: ubuntu-latest
+    - uses: actions/checkout@v2
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        target: $TARGET
+    - name: Build
       run: cargo build -v -p test-nostd --target=$TARGET
+
+  docs_rs_build:
+    runs-on: ubuntu-latest
+    - uses: actions/checkout@v2
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: nightly
+    - name: Docs.rs
+      run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features

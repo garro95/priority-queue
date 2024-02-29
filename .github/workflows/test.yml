@@ -12,13 +12,26 @@ env:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rust: stable
+            features: std
+          - rust: stable
+            features: serde
+          - rust: beta
+            features:
+          - rust: nightly
+            features:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
     - name: Run tests
-      run: cargo test --verbose
-    - name: Run tests with serde
-      run: cargo test --verbose --features serde
+      run: cargo test --verbose --features "${{ matrix.features }}"
+    - name: Run tests in release mode
+      run: cargo test --release --verbose --features "${{ matrix.features }}"
     
