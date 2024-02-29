@@ -227,7 +227,7 @@ mod pqueue_tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -246,7 +246,7 @@ mod pqueue_tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v.into_iter());
+        let mut pq: PriorityQueue<_, _> = PriorityQueue::from_iter(v);
 
         assert!(!pq.change_priority_by("z", |z| *z += 8));
         assert!(pq.change_priority_by("b", |b| *b += 8));
@@ -277,7 +277,7 @@ mod pqueue_tests {
         type Pq<I, P> = PriorityQueue<I, P>;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq = Pq::from_iter(v.into_iter());
+        let mut pq = Pq::from_iter(v);
 
         pq.remove(&"b").unwrap();
         pq.push("b", 2);

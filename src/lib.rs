@@ -61,7 +61,7 @@
 //! assert_eq!(pq.peek(), Some((&"Bananas", &25)));
 //!
 //! for (item, _) in pq.into_sorted_iter() {
-//!     println!("{}", item);
+//!     println!("{}", item); // Will print Bananas, Strawberries, Apples
 //! }
 //! ```
 //!
@@ -70,19 +70,17 @@
 //! use priority_queue::PriorityQueue;
 //! use std::cmp::Reverse;
 //!
-//! fn main() {
-//!     let mut pq = PriorityQueue::new();
+//! let mut pq = PriorityQueue::new();
 //!
-//!     assert!(pq.is_empty());
-//!     pq.push("Apples", Reverse(5));
-//!     pq.push("Bananas", Reverse(8));
-//!     pq.push("Strawberries", Reverse(23));
+//! assert!(pq.is_empty());
+//! pq.push("Apples", Reverse(5));
+//! pq.push("Bananas", Reverse(8));
+//! pq.push("Strawberries", Reverse(23));
 //!
-//!     assert_eq!(pq.peek(), Some((&"Apples", &Reverse(5))));
+//! assert_eq!(pq.peek(), Some((&"Apples", &Reverse(5))));
 //!
-//!     for (item, _) in pq.into_sorted_iter() {
-//!         println!("{}", item);
-//!     }
+//! for (item, _) in pq.into_sorted_iter() {
+//!     println!("{}", item); // Will print Apples, Bananas, Strawberries
 //! }
 //! ```
 

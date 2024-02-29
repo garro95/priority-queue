@@ -237,7 +237,7 @@ mod doublepq_tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7)];
-        let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v.into_iter());
+        let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v);
         assert_eq!(pq.pop_max(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
     }
@@ -256,7 +256,7 @@ mod doublepq_tests {
         use std::iter::FromIterator;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v.into_iter());
+        let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from_iter(v);
 
         assert!(!pq.change_priority_by("z", |z| *z += 8));
 
@@ -291,7 +291,7 @@ mod doublepq_tests {
         type Pq<I, P> = DoublePriorityQueue<I, P>;
 
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("g", 6), ("h", 5)];
-        let mut pq = Pq::from_iter(v.into_iter());
+        let mut pq = Pq::from_iter(v);
 
         pq.remove(&"b").unwrap();
         assert!(pq.remove(&"b").is_none());
@@ -545,8 +545,8 @@ mod doublepq_tests {
             let val = data[idx];
             simple_queue.change_priority(&(idx % window), Reverse(val));
             double_queue.change_priority(&(idx % window), val);
-            let simple_min_result = simple_queue.peek().unwrap().1.clone().0;
-            let double_min_result = double_queue.peek_min().unwrap().1.clone();
+            let simple_min_result = (*simple_queue.peek().unwrap().1).0;
+            let double_min_result = *double_queue.peek_min().unwrap().1;
             assert_eq!(
                 simple_min_result,
                 double_min_result,
