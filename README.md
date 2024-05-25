@@ -126,10 +126,13 @@ It also emerges that the ability to arbitrarily pop the minimum or maximum eleme
 
 ## Contributing
 
-Feel free to contribute to this project with pull requests and/or issues. All contribution should be under a license compatible with the GNU LGPL and with the MPL.
+Feel free to contribute to this project with pull requests and/or issues.
+
+All contribution shall be under a license compatible with the GNU LGPL version 3 or any later version and with the MPL version 2.0.
 
 ## Changes
 
+* 2.0.3 Some licensing-related housekeeping
 * 2.0.2 Fix docs.rs build
 * 2.0.1 Documentation improvements
 * 2.0.0 This release contains **breaking changes**
