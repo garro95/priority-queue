@@ -35,7 +35,7 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
-use crate::core_iterators::{IntoIter, Iter};
+use crate::core_iterators::*;
 use crate::store::{Index, Position, Store};
 use iterators::*;
 
@@ -79,21 +79,13 @@ use std::mem::replace;
 /// ```
 #[derive(Clone, Debug)]
 #[cfg(feature = "std")]
-pub struct PriorityQueue<I, P, H = RandomState>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct PriorityQueue<I, P, H = RandomState> {
     pub(crate) store: Store<I, P, H>,
 }
 
 #[derive(Clone, Debug)]
 #[cfg(not(feature = "std"))]
-pub struct PriorityQueue<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct PriorityQueue<I, P, H> {
     pub(crate) store: Store<I, P, H>,
 }
 
@@ -172,7 +164,9 @@ where
             store: Store::with_capacity_and_hasher(capacity, hash_builder),
         }
     }
+}
 
+impl<I, P, H> PriorityQueue<I, P, H> {
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
     pub fn iter(&self) -> Iter<I, P> {
@@ -184,25 +178,11 @@ where
     pub fn shrink_to_fit(&mut self) {
         self.store.shrink_to_fit();
     }
-}
 
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
-    /// Returns an iterator in arbitrary order over the
-    /// (item, priority) elements in the queue.
-    ///
-    /// The item and the priority are mutable references, but it's a logic error
-    /// to modify the item in a way that change the result of `Hash` or `Eq`.
-    ///
-    /// It's *not* an error, instead, to modify the priorities, because the heap
-    /// will be rebuilt once the `IterMut` goes out of scope. It would be
-    /// rebuilt even if no priority value would have been modified, but the
-    /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> IterMut<I, P, H> {
-        IterMut::new(self)
+    /// Clears the PriorityQueue, returning an iterator over the removed elements in arbitrary order.
+    /// If the iterator is dropped before being fully consumed, it drops the remaining elements in arbitrary order.
+    pub fn drain(&mut self) -> Drain<I, P> {
+        self.store.drain()
     }
 
     /// Returns the couple (item, priority) with the greatest
@@ -223,6 +203,59 @@ where
     /// but is guaranteed to be able to hold at least this many.
     pub fn capacity(&self) -> usize {
         self.store.capacity()
+    }
+
+    /// Returns the number of elements in the priority queue.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.store.len()
+    }
+
+    /// Returns true if the priority queue contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.store.is_empty()
+    }
+
+    /// Returns the items not ordered
+    pub fn into_vec(self) -> Vec<I> {
+        self.store.into_vec()
+    }
+
+    /// Drops all items from the priority queue
+    pub fn clear(&mut self) {
+        self.store.clear();
+    }
+
+    /// Reserves capacity for at least `additional` more elements to be inserted
+    /// in the given `PriorityQueue`. The collection may reserve more space to avoid
+    /// frequent reallocations. After calling `reserve`, capacity will be
+    /// greater than or equal to `self.len() + additional`. Does nothing if
+    /// capacity is already sufficient.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    pub fn reserve(&mut self, additional: usize) {
+        self.store.reserve(additional);
+    }
+}
+
+impl<I, P, H> PriorityQueue<I, P, H>
+where
+    P: Ord,
+{
+    /// Returns an iterator in arbitrary order over the
+    /// (item, priority) elements in the queue.
+    ///
+    /// The item and the priority are mutable references, but it's a logic error
+    /// to modify the item in a way that change the result of `Hash` or `Eq`.
+    ///
+    /// It's *not* an error, instead, to modify the priorities, because the heap
+    /// will be rebuilt once the `IterMut` goes out of scope. It would be
+    /// rebuilt even if no priority value would have been modified, but the
+    /// procedure will not move anything, but just compare the priorities.
+    pub fn iter_mut(&mut self) -> IterMut<I, P, H> {
+        IterMut::new(self)
     }
 
     /// Removes the item with the greatest priority from
@@ -251,17 +284,6 @@ where
         res
     }
 
-    /// Returns the number of elements in the priority queue.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.store.len()
-    }
-
-    /// Returns true if the priority queue contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.store.is_empty()
-    }
-
     /// Generates a new iterator from self that
     /// will extract the elements from the one with the highest priority
     /// to the lowest one.
@@ -277,19 +299,6 @@ where
     H: BuildHasher,
 {
     // reserve_exact -> IndexMap does not implement reserve_exact
-
-    /// Reserves capacity for at least `additional` more elements to be inserted
-    /// in the given `PriorityQueue`. The collection may reserve more space to avoid
-    /// frequent reallocations. After calling `reserve`, capacity will be
-    /// greater than or equal to `self.len() + additional`. Does nothing if
-    /// capacity is already sufficient.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the new capacity overflows `usize`.
-    pub fn reserve(&mut self, additional: usize) {
-        self.store.reserve(additional);
-    }
 
     /// Insert the item-priority pair into the queue.
     ///
@@ -491,16 +500,6 @@ where
         })
     }
 
-    /// Returns the items not ordered
-    pub fn into_vec(self) -> Vec<I> {
-        self.store.into_vec()
-    }
-
-    /// Drops all items from the priority queue
-    pub fn clear(&mut self) {
-        self.store.clear();
-    }
-
     /// Move all items of the `other` queue to `self`
     /// ignoring the items Eq to elements already in `self`
     /// At the end, `other` will be empty.
@@ -524,7 +523,6 @@ where
 impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
-    I: Hash + Eq,
 {
     /**************************************************************************/
     /*                            internal functions                          */

@@ -30,56 +30,97 @@
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
+use core::iter::FusedIterator;
+
 #[cfg(not(feature = "std"))]
 pub(crate) mod std {
     pub use ::alloc::vec;
     pub use core::*;
 }
 
-use std::hash::Hash;
+/// A draining iterator in arbitrary order over the couples
+/// `(item, priority)` in the queue.
+///
+/// It can be obtained calling the `drain` method.
+pub struct Drain<'a, I: 'a, P: 'a> {
+    pub(crate) iter: ::indexmap::map::Drain<'a, I, P>,
+}
+
+impl<'a, I: 'a, P: 'a> Iterator for Drain<'a, I, P> {
+    type Item = (I, P);
+    fn next(&mut self) -> Option<(I, P)> {
+        self.iter.next()
+    }
+}
+
+impl<I, P> DoubleEndedIterator for Drain<'_, I, P> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+}
+
+impl<I, P> ExactSizeIterator for Drain<'_, I, P> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
+impl<I, P> FusedIterator for Drain<'_, I, P> {}
 
 /// An iterator in arbitrary order over the couples
 /// `(item, priority)` in the queue.
 ///
 /// It can be obtained calling the `iter` method.
-pub struct Iter<'a, I: 'a, P: 'a>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct Iter<'a, I: 'a, P: 'a> {
     pub(crate) iter: ::indexmap::map::Iter<'a, I, P>,
 }
 
-impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P> {
     type Item = (&'a I, &'a P);
     fn next(&mut self) -> Option<(&'a I, &'a P)> {
         self.iter.next()
     }
 }
 
+impl<I, P> DoubleEndedIterator for Iter<'_, I, P> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+}
+
+impl<I, P> ExactSizeIterator for Iter<'_, I, P> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
+impl<I, P> FusedIterator for Iter<'_, I, P> {}
+
 /// An iterator in arbitrary order over the couples
 /// `(item, priority)` that consumes the queue.
 ///
 /// It can be obtained calling the `into_iter` method from the `IntoIterator` trait.
-pub struct IntoIter<I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct IntoIter<I, P> {
     pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
 }
 
-impl<I, P> Iterator for IntoIter<I, P>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+impl<I, P> Iterator for IntoIter<I, P> {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
         self.iter.next()
     }
 }
+
+impl<I, P> DoubleEndedIterator for IntoIter<I, P> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+}
+
+impl<I, P> ExactSizeIterator for IntoIter<I, P> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
+impl<I, P> FusedIterator for IntoIter<I, P> {}

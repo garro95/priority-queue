@@ -52,11 +52,7 @@ pub(crate) struct Position(pub usize);
 /// Internal storage of PriorityQueue and DoublePriorityQueue
 #[derive(Clone)]
 #[cfg(feature = "std")]
-pub(crate) struct Store<I, P, H = RandomState>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub(crate) struct Store<I, P, H = RandomState> {
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
     pub heap: Vec<Index>,       // Implements the heap of indexes
     pub qp: Vec<Position>,      // Performs the translation from the index
@@ -66,11 +62,7 @@ where
 
 #[derive(Clone)]
 #[cfg(not(feature = "std"))]
-pub(crate) struct Store<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub(crate) struct Store<I, P, H> {
     pub map: IndexMap<I, P, H>, // Stores the items and assign them an index
     pub heap: Vec<Index>,       // Implements the heap of indexes
     pub qp: Vec<Position>,      // Performs the translation from the index
@@ -139,7 +131,9 @@ where
             size: 0,
         }
     }
+}
 
+impl<I, P, H> Store<I, P, H> {
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
     pub fn iter(&self) -> Iter<I, P> {
@@ -172,13 +166,19 @@ where
         self.heap.reserve(additional);
         self.qp.reserve(additional);
     }
-}
 
-impl<I, P, H> Store<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
+    /// Clears the store, returning an iterator over the removed elements in arbitrary order.
+    /// If the iterator is dropped before being fully consumed, it drops the remaining elements in arbitrary order.
+    pub fn drain(&mut self) -> Drain<'_, I, P> {
+        self.heap.clear();
+        self.qp.clear();
+        self.size = 0;
+
+        Drain {
+            iter: self.map.drain(..),
+        }
+    }
+
     /// Returns the number of elements the internal map can hold without
     /// reallocating.
     ///
@@ -199,6 +199,19 @@ where
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.size == 0
+    }
+
+    /// Returns the items not ordered
+    pub fn into_vec(self) -> Vec<I> {
+        self.map.into_iter().map(|(i, _)| i).collect()
+    }
+
+    /// Drops all items from the priority queue
+    pub fn clear(&mut self) {
+        self.heap.clear();
+        self.qp.clear();
+        self.map.clear();
+        self.size = 0;
     }
 
     /// Swap two elements keeping a consistent state.
@@ -378,19 +391,6 @@ where
         })
     }
 
-    /// Returns the items not ordered
-    pub fn into_vec(self) -> Vec<I> {
-        self.map.into_iter().map(|(i, _)| i).collect()
-    }
-
-    /// Drops all items from the priority queue
-    pub fn clear(&mut self) {
-        self.heap.clear();
-        self.qp.clear();
-        self.map.clear();
-        self.size = 0;
-    }
-
     /// Move all items of the `other` queue to `self`
     /// ignoring the items Eq to elements already in `self`
     /// At the end, `other` will be empty.
@@ -405,10 +405,9 @@ where
         if other.size == 0 {
             return;
         }
-        let drain = other.map.drain(..);
         // what should we do for duplicated keys?
         // ignore
-        for (k, v) in drain {
+        for (k, v) in other.drain() {
             if !self.map.contains_key(&k) {
                 let i = self.size;
                 self.map.insert(k, v);
@@ -417,16 +416,10 @@ where
                 self.size += 1;
             }
         }
-        other.clear();
     }
 }
 
-impl<I, P, H> IntoIterator for Store<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-    H: BuildHasher,
-{
+impl<I, P, H> IntoIterator for Store<I, P, H> {
     type Item = (I, P);
     type IntoIter = IntoIter<I, P>;
     fn into_iter(self) -> IntoIter<I, P> {
@@ -436,12 +429,7 @@ where
     }
 }
 
-impl<'a, I, P, H> IntoIterator for &'a Store<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-    H: BuildHasher,
-{
+impl<'a, I, P, H> IntoIterator for &'a Store<I, P, H> {
     type Item = (&'a I, &'a P);
     type IntoIter = Iter<'a, I, P>;
     fn into_iter(self) -> Iter<'a, I, P> {
@@ -550,8 +538,8 @@ where
 use std::fmt;
 impl<I, P, H> fmt::Debug for Store<I, P, H>
 where
-    I: fmt::Debug + Hash + Eq,
-    P: fmt::Debug + Ord,
+    I: fmt::Debug,
+    P: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map()
@@ -575,12 +563,7 @@ mod serde {
 
     use serde::ser::{Serialize, SerializeSeq, Serializer};
 
-    impl<I, P, H> Serialize for Store<I, P, H>
-    where
-        I: Hash + Eq + Serialize,
-        P: Ord + Serialize,
-        H: BuildHasher,
-    {
+    impl<I, P, H> Serialize for Store<I, P, H> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,

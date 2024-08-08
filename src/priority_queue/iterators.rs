@@ -36,10 +36,9 @@ pub(crate) mod std {
 }
 
 use core::hash::BuildHasher;
-use std::cmp::{Eq, Ord};
+use std::cmp::Ord;
 #[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
-use std::hash::Hash;
 use std::iter::*;
 
 use crate::PriorityQueue;
@@ -58,7 +57,6 @@ use crate::PriorityQueue;
 #[cfg(feature = "std")]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pq: &'a mut PriorityQueue<I, P, H>,
@@ -68,7 +66,6 @@ where
 #[cfg(not(feature = "std"))]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pq: &'a mut PriorityQueue<I, P, H>,
@@ -77,7 +74,6 @@ where
 
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
@@ -87,7 +83,6 @@ where
 
 impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
     H: BuildHasher,
 {
@@ -109,7 +104,6 @@ where
 
 impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     fn drop(&mut self) {
@@ -122,26 +116,17 @@ where
 ///
 /// It can be obtained calling the `into_sorted_iter` method.
 #[cfg(feature = "std")]
-pub struct IntoSortedIter<I, P, H = RandomState>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct IntoSortedIter<I, P, H = RandomState> {
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
 
 #[cfg(not(feature = "std"))]
-pub struct IntoSortedIter<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct IntoSortedIter<I, P, H> {
     pub(crate) pq: PriorityQueue<I, P, H>,
 }
 
 impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     type Item = (I, P);

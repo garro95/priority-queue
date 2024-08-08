@@ -36,10 +36,9 @@ pub(crate) mod std {
 }
 
 use core::hash::BuildHasher;
-use std::cmp::{Eq, Ord};
+use std::cmp::Ord;
 #[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
-use std::hash::Hash;
 use std::iter::*;
 
 use crate::DoublePriorityQueue;
@@ -58,7 +57,6 @@ use crate::DoublePriorityQueue;
 #[cfg(feature = "std")]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a = RandomState>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pq: &'a mut DoublePriorityQueue<I, P, H>,
@@ -68,7 +66,6 @@ where
 #[cfg(not(feature = "std"))]
 pub struct IterMut<'a, I: 'a, P: 'a, H: 'a>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pq: &'a mut DoublePriorityQueue<I, P, H>,
@@ -77,7 +74,6 @@ where
 
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pub(crate) fn new(pq: &'a mut DoublePriorityQueue<I, P, H>) -> Self {
@@ -87,7 +83,6 @@ where
 
 impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
     H: BuildHasher,
 {
@@ -106,9 +101,44 @@ where
     }
 }
 
+impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> DoubleEndedIterator for IterMut<'a, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        use indexmap::map::MutableKeys;
+        let r: Option<(&'a mut I, &'a mut P)> = self
+            .pq
+            .store
+            .map
+            .get_index_mut2(self.pos)
+            .map(|(i, p)| (i as *mut I, p as *mut P))
+            .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
+        self.pos -= 1;
+        r
+    }
+}
+
+impl<'a, I, P, H> ExactSizeIterator for IterMut<'_, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+    fn len(&self) -> usize {
+        self.pq.len()
+    }
+}
+
+impl<'a, I, P, H> FusedIterator for IterMut<'_, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+}
+
 impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     fn drop(&mut self) {
@@ -127,7 +157,6 @@ where
 #[cfg(feature = "std")]
 pub struct IntoSortedIter<I, P, H = RandomState>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pub(crate) pq: DoublePriorityQueue<I, P, H>,
@@ -136,7 +165,6 @@ where
 #[cfg(not(feature = "std"))]
 pub struct IntoSortedIter<I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     pub(crate) pq: DoublePriorityQueue<I, P, H>,
@@ -144,7 +172,6 @@ where
 
 impl<I, P, H> Iterator for IntoSortedIter<I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     type Item = (I, P);
@@ -155,10 +182,20 @@ where
 
 impl<I, P, H> DoubleEndedIterator for IntoSortedIter<I, P, H>
 where
-    I: Hash + Eq,
     P: Ord,
 {
     fn next_back(&mut self) -> Option<(I, P)> {
         self.pq.pop_max()
     }
 }
+
+impl<I, P, H> ExactSizeIterator for IntoSortedIter<I, P, H>
+where
+    P: Ord,
+{
+    fn len(&self) -> usize {
+        self.pq.len()
+    }
+}
+
+impl<I, P, H> FusedIterator for IntoSortedIter<I, P, H> where P: Ord {}

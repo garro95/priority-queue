@@ -34,7 +34,7 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
-use crate::core_iterators::{IntoIter, Iter};
+use crate::core_iterators::*;
 use crate::store::{Index, Position, Store};
 use iterators::*;
 
@@ -88,21 +88,13 @@ use std::mem::replace;
 /// ```
 #[derive(Clone)]
 #[cfg(feature = "std")]
-pub struct DoublePriorityQueue<I, P, H = RandomState>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct DoublePriorityQueue<I, P, H = RandomState> {
     pub(crate) store: Store<I, P, H>,
 }
 
 #[derive(Clone)]
 #[cfg(not(feature = "std"))]
-pub struct DoublePriorityQueue<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-{
+pub struct DoublePriorityQueue<I, P, H> {
     pub(crate) store: Store<I, P, H>,
 }
 
@@ -181,6 +173,17 @@ where
             store: Store::with_capacity_and_hasher(capacity, hash_builder),
         }
     }
+}
+
+impl<I, P, H> DoublePriorityQueue<I, P, H> {
+    /// Returns the number of elements the internal map can hold without
+    /// reallocating.
+    ///
+    /// This number is a lower bound; the map might be able to hold more,
+    /// but is guaranteed to be able to hold at least this many.
+    pub fn capacity(&self) -> usize {
+        self.store.capacity()
+    }
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
@@ -188,17 +191,59 @@ where
         self.store.iter()
     }
 
+    /// Clears the PriorityQueue, returning an iterator over the removed elements in arbitrary order.
+    /// If the iterator is dropped before being fully consumed, it drops the remaining elements in arbitrary order.
+    pub fn drain(&mut self) -> Drain<I, P> {
+        self.store.drain()
+    }
+
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
     pub fn shrink_to_fit(&mut self) {
         self.store.shrink_to_fit();
     }
-}
 
+    /// Returns the number of elements in the priority queue.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.store.len()
+    }
+
+    /// Returns true if the priority queue contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.store.is_empty()
+    }
+
+    /// Returns the couple (item, priority) with the lowest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_min(&self) -> Option<(&I, &P)> {
+        self.find_min().and_then(|i| {
+            self.store
+                .map
+                .get_index(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+        })
+    }
+
+    // reserve_exact -> IndexMap does not implement reserve_exact
+
+    /// Reserves capacity for at least `additional` more elements to be inserted
+    /// in the given `DoublePriorityQueue`. The collection may reserve more space to avoid
+    /// frequent reallocations. After calling `reserve`, capacity will be
+    /// greater than or equal to `self.len() + additional`. Does nothing if
+    /// capacity is already sufficient.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    pub fn reserve(&mut self, additional: usize) {
+        self.store.reserve(additional);
+    }
+}
 impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
-    I: Hash + Eq,
 {
     /// Return an iterator in arbitrary order over the
     /// (item, priority) elements in the queue.
@@ -214,18 +259,6 @@ where
         IterMut::new(self)
     }
 
-    /// Returns the couple (item, priority) with the lowest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_min(&self) -> Option<(&I, &P)> {
-        self.find_min().and_then(|i| {
-            self.store
-                .map
-                .get_index(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
-        })
-    }
-
     /// Returns the couple (item, priority) with the greatest
     /// priority in the queue, or None if it is empty.
     ///
@@ -236,15 +269,6 @@ where
                 .map
                 .get_index(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
         })
-    }
-
-    /// Returns the number of elements the internal map can hold without
-    /// reallocating.
-    ///
-    /// This number is a lower bound; the map might be able to hold more,
-    /// but is guaranteed to be able to hold at least this many.
-    pub fn capacity(&self) -> usize {
-        self.store.capacity()
     }
 
     /// Removes the item with the lowest priority from
@@ -295,17 +319,6 @@ where
         res
     }
 
-    /// Returns the number of elements in the priority queue.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.store.len()
-    }
-
-    /// Returns true if the priority queue contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.store.is_empty()
-    }
-
     /// Generates a new double ended iterator from self that
     /// will extract the elements from the one with the lowest priority
     /// to the highest one.
@@ -316,25 +329,66 @@ where
 
 impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
+    H: BuildHasher,
+{
+    /// Returns the couple (item, priority) with the lowest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
+        use indexmap::map::MutableKeys;
+
+        self.find_min()
+            .and_then(move |i| {
+                self.store
+                    .map
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+            })
+            .map(|(k, v)| (k, &*v))
+    }
+}
+
+impl<I, P, H> DoublePriorityQueue<I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+    /// Returns the couple (item, priority) with the greatest
+    /// priority in the queue, or None if it is empty.
+    ///
+    /// The item is a mutable reference, but it's a logic error to modify it
+    /// in a way that change the result of  `Hash` or `Eq`.
+    ///
+    /// The priority cannot be modified with a call to this function.
+    /// To modify the priority use `push`, `change_priority` or
+    /// `change_priority_by`.
+    ///
+    /// Computes in **O(1)** time
+    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
+        use indexmap::map::MutableKeys;
+        self.find_max()
+            .and_then(move |i| {
+                self.store
+                    .map
+                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
+            })
+            .map(|(k, v)| (k, &*v))
+    }
+}
+
+impl<I, P, H> DoublePriorityQueue<I, P, H>
+where
     P: Ord,
     I: Hash + Eq,
     H: BuildHasher,
 {
-    // reserve_exact -> IndexMap does not implement reserve_exact
-
-    /// Reserves capacity for at least `additional` more elements to be inserted
-    /// in the given `DoublePriorityQueue`. The collection may reserve more space to avoid
-    /// frequent reallocations. After calling `reserve`, capacity will be
-    /// greater than or equal to `self.len() + additional`. Does nothing if
-    /// capacity is already sufficient.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the new capacity overflows `usize`.
-    pub fn reserve(&mut self, additional: usize) {
-        self.store.reserve(additional);
-    }
-
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` was already into the queue,
@@ -437,51 +491,6 @@ where
             })
     }
 
-    /// Returns the couple (item, priority) with the lowest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
-        use indexmap::map::MutableKeys;
-
-        self.find_min()
-            .and_then(move |i| {
-                self.store
-                    .map
-                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
-            })
-            .map(|(k, v)| (k, &*v))
-    }
-
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
-    ///
-    /// The item is a mutable reference, but it's a logic error to modify it
-    /// in a way that change the result of  `Hash` or `Eq`.
-    ///
-    /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
-    ///
-    /// Computes in **O(1)** time
-    pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
-        use indexmap::map::MutableKeys;
-        self.find_max()
-            .and_then(move |i| {
-                self.store
-                    .map
-                    .get_index_mut2(unsafe { *self.store.heap.get_unchecked(i.0) }.0)
-            })
-            .map(|(k, v)| (k, &*v))
-    }
-
     /// Change the priority of an Item using the provided function.
     /// Return a boolean value where `true` means the item was in the queue and update was successful
     ///
@@ -582,17 +591,19 @@ where
     }
 }
 
-impl<I, P, H> DoublePriorityQueue<I, P, H>
-where
-    P: Ord,
-    I: Hash + Eq,
-{
+impl<I, P, H> DoublePriorityQueue<I, P, H> {
+    /// Returns the index of the min element
+    fn find_min(&self) -> Option<Position> {
+        match self.len() {
+            0 => None,
+            _ => Some(Position(0)),
+        }
+    }
 }
 
 impl<I, P, H> DoublePriorityQueue<I, P, H>
 where
     P: Ord,
-    I: Hash + Eq,
 {
     /**************************************************************************/
     /*                            internal functions                          */
@@ -803,14 +814,6 @@ where
                     .max_by_key(|i| unsafe { self.store.get_priority_from_position(**i) })
                     .unwrap(),
             ),
-        }
-    }
-
-    /// Returns the index of the min element
-    fn find_min(&self) -> Option<Position> {
-        match self.len() {
-            0 => None,
-            _ => Some(Position(0)),
         }
     }
 }

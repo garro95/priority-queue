@@ -328,6 +328,23 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn drain() {
+        use std::collections::hash_map::RandomState;
+        let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
+
+        for i in 0..7 {
+            queue.push(i, i);
+        }
+
+        let previous_capacity = queue.capacity();
+        queue.drain();
+
+        assert_eq!(queue.len(), 0);
+        assert_eq!(queue.capacity(), previous_capacity);
+        assert_eq!(queue.pop(), None);
+    }
+
+    #[test]
     fn extend() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
