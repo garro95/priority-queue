@@ -563,7 +563,11 @@ mod serde {
 
     use serde::ser::{Serialize, SerializeSeq, Serializer};
 
-    impl<I, P, H> Serialize for Store<I, P, H> {
+    impl<I, P, H> Serialize for Store<I, P, H>
+    where
+        I: Serialize,
+        P: Serialize,
+    {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
