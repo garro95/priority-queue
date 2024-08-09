@@ -362,6 +362,28 @@ mod doublepq_tests {
     }
 
     #[test]
+    fn reserve() {
+        use std::collections::hash_map::RandomState;
+        let mut queue = DoublePriorityQueue::<i32, i32, RandomState>::default();
+
+        queue.reserve(100);
+
+        assert_eq!(queue.len(), 0);
+        assert!(queue.capacity() >= 100);
+    }
+
+    #[test]
+    fn reserve_exact() {
+        use std::collections::hash_map::RandomState;
+        let mut queue = DoublePriorityQueue::<i32, i32, RandomState>::default();
+
+        queue.reserve_exact(100);
+
+        assert_eq!(queue.len(), 0);
+        assert_eq!(queue.capacity(), 100);
+    }
+
+    #[test]
     fn extend() {
         let mut pq = DoublePriorityQueue::new();
         pq.push("a", 1);
