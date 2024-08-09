@@ -30,10 +30,7 @@
 //! Usually you don't need to explicitly `use` any of the types declared here.
 
 #[cfg(not(feature = "std"))]
-pub(crate) mod std {
-    pub use ::alloc::vec;
-    pub use core::*;
-}
+use crate::core_iterators::std;
 
 use core::hash::BuildHasher;
 use std::cmp::Ord;
