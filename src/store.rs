@@ -31,6 +31,7 @@ use std::vec::Vec;
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
 use crate::core_iterators::*;
+use crate::TryReserveError;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -141,7 +142,6 @@ impl<I, P, H> Store<I, P, H> {
             iter: self.map.iter(),
         }
     }
-    // reserve_exact -> IndexMap does not implement reserve_exact
 
     /// Shrinks the capacity of the internal data structures
     /// that support this operation as much as possible.
@@ -161,10 +161,51 @@ impl<I, P, H> Store<I, P, H> {
     /// # Panics
     ///
     /// Panics if the new capacity overflows `usize`.
+    ///
+    /// Computes in O(n) time.
     pub fn reserve(&mut self, additional: usize) {
         self.map.reserve(additional);
         self.heap.reserve(additional);
         self.qp.reserve(additional);
+    }
+
+    /// Reserve capacity for `additional` more elements, without over-allocating.
+    ///
+    /// Unlike `reserve`, this does not deliberately over-allocate the entry capacity to avoid
+    /// frequent re-allocations. However, the underlying data structures may still have internal
+    /// capacity requirements, and the allocator itself may give more space than requested, so this
+    /// cannot be relied upon to be precisely minimal.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.map.reserve_exact(additional);
+        self.heap.reserve_exact(additional);
+        self.qp.reserve_exact(additional);
+    }
+
+    /// Try to reserve capacity for at least `additional` more elements.
+    ///
+    /// Computes in O(n) time.
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.map.try_reserve(additional)?;
+        self.heap.try_reserve(additional)?;
+        self.qp.try_reserve(additional)?;
+        Ok(())
+    }
+
+    /// Try to reserve capacity for `additional` more elements, without over-allocating.
+    ///
+    /// Unlike `reserve`, this does not deliberately over-allocate the entry capacity to avoid
+    /// frequent re-allocations. However, the underlying data structures may still have internal
+    /// capacity requirements, and the allocator itself may give more space than requested, so this
+    /// cannot be relied upon to be precisely minimal.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.map.try_reserve_exact(additional)?;
+        self.heap.try_reserve_exact(additional)?;
+        self.qp.try_reserve_exact(additional)?;
+        Ok(())
     }
 
     /// Clears the store, returning an iterator over the removed elements in arbitrary order.

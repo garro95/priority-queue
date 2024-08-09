@@ -101,6 +101,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 pub(crate) mod std {
     pub use core::*;
+    pub use ::alloc::collections;
 }
 
 pub mod core_iterators;
@@ -110,3 +111,45 @@ mod store;
 
 pub use crate::double_priority_queue::DoublePriorityQueue;
 pub use crate::priority_queue::PriorityQueue;
+
+use indexmap::TryReserveError as IndexMapTryReserveError;
+use std::collections::TryReserveError as StdTryReserveError;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TryReserveError {
+    kind: TryReserveErrorKind,
+}
+
+/// The error type for `try_reserve` methods.
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum TryReserveErrorKind {
+    Std(StdTryReserveError),
+    IndexMap(IndexMapTryReserveError),
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for TryReserveError {}
+
+impl core::fmt::Display for TryReserveError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match &self.kind {
+            TryReserveErrorKind::Std(e) => core::fmt::Display::fmt(e, f),
+            TryReserveErrorKind::IndexMap(e) => core::fmt::Display::fmt(e, f),
+        }
+    }
+}
+
+use TryReserveErrorKind::*;
+impl From<StdTryReserveError> for TryReserveError {
+    fn from(source: StdTryReserveError) -> Self {
+        Self { kind: Std(source) }
+    }
+}
+
+impl From<IndexMapTryReserveError> for TryReserveError {
+    fn from(source: IndexMapTryReserveError) -> Self {
+        Self {
+            kind: IndexMap(source),
+        }
+    }
+}

@@ -36,6 +36,7 @@ use std::vec::Vec;
 
 use crate::core_iterators::*;
 use crate::store::{Index, Position, Store};
+use crate::TryReserveError;
 use iterators::*;
 
 use std::borrow::Borrow;
@@ -226,8 +227,6 @@ impl<I, P, H> DoublePriorityQueue<I, P, H> {
         })
     }
 
-    // reserve_exact -> IndexMap does not implement reserve_exact
-
     /// Reserves capacity for at least `additional` more elements to be inserted
     /// in the given `DoublePriorityQueue`. The collection may reserve more space to avoid
     /// frequent reallocations. After calling `reserve`, capacity will be
@@ -239,6 +238,37 @@ impl<I, P, H> DoublePriorityQueue<I, P, H> {
     /// Panics if the new capacity overflows `usize`.
     pub fn reserve(&mut self, additional: usize) {
         self.store.reserve(additional);
+    }
+
+    /// Reserve capacity for `additional` more elements, without over-allocating.
+    ///
+    /// Unlike `reserve`, this does not deliberately over-allocate the entry capacity to avoid
+    /// frequent re-allocations. However, the underlying data structures may still have internal
+    /// capacity requirements, and the allocator itself may give more space than requested, so this
+    /// cannot be relied upon to be precisely minimal.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.store.reserve_exact(additional);
+    }
+
+    /// Try to reserve capacity for at least `additional` more elements.
+    ///
+    /// Computes in O(n) time.
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.store.try_reserve(additional)
+    }
+
+    /// Try to reserve capacity for `additional` more elements, without over-allocating.
+    ///
+    /// Unlike `reserve`, this does not deliberately over-allocate the entry capacity to avoid
+    /// frequent re-allocations. However, the underlying data structures may still have internal
+    /// capacity requirements, and the allocator itself may give more space than requested, so this
+    /// cannot be relied upon to be precisely minimal.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.store.try_reserve_exact(additional)
     }
 }
 impl<I, P, H> DoublePriorityQueue<I, P, H>
