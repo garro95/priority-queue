@@ -367,6 +367,28 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn try_reserve() {
+        use std::collections::hash_map::RandomState;
+        let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
+
+        queue.try_reserve(100).unwrap();
+
+        assert_eq!(queue.len(), 0);
+        assert!(queue.capacity() >= 100);
+    }
+
+    #[test]
+    fn try_reserve_exact() {
+        use std::collections::hash_map::RandomState;
+        let mut queue = PriorityQueue::<i32, i32, RandomState>::default();
+
+        queue.try_reserve_exact(100).unwrap();
+
+        assert_eq!(queue.len(), 0);
+        assert_eq!(queue.capacity(), 100);
+    }
+
+    #[test]
     fn extend() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);
