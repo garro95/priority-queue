@@ -132,6 +132,7 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.1.0 Implement `drain` and `reserve` variations
 * 2.0.3 Some licensing-related housekeeping
 * 2.0.2 Fix docs.rs build
 * 2.0.1 Documentation improvements
