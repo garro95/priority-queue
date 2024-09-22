@@ -16,7 +16,7 @@ autocfg = "1"
 
 [dependencies]
 equivalent = "1.0.1"
-indexmap = {version = "2", features = [], default-features = false}
+indexmap = {version = "2.2", features = [], default-features = false}
 serde = { version = "1", optional = true }
 
 [dev-dependencies]
