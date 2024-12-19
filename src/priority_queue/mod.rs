@@ -332,9 +332,21 @@ where
 {
     /// Insert the item-priority pair into the queue.
     ///
-    /// If an element equal to `item` was already into the queue,
-    /// it is updated and the old value of its priority returned in `Some`;
-    /// otherwise, returns `None`.
+    /// If an element equal to `item` is already in the queue, its priority
+    /// is updated and the old priority is returned in `Some`; otherwise,
+    /// `item` is inserted with `priority` and `None` is returned.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    /// assert_eq!(pq.push("Apples", 5), None);
+    /// assert_eq!(pq.get_priority("Apples"), Some(&5));
+    /// assert_eq!(pq.push("Apples", 6), Some(5));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// assert_eq!(pq.push("Apples", 4), Some(6));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// ```
     ///
     /// Computes in **O(log(N))** time.
     pub fn push(&mut self, item: I, priority: P) -> Option<P> {
@@ -371,13 +383,29 @@ where
     ///
     /// If an element equal to `item` is already in the queue with a
     /// lower priority, its priority is increased to the new one
-    /// without replacing the element and the old priority is returned.
-    /// Otherwise, the new element is inserted into the queue.
+    /// without replacing the element and the old priority is returned
+    /// in `Some`.
     ///
-    /// Returns `Some` if an element equal to `item` is already in the
-    /// queue. If its priority is higher then `priority`, the latter is returned back,
-    /// otherwise, the old priority is contained in the Option.
-    /// If the item is not in the queue, `None` is returned.
+    /// If an element equal to `item` is already in the queue with an
+    /// equal or higher priority, its priority is not changed and the
+    /// `priority` argument is returned in `Some`.
+    ///
+    /// If no element equal to `item` is already in the queue, the new
+    /// element is inserted and `None` is returned.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    /// assert_eq!(pq.push_increase("Apples", 5), None);
+    /// assert_eq!(pq.get_priority("Apples"), Some(&5));
+    /// assert_eq!(pq.push_increase("Apples", 6), Some(5));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// // Already present with higher priority, so requested (lower)
+    /// // priority is returned.
+    /// assert_eq!(pq.push_increase("Apples", 4), Some(4));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// ```
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
@@ -393,13 +421,29 @@ where
     ///
     /// If an element equal to `item` is already in the queue with a
     /// higher priority, its priority is decreased to the new one
-    /// without replacing the element and the old priority is returned.
-    /// Otherwise, the new element is inserted into the queue.
+    /// without replacing the element and the old priority is returned
+    /// in `Some`.
     ///
-    /// Returns `Some` if an element equal to `item` is already in the
-    /// queue. If its priority is lower then `priority`, the latter is returned back,
-    /// otherwise, the old priority is contained in the Option.
-    /// If the item is not in the queue, `None` is returned.
+    /// If an element equal to `item` is already in the queue with an
+    /// equal or lower priority, its priority is not changed and the
+    /// `priority` argument is returned in `Some`.
+    ///
+    /// If no element equal to `item` is already in the queue, the new
+    /// element is inserted and `None` is returned.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    /// assert_eq!(pq.push_decrease("Apples", 5), None);
+    /// assert_eq!(pq.get_priority("Apples"), Some(&5));
+    /// assert_eq!(pq.push_decrease("Apples", 4), Some(5));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// // Already present with lower priority, so requested (higher)
+    /// // priority is returned.
+    /// assert_eq!(pq.push_decrease("Apples", 6), Some(6));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// ```
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
@@ -415,6 +459,18 @@ where
     ///
     /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
     /// in the priority queue.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    /// assert_eq!(pq.change_priority("Apples", 5), None);
+    /// assert_eq!(pq.get_priority("Apples"), None);
+    /// assert_eq!(pq.push("Apples", 6), None);
+    /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// assert_eq!(pq.change_priority("Apples", 4), Some(6));
+    /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// ```
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
