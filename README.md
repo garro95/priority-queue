@@ -132,9 +132,10 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.1.2 Documentation improvements: [#58](https://github.com/garro95/priority-queue/pull/58). Thanks to [jmr](https://github.com/jmr)
 * 2.1.1 Bug fix: [#56](https://github.com/garro95/priority-queue/issues/56)
 * 2.1.0 Implement `drain` and `reserve` variations
-* 2.0.3 Some licensing-related housekeeping
+* 2.0.3 Some licensing-related housekeeping: [#54](https://github.com/garro95/priority-queue/pull/54). Thanks to [musicinmybrain](https://github.com/musicinmybrain)
 * 2.0.2 Fix docs.rs build
 * 2.0.1 Documentation improvements
 * 2.0.0 This release contains **breaking changes**
