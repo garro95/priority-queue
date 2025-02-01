@@ -43,7 +43,7 @@ use crate::DoublePriorityQueue;
 /// A mutable iterator over the couples `(item, priority)` of the `DoublePriorityQueue`
 /// in arbitrary order.
 ///
-/// It can be obtained calling the `iter_mut` method.
+/// It can be obtained calling the [`iter_mut`](DoublePriorityQueue::iter_mut) method.
 ///
 /// It can be used to update the priorities of the elements in the queue.
 /// When the iterator goes out of scope, the heap is rebuilt to restore the
@@ -146,7 +146,7 @@ where
 /// A consuming iterator over the couples `(item, priority)` of the `PriorityQueue`
 /// ordered by priority, from the lowest to the highest.
 ///
-/// It can be obtained calling the `into_sorted_iter` method.
+/// It can be obtained calling the [`into_sorted_iter`](DoublePriorityQueue::into_sorted_iter) method.
 ///
 /// Since it implements [`DoubleEndedIterator`], this iterator can be reversed at any time
 /// calling `rev`, at which point, elements will be extracted from the one with maximum priority

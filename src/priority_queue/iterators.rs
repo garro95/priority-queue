@@ -43,7 +43,7 @@ use crate::PriorityQueue;
 /// A mutable iterator over the couples `(item, priority)` of the `PriorityQueue`
 /// in arbitrary order.
 ///
-/// It can be obtained calling the `iter_mut` method.
+/// It can be obtained calling the [`iter_mut`](PriorityQueue::iter_mut) method.
 ///
 /// It can be used to update the priorities of the elements in the queue.
 /// When the iterator goes out of scope, the heap is rebuilt to restore the
@@ -111,7 +111,7 @@ where
 /// A consuming iterator over the couples `(item, priority)` of the `PriorityQueue`
 /// ordered by priority, from the highest to the lowest.
 ///
-/// It can be obtained calling the `into_sorted_iter` method.
+/// It can be obtained calling the [`into_sorted_iter`](PriorityQueue::into_sorted_iter) method.
 #[cfg(feature = "std")]
 pub struct IntoSortedIter<I, P, H = RandomState> {
     pub(crate) pq: PriorityQueue<I, P, H>,

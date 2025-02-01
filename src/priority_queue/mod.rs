@@ -535,8 +535,9 @@ where
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
+    /// To modify the priority use [`push`](PriorityQueue::push),
+    /// [`change_priority`](PriorityQueue::change_priority) or
+    /// [`change_priority_by`](PriorityQueue::change_priority_by).
     pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
@@ -552,8 +553,9 @@ where
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
+    /// To modify the priority use[`push`](PriorityQueue::push),
+    /// [`change_priority`](PriorityQueue::change_priority) or
+    /// [`change_priority_by`](PriorityQueue::change_priority_by).
     ///
     /// Computes in **O(1)** time
     pub fn peek_mut(&mut self) -> Option<(&mut I, &P)> {

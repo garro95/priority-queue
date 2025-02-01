@@ -368,8 +368,9 @@ where
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
+    /// To modify the priority use [`push`](DoublePriorityQueue::push),
+    /// [`change_priority`](DoublePriorityQueue::change_priority) or
+    /// [`change_priority_by`](DoublePriorityQueue::change_priority_by).
     ///
     /// Computes in **O(1)** time
     pub fn peek_min_mut(&mut self) -> Option<(&mut I, &P)> {
@@ -397,8 +398,9 @@ where
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
+    /// To modify the priority use [`push`](DoublePriorityQueue::push),
+    /// [`change_priority`](DoublePriorityQueue::change_priority) or
+    /// [`change_priority_by`](DoublePriorityQueue::change_priority_by).
     ///
     /// Computes in **O(1)** time
     pub fn peek_max_mut(&mut self) -> Option<(&mut I, &P)> {
@@ -569,8 +571,9 @@ where
     /// in a way that change the result of  `Hash` or `Eq`.
     ///
     /// The priority cannot be modified with a call to this function.
-    /// To modify the priority use `push`, `change_priority` or
-    /// `change_priority_by`.
+    /// To modify the priority use  use [`push`](DoublePriorityQueue::push),
+    /// [`change_priority`](DoublePriorityQueue::change_priority) or
+    /// [`change_priority_by`](DoublePriorityQueue::change_priority_by).
     pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
@@ -613,8 +616,8 @@ where
     /// At the end, `other` will be empty.
     ///
     /// **Note** that at the end, the priority of the duplicated elements
-    /// inside self may be the one of the elements in other,
-    /// if other is longer than self
+    /// inside `self` may be the one of the elements in `other`,
+    /// if `other` is longer than `self`
     pub fn append(&mut self, other: &mut Self) {
         self.store.append(&mut other.store);
         self.heap_build();

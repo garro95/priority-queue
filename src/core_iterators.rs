@@ -99,7 +99,7 @@ impl<I, P> FusedIterator for Iter<'_, I, P> {}
 /// An iterator in arbitrary order over the couples
 /// `(item, priority)` that consumes the queue.
 ///
-/// It can be obtained calling the `into_iter` method from the `IntoIterator` trait.
+/// It can be obtained calling the `into_iter` method from the [`IntoIterator`] trait.
 pub struct IntoIter<I, P> {
     pub(crate) iter: ::indexmap::map::IntoIter<I, P>,
 }
