@@ -30,10 +30,11 @@ hashbrown = "0.14"
 default = ["std"]
 std = ["indexmap/std"]
 benchmarks = []
+nightly = []
 
 [workspace]
 members = ["test-nostd"]
 
 [package.metadata.docs.rs]
-features = ["serde"]
+features = ["serde", "nightly"]
 rustdoc-args = ["--cfg", "docsrs"]
