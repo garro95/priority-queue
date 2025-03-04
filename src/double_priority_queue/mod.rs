@@ -488,7 +488,7 @@ where
     /// }), None);
     /// assert_eq!(pq.pop_max(), Some(("Apples", 5)));
     /// ```
-    pub fn pop_max_if<F>(&mut self, f: F) -> Option<(I, P)> 
+    pub fn pop_max_if<F>(&mut self, f: F) -> Option<(I, P)>
     where
         F: FnOnce(&mut I, &mut P) -> bool,
     {
