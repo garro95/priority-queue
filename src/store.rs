@@ -267,7 +267,7 @@ impl<I, P, H> Store<I, P, H> {
         self.heap.swap(a.0, b.0);
     }
 
-    /// Remove and return the element with the max priority
+    /// Remove and return the element in position `position`
     /// and swap it with the last element keeping a consistent
     /// state.
     ///
@@ -316,6 +316,25 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    /// If the predicate returns true for the element in position `position`,
+    /// remove it and swap it with the last element keeping a consistent
+    /// state.
+    ///
+    /// Computes in **O(1)** time (average)
+    pub fn swap_remove_if<F>(&mut self, position: Position, f: F) -> Option<(I, P)>
+    where
+        F: FnOnce(&mut I, &mut P) -> bool,
+    {
+        let head: Index = unsafe { *self.heap.get_unchecked(position.0) };
+        let (i, p) = self.map.get_index_mut2(head.0).unwrap();
+
+        if f(i, p) {
+            self.swap_remove(position)
+        } else {
+            None
+        }
+    }
+
     /// Change the priority of an Item returning the old value of priority,
     /// or `None` if the item wasn't in the queue.
     ///

@@ -330,6 +330,49 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    /// Removes the item with the greatest priority from
+    /// the priority queue if the predicate returns `true`.
+    ///
+    /// Returns the pair (item, priority), or None if the
+    /// queue is empty or the predicate returns `false`.
+    ///
+    /// The predicate receives mutable references to both the item and
+    /// the priority.
+    ///
+    /// It's a logical error to change the item in a way
+    /// that changes the result of `Hash` or `EQ`.
+    ///
+    /// The predicate can change the priority. If it returns true, the
+    /// returned couple will have the updated priority, otherwise, the
+    /// heap structural property will be restored.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    /// pq.push("Apples", 5);
+    /// pq.push("Bananas", 10);
+    /// assert_eq!(pq.pop_if(|i, p| {
+    ///   *p = 3;
+    ///   false
+    /// }), None);
+    /// assert_eq!(pq.pop(), Some(("Apples", 5)));
+    /// ```
+    pub fn pop_if<F>(&mut self, f: F) -> Option<(I, P)>
+    where
+        F: FnOnce(&mut I, &mut P) -> bool,
+    {
+        match self.len() {
+            0 => None,
+            1 => self.store.swap_remove_if(Position(0), f),
+            _ => {
+                let r = self.store.swap_remove_if(Position(0), f);
+                self.heapify(Position(0));
+                r
+            }
+        }
+    }
+
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` is already in the queue, its priority

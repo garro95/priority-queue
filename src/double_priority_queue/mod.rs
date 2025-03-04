@@ -421,6 +421,84 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    /// Removes the item with the lowest priority from
+    /// the priority queue if the predicate returns `true`.
+    ///
+    /// Returns the pair (item, priority), or None if the
+    /// queue is empty or the predicate returns `false`.
+    ///
+    /// The predicate receives mutable references to both the item and
+    /// the priority.
+    ///
+    /// It's a logical error to change the item in a way
+    /// that changes the result of `Hash` or `EQ`.
+    ///
+    /// The predicate can change the priority. If it returns true, the
+    /// returned couple will have the updated priority, otherwise, the
+    /// heap structural property will be restored.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::DoublePriorityQueue;
+    /// let mut pq = DoublePriorityQueue::new();
+    /// pq.push("Apples", 5);
+    /// pq.push("Bananas", 10);
+    /// assert_eq!(pq.pop_min_if(|i, p| {
+    ///   *p = 15;
+    ///   false
+    /// }), None);
+    /// assert_eq!(pq.pop_min(), Some(("Bananas", 10)));
+    /// ```
+    pub fn pop_min_if<F>(&mut self, f: F) -> Option<(I, P)>
+    where
+        F: FnOnce(&mut I, &mut P) -> bool,
+    {
+        self.find_min().and_then(|i| {
+            let r = self.store.swap_remove_if(i, f);
+            self.heapify(i);
+            r
+        })
+    }
+
+    /// Removes the item with the greatest priority from
+    /// the priority queue if the predicate returns `true`.
+    ///
+    /// Returns the pair (item, priority), or None if the
+    /// queue is empty or the predicate returns `false`.
+    ///
+    /// The predicate receives mutable references to both the item and
+    /// the priority.
+    ///
+    /// It's a logical error to change the item in a way
+    /// that changes the result of `Hash` or `EQ`.
+    ///
+    /// The predicate can change the priority. If it returns true, the
+    /// returned couple will have the updated priority, otherwise, the
+    /// heap structural property will be restored.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::DoublePriorityQueue;
+    /// let mut pq = DoublePriorityQueue::new();
+    /// pq.push("Apples", 5);
+    /// pq.push("Bananas", 10);
+    /// assert_eq!(pq.pop_max_if(|i, p| {
+    ///   *p = 3;
+    ///   false
+    /// }), None);
+    /// assert_eq!(pq.pop_max(), Some(("Apples", 5)));
+    /// ```
+    pub fn pop_max_if<F>(&mut self, f: F) -> Option<(I, P)> 
+    where
+        F: FnOnce(&mut I, &mut P) -> bool,
+    {
+        self.find_max().and_then(|i| {
+            let r = self.store.swap_remove_if(i, f);
+            self.up_heapify(i);
+            r
+        })
+    }
+
     /// Insert the item-priority pair into the queue.
     ///
     /// If an element equal to `item` is already in the queue, its priority
