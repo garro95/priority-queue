@@ -100,9 +100,6 @@
 //!   This feature is **enabled by default** and can be disabled when compiling
 //!   for no_std targets.
 //! * **serde** - Enables serialization/deserialization using serde
-//! * **nightly** - Enables experimental APIs that are expected to change
-//!   breakingly without notice even across minor versions. When considered
-//!   stable, these APIs will be enabled by default.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 

@@ -30,7 +30,6 @@ hashbrown = "0.14"
 default = ["std"]
 std = ["indexmap/std"]
 benchmarks = []
-nightly = []
 
 [workspace]
 members = ["test-nostd"]
