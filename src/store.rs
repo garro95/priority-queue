@@ -302,12 +302,12 @@ impl<I, P, H> Store<I, P, H> {
     }
 
     #[inline(always)]
-    pub unsafe fn get_priority_from_position(&self, position: Position) -> &P {
+    pub unsafe fn get_priority_from_position(&self, position: Position) -> &P { unsafe {
         self.map
             .get_index(self.heap.get_unchecked(position.0).0)
             .unwrap()
             .1
-    }
+    }}
 }
 
 impl<I, P, H> Store<I, P, H>
