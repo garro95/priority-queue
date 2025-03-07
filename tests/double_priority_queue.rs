@@ -634,7 +634,7 @@ mod doublepq_tests {
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_basics {
     use priority_queue::DoublePriorityQueue;
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
     #[test]
     fn serde_empty() {
         let pq: DoublePriorityQueue<String, i32> = DoublePriorityQueue::new();

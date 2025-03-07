@@ -33,7 +33,7 @@ mod benchmarks {
     extern crate test;
     use hashbrown::hash_map::DefaultHashBuilder;
     use priority_queue::{DoublePriorityQueue, PriorityQueue};
-    use test::{black_box, Bencher};
+    use test::{Bencher, black_box};
 
     #[bench]
     fn push_and_pop(b: &mut Bencher) {

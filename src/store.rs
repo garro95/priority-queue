@@ -30,8 +30,8 @@ use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
-use crate::core_iterators::*;
 use crate::TryReserveError;
+use crate::core_iterators::*;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -302,12 +302,14 @@ impl<I, P, H> Store<I, P, H> {
     }
 
     #[inline(always)]
-    pub unsafe fn get_priority_from_position(&self, position: Position) -> &P { unsafe {
-        self.map
-            .get_index(self.heap.get_unchecked(position.0).0)
-            .unwrap()
-            .1
-    }}
+    pub unsafe fn get_priority_from_position(&self, position: Position) -> &P {
+        unsafe {
+            self.map
+                .get_index(self.heap.get_unchecked(position.0).0)
+                .unwrap()
+                .1
+        }
+    }
 }
 
 impl<I, P, H> Store<I, P, H>
