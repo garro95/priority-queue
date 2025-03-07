@@ -343,11 +343,7 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q>(
-        &mut self,
-        item: &Q,
-        mut new_priority: P,
-    ) -> Option<(P, Position)>
+    pub fn change_priority<Q>(&mut self, item: &Q, mut new_priority: P) -> Option<(P, Position)>
     where
         I: Borrow<Q>,
         Q: Eq + Hash + ?Sized,
@@ -363,11 +359,7 @@ where
     /// Change the priority of an Item using the provided function.
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q, F>(
-        &mut self,
-        item: &Q,
-        priority_setter: F,
-    ) -> Option<Position>
+    pub fn change_priority_by<Q, F>(&mut self, item: &Q, priority_setter: F) -> Option<Position>
     where
         I: Borrow<Q>,
         Q: Eq + Hash + ?Sized,
