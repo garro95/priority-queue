@@ -78,7 +78,7 @@ where
     }
 }
 
-impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
+impl<'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     P: Ord,
     H: BuildHasher,

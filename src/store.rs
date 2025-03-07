@@ -343,14 +343,14 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(
+    pub fn change_priority<Q>(
         &mut self,
         item: &Q,
         mut new_priority: P,
     ) -> Option<(P, Position)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         let Store { map, qp, .. } = self;
         map.get_full_mut(item).map(|(index, _, p)| {
@@ -363,14 +363,14 @@ where
     /// Change the priority of an Item using the provided function.
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q: ?Sized, F>(
+    pub fn change_priority_by<Q, F>(
         &mut self,
         item: &Q,
         priority_setter: F,
     ) -> Option<Position>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
         F: FnOnce(&mut P),
     {
         let Store { map, qp, .. } = self;
@@ -381,20 +381,20 @@ where
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
-    pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
+    pub fn get_priority<Q>(&self, item: &Q) -> Option<&P>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.map.get(item)
     }
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
-    pub fn get<Q: ?Sized>(&self, item: &Q) -> Option<(&I, &P)>
+    pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.map.get_full(item).map(|(_, k, v)| (k, v))
     }
@@ -408,18 +408,18 @@ where
     /// The priority cannot be modified with a call to this function.
     /// To modify the priority use `push`, `change_priority` or
     /// `change_priority_by`.
-    pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
+    pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
-    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P, Position)>
+    pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P, Position)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.map.swap_remove_full(item).map(|(i, item, priority)| {
             let i = Index(i);

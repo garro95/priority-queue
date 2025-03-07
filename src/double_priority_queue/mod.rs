@@ -579,7 +579,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority > *p) {
+        if self.get_priority(&item).is_none_or(|p| priority > *p) {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -617,7 +617,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority < *p) {
+        if self.get_priority(&item).is_none_or(|p| priority < *p) {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -644,10 +644,10 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time.
-    pub fn change_priority<Q: ?Sized>(&mut self, item: &Q, new_priority: P) -> Option<P>
+    pub fn change_priority<Q>(&mut self, item: &Q, new_priority: P) -> Option<P>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.store
             .change_priority(item, new_priority)
@@ -665,10 +665,10 @@ where
     ///
     /// The item is found in **O(1)** thanks to the hash table.
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn change_priority_by<Q: ?Sized, F>(&mut self, item: &Q, priority_setter: F) -> bool
+    pub fn change_priority_by<Q, F>(&mut self, item: &Q, priority_setter: F) -> bool
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
         F: FnOnce(&mut P),
     {
         self.store
@@ -680,20 +680,20 @@ where
     }
 
     /// Get the priority of an item, or `None`, if the item is not in the queue
-    pub fn get_priority<Q: ?Sized>(&self, item: &Q) -> Option<&P>
+    pub fn get_priority<Q>(&self, item: &Q) -> Option<&P>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.store.get_priority(item)
     }
 
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
-    pub fn get<Q: ?Sized>(&self, item: &Q) -> Option<(&I, &P)>
+    pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.store.get(item)
     }
@@ -708,10 +708,10 @@ where
     /// To modify the priority use  use [`push`](DoublePriorityQueue::push),
     /// [`change_priority`](DoublePriorityQueue::change_priority) or
     /// [`change_priority_by`](DoublePriorityQueue::change_priority_by).
-    pub fn get_mut<Q: ?Sized>(&mut self, item: &Q) -> Option<(&mut I, &P)>
+    pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.store.get_mut(item)
     }
@@ -721,10 +721,10 @@ where
     /// is not found in the queue.
     ///
     /// The operation is performed in **O(log(N))** time (worst case).
-    pub fn remove<Q: ?Sized>(&mut self, item: &Q) -> Option<(I, P)>
+    pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
     where
         I: Borrow<Q>,
-        Q: Eq + Hash,
+        Q: Eq + Hash + ?Sized,
     {
         self.store.remove(item).map(|(item, priority, pos)| {
             if pos.0 < self.len() {

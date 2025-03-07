@@ -78,7 +78,7 @@ where
     }
 }
 
-impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
+impl<'a, I: 'a, P: 'a, H: 'a> Iterator for IterMut<'a, I, P, H>
 where
     P: Ord,
     H: BuildHasher,
@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<'a, 'b: 'a, I: 'a, P: 'a, H: 'a> DoubleEndedIterator for IterMut<'a, I, P, H>
+impl<'a, I: 'a, P: 'a, H: 'a> DoubleEndedIterator for IterMut<'a, I, P, H>
 where
     P: Ord,
     H: BuildHasher,
@@ -117,7 +117,7 @@ where
     }
 }
 
-impl<'a, I, P, H> ExactSizeIterator for IterMut<'_, I, P, H>
+impl<I, P, H> ExactSizeIterator for IterMut<'_, I, P, H>
 where
     P: Ord,
     H: BuildHasher,
@@ -127,7 +127,7 @@ where
     }
 }
 
-impl<'a, I, P, H> FusedIterator for IterMut<'_, I, P, H>
+impl<I, P, H> FusedIterator for IterMut<'_, I, P, H>
 where
     P: Ord,
     H: BuildHasher,
