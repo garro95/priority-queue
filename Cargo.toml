@@ -1,6 +1,6 @@
 [package]
 name = "priority-queue"
-version = "2.2.0"
+version = "2.2.1"
 authors = ["Gianmarco Garrisi <gianmarcogarrisi@tutanota.com>"]
 description = "A Priority Queue implemented as a heap with a function to efficiently change the priority of an item."
 repository = "https://github.com/garro95/priority-queue"
@@ -35,5 +35,5 @@ benchmarks = []
 members = ["test-nostd"]
 
 [package.metadata.docs.rs]
-features = ["serde", "nightly"]
+features = ["serde"]
 rustdoc-args = ["--cfg", "docsrs"]
