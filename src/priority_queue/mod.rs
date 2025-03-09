@@ -51,9 +51,9 @@ use std::mem::replace;
 /// A priority queue with efficient change function to change the priority of an
 /// element.
 ///
-/// The priority is of type P, that must implement `std::cmp::Ord`.
+/// The priority is of type `P`, that must implement `std::cmp::Ord`.
 ///
-/// The item is of type I, that must implement `Hash` and `Eq`.
+/// The item is of type `I`, that must implement `Hash` and `Eq`.
 ///
 /// Implemented as a heap of indexes, stores the items inside an `IndexMap`
 /// to be able to retrieve them quickly.
@@ -169,7 +169,7 @@ where
 
 impl<I, P, H> PriorityQueue<I, P, H> {
     /// Returns an iterator in arbitrary order over the
-    /// (item, priority) elements in the queue
+    /// `(item, priority)` elements in the queue
     pub fn iter(&self) -> Iter<I, P> {
         self.store.iter()
     }
@@ -180,14 +180,14 @@ impl<I, P, H> PriorityQueue<I, P, H> {
         self.store.shrink_to_fit();
     }
 
-    /// Clears the PriorityQueue, returning an iterator over the removed elements in arbitrary order.
+    /// Clears the `PriorityQueue`, returning an iterator over the removed elements in arbitrary order.
     /// If the iterator is dropped before being fully consumed, it drops the remaining elements in arbitrary order.
     pub fn drain(&mut self) -> Drain<I, P> {
         self.store.drain()
     }
 
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
+    /// Returns the couple `(item, priority)` with the greatest
+    /// priority in the queue, or `None` if it is empty.
     ///
     /// Computes in **O(1)** time
     pub fn peek(&self) -> Option<(&I, &P)> {
@@ -212,7 +212,7 @@ impl<I, P, H> PriorityQueue<I, P, H> {
         self.store.len()
     }
 
-    /// Returns true if the priority queue contains no elements.
+    /// Returns `true` if the priority queue contains no elements.
     pub fn is_empty(&self) -> bool {
         self.store.is_empty()
     }
@@ -277,22 +277,23 @@ where
     P: Ord,
 {
     /// Returns an iterator in arbitrary order over the
-    /// (item, priority) elements in the queue.
+    /// `(item, priority)` elements in the queue.
     ///
     /// The item and the priority are mutable references, but it's a logic error
     /// to modify the item in a way that change the result of `Hash` or `Eq`.
     ///
     /// It's *not* an error, instead, to modify the priorities, because the heap
-    /// will be rebuilt once the `IterMut` goes out of scope. It would be
-    /// rebuilt even if no priority value would have been modified, but the
-    /// procedure will not move anything, but just compare the priorities.
+    /// will be rebuilt once the `IterMut` goes out of scope.
+    ///
+    /// It would be rebuilt even if no priority value would have been modified,
+    /// but the procedure will not move anything, but just compare the priorities.
     pub fn iter_mut(&mut self) -> IterMut<I, P, H> {
         IterMut::new(self)
     }
 
     /// Removes the item with the greatest priority from
-    /// the priority queue and returns the pair (item, priority),
-    /// or None if the queue is empty.
+    /// the priority queue and returns the pair `(item, priority)`,
+    /// or `None` if the queue is empty.
     pub fn pop(&mut self) -> Option<(I, P)> {
         match self.len() {
             0 => None,
@@ -305,7 +306,7 @@ where
         }
     }
 
-    /// Implements a HeapSort.
+    /// Implements a heap sort.
     ///
     /// Returns a `Vec<I>` sorted from the item associated to the highest priority to the lowest.
     pub fn into_sorted_vec(mut self) -> Vec<I> {
@@ -316,7 +317,7 @@ where
         res
     }
 
-    /// Generates a new iterator from self that
+    /// Generates a new iterator from `self` that
     /// will extract the elements from the one with the highest priority
     /// to the lowest one.
     pub fn into_sorted_iter(self) -> IntoSortedIter<I, P, H> {
@@ -331,20 +332,20 @@ where
     H: BuildHasher,
 {
     /// Removes the item with the greatest priority from
-    /// the priority queue if the predicate returns `true`.
+    /// the priority queue if the `predicate` returns `true`.
     ///
-    /// Returns the pair (item, priority), or None if the
-    /// queue is empty or the predicate returns `false`.
+    /// Returns the pair `(item, priority)`, or `None` if the
+    /// queue is empty or the `predicate` returns `false`.
     ///
-    /// The predicate receives mutable references to both the item and
-    /// the priority.
+    /// The `predicate` receives mutable references to both the item
+    /// and the priority.
     ///
     /// It's a logical error to change the item in a way
-    /// that changes the result of `Hash` or `EQ`.
+    /// that changes the result of `Hash` or `Eq`.
     ///
-    /// The predicate can change the priority. If it returns true, the
-    /// returned couple will have the updated priority, otherwise, the
-    /// heap structural property will be restored.
+    /// The `predicate` can change the priority. If it returns `true`,
+    /// the returned couple will have the updated priority,
+    /// otherwise, the heap structural property will be restored.
     ///
     /// # Example
     /// ```
@@ -358,22 +359,22 @@ where
     /// }), None);
     /// assert_eq!(pq.pop(), Some(("Apples", 5)));
     /// ```
-    pub fn pop_if<F>(&mut self, f: F) -> Option<(I, P)>
+    pub fn pop_if<F>(&mut self, predicate: F) -> Option<(I, P)>
     where
         F: FnOnce(&mut I, &mut P) -> bool,
     {
         match self.len() {
             0 => None,
-            1 => self.store.swap_remove_if(Position(0), f),
+            1 => self.store.swap_remove_if(Position(0), predicate),
             _ => {
-                let r = self.store.swap_remove_if(Position(0), f);
+                let r = self.store.swap_remove_if(Position(0), predicate);
                 self.heapify(Position(0));
                 r
             }
         }
     }
 
-    /// Insert the item-priority pair into the queue.
+    /// Insert the `(item, priority)` pair into the queue.
     ///
     /// If an element equal to `item` is already in the queue, its priority
     /// is updated and the old priority is returned in `Some`; otherwise,
@@ -497,7 +498,7 @@ where
         }
     }
 
-    /// Change the priority of an Item returning the old value of priority,
+    /// Change the priority of an item returning the old value of priority,
     /// or `None` if the item wasn't in the queue.
     ///
     /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
@@ -530,8 +531,9 @@ where
             })
     }
 
-    /// Change the priority of an Item using the provided function.
-    /// Return a boolean value where `true` means the item was in the queue and update was successful
+    /// Change the priority of an item using the provided function.
+    ///
+    /// Returns a boolean value where `true` means the item was in the queue and update was successful.
     ///
     /// The argument `item` is only used for lookup, and is not used to overwrite the item's data
     /// in the priority queue.
@@ -561,7 +563,7 @@ where
         self.store.get_priority(item)
     }
 
-    /// Get the couple (item, priority) of an arbitrary element, as reference
+    /// Get the couple `(item, priority)` of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
     where
@@ -571,7 +573,7 @@ where
         self.store.get(item)
     }
 
-    /// Get the couple (item, priority) of an arbitrary element, or `None`
+    /// Get the couple `(item, priority)` of an arbitrary element, or `None`
     /// if the item was not in the queue.
     ///
     /// The item is a mutable reference, but it's a logic error to modify it
@@ -589,8 +591,8 @@ where
         self.store.get_mut(item)
     }
 
-    /// Returns the couple (item, priority) with the greatest
-    /// priority in the queue, or None if it is empty.
+    /// Returns the couple `(item, priority)` with the greatest
+    /// priority in the queue, or `None` if it is empty.
     ///
     /// The item is a mutable reference, but it's a logic error to modify it
     /// in a way that change the result of  `Hash` or `Eq`.
@@ -613,7 +615,8 @@ where
     }
 
     /// Remove an arbitrary element from the priority queue.
-    /// Returns the (item, priority) couple or None if the item
+    ///
+    /// Returns the `(item, priority)` couple or `None` if the item
     /// is not found in the queue.
     ///
     /// The operation is performed in **O(log(N))** time (worst case).
@@ -636,8 +639,8 @@ where
     /// At the end, `other` will be empty.
     ///
     /// **Note** that at the end, the priority of the duplicated elements
-    /// inside self may be the one of the elements in other,
-    /// if other is longer than self
+    /// inside `self` may be the one of the elements in `other`,
+    /// if `other` is longer than `self`
     pub fn append(&mut self, other: &mut Self) {
         self.store.append(&mut other.store);
         self.heap_build();
