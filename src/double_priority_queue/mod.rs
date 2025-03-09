@@ -948,12 +948,13 @@ where
     }
 
     fn up_heapify(&mut self, i: Position) {
-        let tmp = unsafe { *self.store.heap.get_unchecked(i.0) };
-        let pos = self.bubble_up(i, tmp);
-        if i != pos {
-            self.heapify(i)
+        if let Some(&tmp) = self.store.heap.get(i.0) {
+            let pos = self.bubble_up(i, tmp);
+            if i != pos {
+                self.heapify(i)
+            }
+            self.heapify(pos);
         }
-        self.heapify(pos);
     }
 
     /// Internal function that transform the `heap`

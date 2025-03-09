@@ -67,6 +67,267 @@ mod doublepq_tests {
     }
 
     #[test]
+    fn pop_if() {
+        let mut pq = DoublePriorityQueue::new();
+        assert_eq!(pq.pop_min_if(|_, _| true), None);
+        assert_eq!(pq.pop_max_if(|_, _| true), None);
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 4);
+        pq.push("h", 3);
+        println!("{:?}", pq);
+        assert_eq!(pq.pop_min_if(|_, _| false), None);
+        assert_eq!(pq.pop_max_if(|_, _| false), None);
+        println!("{:?}", pq);
+
+        assert_eq!(pq.pop_min_if(|_, p| {
+            *p = 10;
+            true
+        }), Some(("a", 10)));
+        assert_eq!(pq.pop_max_if(|_, p| {
+            *p = 10;
+            true
+        }), Some(("f", 10)));
+        println!("{:?}", pq);
+
+        assert_eq!(pq.pop_min_if(|_, p| {
+            *p = 10;
+            false
+        }), None);
+        println!("{:?}", pq);
+        assert_eq!(pq.peek_min(), Some((&"h", &3)));
+        assert_eq!(pq.peek_max(), Some((&"b", &10)));
+        println!("{:?}", pq);
+        assert_eq!(pq.pop_max_if(|_, p| {
+            *p = 2;
+            false
+        }), None);
+        assert_eq!(pq.peek_min(), Some((&"b", &2)));
+        assert_eq!(pq.peek_max(), Some((&"g", &4)));
+        println!("{:?}", pq);
+    }
+
+    #[test]
+    fn peek_mut() {
+        use std::hash::{Hash, Hasher};
+
+        #[derive(Debug)]
+        struct Person {
+            id: u32,
+            name: String,
+            phone: u64,
+        }
+
+        impl Hash for Person {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                self.id.hash(state);
+                self.phone.hash(state);
+            }
+        }
+
+        impl PartialEq for Person {
+            fn eq(&self, other: &Self) -> bool {
+                self.id == other.id && self.phone == other.phone
+            }
+        }
+
+        impl Eq for Person {}
+
+        let mut pq = DoublePriorityQueue::new();
+        assert_eq!(pq.peek_max_mut(), None);
+        assert_eq!(pq.peek_min_mut(), None);
+        pq.push(
+            Person {
+                id: 1,
+                name: "a".to_string(),
+                phone: 39281048279,
+            },
+            1,
+        );
+        pq.push(
+            Person {
+                id: 2,
+                name: "b".to_string(),
+                phone: 23912750234,
+            },
+            2,
+        );
+        pq.push(
+            Person {
+                id: 3,
+                name: "c".to_string(),
+                phone: 1298275802947,
+            },
+            3,
+        );
+        pq.push(
+            Person {
+                id: 4,
+                name: "d".to_string(),
+                phone: 65723012057,
+            },
+            4,
+        );
+        pq.push(
+            Person {
+                id: 5,
+                name: "e".to_string(),
+                phone: 7237569870239,
+            },
+            5,
+        );
+        pq.push(
+            Person {
+                id: 6,
+                name: "f".to_string(),
+                phone: 35756872497,
+            },
+            6,
+        );
+        println!("{:?}", pq);
+
+        let (item_max, _) = pq.peek_max_mut().unwrap();
+        item_max.name.push('g');
+
+        let (item_max, priority_max) = pq.pop_max().unwrap();
+        assert_eq!(item_max,
+                Person {
+                    id: 6,
+                    // name is not used for checking equality
+                    name: "f".to_string(),
+                    phone: 35756872497
+                }
+        );
+        assert_eq!(6, priority_max);
+        assert_eq!("fg", item_max.name);
+
+        let (item_min, _) = pq.peek_min_mut().unwrap();
+        item_min.name.push('b');
+
+        let (item_min, priority_min) = pq.pop_min().unwrap();
+        assert_eq!(item_min,
+                Person {
+                    id: 1,
+                    // name is not used for checking equality
+                    name: "f".to_string(),
+                    phone: 39281048279
+                }
+        );
+        assert_eq!(1, priority_min);
+        assert_eq!("ab", item_min.name);
+        
+        println!("{:?}", pq);
+        assert_eq!(pq.len(), 4);
+    }
+
+    #[test]
+    fn get_mut() {
+        use std::hash::{Hash, Hasher};
+
+        #[derive(Debug)]
+        struct Person {
+            id: u32,
+            name: String,
+            phone: u64,
+        }
+
+        impl Hash for Person {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                self.id.hash(state);
+                self.phone.hash(state);
+            }
+        }
+
+        impl PartialEq for Person {
+            fn eq(&self, other: &Self) -> bool {
+                self.id == other.id && self.phone == other.phone
+            }
+        }
+
+        impl Eq for Person {}
+
+        let mut pq = DoublePriorityQueue::new();
+        assert_eq!(pq.get_mut(&Person {
+                id: 1,
+                name: "a".to_string(),
+                phone: 39281048279,
+        }), None);
+
+        pq.push(
+            Person {
+                id: 1,
+                name: "a".to_string(),
+                phone: 39281048279,
+            },
+            1,
+        );
+        pq.push(
+            Person {
+                id: 2,
+                name: "b".to_string(),
+                phone: 23912750234,
+            },
+            2,
+        );
+        pq.push(
+            Person {
+                id: 3,
+                name: "c".to_string(),
+                phone: 1298275802947,
+            },
+            3,
+        );
+        pq.push(
+            Person {
+                id: 4,
+                name: "d".to_string(),
+                phone: 65723012057,
+            },
+            4,
+        );
+        pq.push(
+            Person {
+                id: 5,
+                name: "e".to_string(),
+                phone: 7237569870239,
+            },
+            5,
+        );
+        pq.push(
+            Person {
+                id: 6,
+                name: "f".to_string(),
+                phone: 35756872497,
+            },
+            6,
+        );
+        println!("{:?}", pq);
+
+        let (item, _) = pq.get_mut(&Person {
+                id: 1,
+                name: "a".to_string(),
+                phone: 39281048279,
+        }).unwrap();
+        item.name.push('g');
+
+        let (item_min, priority_min) = pq.pop_min().unwrap();
+        assert_eq!(item_min,
+                Person {
+                    id: 1,
+                    // name is not used for checking equality
+                    name: "f".to_string(),
+                    phone: 39281048279
+                }
+        );
+        assert_eq!(1, priority_min);
+        assert_eq!("ag", item_min.name);
+        
+        println!("{:?}", pq);
+        assert_eq!(pq.len(), 5);
+    }
+
+    #[test]
     fn push_update() {
         let mut pq = DoublePriorityQueue::new();
         pq.push("a", 9);
@@ -109,6 +370,33 @@ mod doublepq_tests {
 
         pq.push_increase("Processor", 6);
         assert_eq!(pq.peek_max(), Some((&"Processor", &6)));
+    }
+
+    #[test]
+    fn push_decrease() {
+        let mut pq = DoublePriorityQueue::new();
+        pq.push("Processor", 1);
+        pq.push("Mainboard", 2);
+        pq.push("RAM", 5);
+        pq.push("GPU", 4);
+        pq.push("Disk", 3);
+
+        let processor_priority = |pq: &DoublePriorityQueue<&str, i32>| {
+            *pq.iter()
+                .find_map(|(i, p)| if *i == "Processor" { Some(p) } else { None })
+                .unwrap()
+        };
+
+        pq.push_decrease("SSD", 5);
+        assert_eq!(pq.get("SSD"), Some((&"SSD", &5)));
+
+        pq.push_decrease("Processor", 3);
+        assert_eq!(processor_priority(&pq), 1);
+
+        pq.push_decrease("Processor", 0);
+        assert_eq!(processor_priority(&pq), 0);
+
+        assert_eq!(pq.peek_min(), Some((&"Processor", &0)));
     }
 
     #[test]
@@ -233,6 +521,16 @@ mod doublepq_tests {
     }
 
     #[test]
+    fn clear() {
+        let v = vec![("a", 1), ("b", 2), ("f", 7)];
+        let mut pq: DoublePriorityQueue<_, _> = DoublePriorityQueue::from(v);
+        assert_eq!(pq.len(), 3);
+
+        pq.clear();
+        assert_eq!(pq.len(), 0);
+    }
+
+    #[test]
     fn from_vec_with_repeated() {
         let v = vec![("a", 1), ("b", 2), ("f", 7), ("a", 2)];
         let mut pq: DoublePriorityQueue<_, _> = v.into();
@@ -257,6 +555,15 @@ mod doublepq_tests {
         let v = vec![("a", 2), ("b", 7), ("f", 1)];
         let sorted = (Pq::from(v)).into_descending_sorted_vec();
         assert_eq!(sorted.as_slice(), &["b", "a", "f"]);
+    }
+
+    #[test]
+    fn heap_sort_asc() {
+        type Pq<I, P> = DoublePriorityQueue<I, P>;
+
+        let v = vec![("a", 2), ("b", 7), ("f", 1)];
+        let sorted = (Pq::from(v)).into_ascending_sorted_vec();
+        assert_eq!(sorted.as_slice(), &["f", "a", "b"]);
     }
 
     #[test]
