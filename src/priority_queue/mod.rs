@@ -343,7 +343,7 @@ where
     /// The `predicate` can change the priority. If it returns `true`, the
     /// extracted pair will have the updated priority, otherwise, the
     /// heap structural property will be restored once the iterator is `Drop`ped.
-    pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I,P,F,H>
+    pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
     where
         F: FnMut(&mut I, &mut P) -> bool,
     {

@@ -79,7 +79,11 @@ where
     P: Ord,
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>, predicate: F) -> Self {
-        ExtractIf { pq, predicate, pos: Position(0) }
+        ExtractIf {
+            pq,
+            predicate,
+            pos: Position(0),
+        }
     }
 }
 
@@ -103,8 +107,8 @@ where
 
             match r {
                 Some(true) => return self.pq.store.swap_remove(self.pos),
-                Some(false) =>  self.pos.0 += 1,
-                None => return None
+                Some(false) => self.pos.0 += 1,
+                None => return None,
             }
         }
     }
