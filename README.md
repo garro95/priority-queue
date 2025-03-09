@@ -132,6 +132,7 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.2.2 Fix a bug in the heapify_up implementation for DoublePriorityQueue
 * 2.2.1 Fix docs.rs build
 * 2.2.0 Implement `pop_if`. Documentation Improvements
 * 2.1.2 Documentation improvements: [#58](https://github.com/garro95/priority-queue/pull/58). Thanks to [jmr](https://github.com/jmr)

@@ -81,28 +81,40 @@ mod doublepq_tests {
         assert_eq!(pq.pop_max_if(|_, _| false), None);
         println!("{:?}", pq);
 
-        assert_eq!(pq.pop_min_if(|_, p| {
-            *p = 10;
-            true
-        }), Some(("a", 10)));
-        assert_eq!(pq.pop_max_if(|_, p| {
-            *p = 10;
-            true
-        }), Some(("f", 10)));
+        assert_eq!(
+            pq.pop_min_if(|_, p| {
+                *p = 10;
+                true
+            }),
+            Some(("a", 10))
+        );
+        assert_eq!(
+            pq.pop_max_if(|_, p| {
+                *p = 10;
+                true
+            }),
+            Some(("f", 10))
+        );
         println!("{:?}", pq);
 
-        assert_eq!(pq.pop_min_if(|_, p| {
-            *p = 10;
-            false
-        }), None);
+        assert_eq!(
+            pq.pop_min_if(|_, p| {
+                *p = 10;
+                false
+            }),
+            None
+        );
         println!("{:?}", pq);
         assert_eq!(pq.peek_min(), Some((&"h", &3)));
         assert_eq!(pq.peek_max(), Some((&"b", &10)));
         println!("{:?}", pq);
-        assert_eq!(pq.pop_max_if(|_, p| {
-            *p = 2;
-            false
-        }), None);
+        assert_eq!(
+            pq.pop_max_if(|_, p| {
+                *p = 2;
+                false
+            }),
+            None
+        );
         assert_eq!(pq.peek_min(), Some((&"b", &2)));
         assert_eq!(pq.peek_max(), Some((&"g", &4)));
         println!("{:?}", pq);
@@ -191,13 +203,14 @@ mod doublepq_tests {
         item_max.name.push('g');
 
         let (item_max, priority_max) = pq.pop_max().unwrap();
-        assert_eq!(item_max,
-                Person {
-                    id: 6,
-                    // name is not used for checking equality
-                    name: "f".to_string(),
-                    phone: 35756872497
-                }
+        assert_eq!(
+            item_max,
+            Person {
+                id: 6,
+                // name is not used for checking equality
+                name: "f".to_string(),
+                phone: 35756872497
+            }
         );
         assert_eq!(6, priority_max);
         assert_eq!("fg", item_max.name);
@@ -206,17 +219,18 @@ mod doublepq_tests {
         item_min.name.push('b');
 
         let (item_min, priority_min) = pq.pop_min().unwrap();
-        assert_eq!(item_min,
-                Person {
-                    id: 1,
-                    // name is not used for checking equality
-                    name: "f".to_string(),
-                    phone: 39281048279
-                }
+        assert_eq!(
+            item_min,
+            Person {
+                id: 1,
+                // name is not used for checking equality
+                name: "f".to_string(),
+                phone: 39281048279
+            }
         );
         assert_eq!(1, priority_min);
         assert_eq!("ab", item_min.name);
-        
+
         println!("{:?}", pq);
         assert_eq!(pq.len(), 4);
     }
@@ -248,11 +262,14 @@ mod doublepq_tests {
         impl Eq for Person {}
 
         let mut pq = DoublePriorityQueue::new();
-        assert_eq!(pq.get_mut(&Person {
+        assert_eq!(
+            pq.get_mut(&Person {
                 id: 1,
                 name: "a".to_string(),
                 phone: 39281048279,
-        }), None);
+            }),
+            None
+        );
 
         pq.push(
             Person {
@@ -304,25 +321,28 @@ mod doublepq_tests {
         );
         println!("{:?}", pq);
 
-        let (item, _) = pq.get_mut(&Person {
+        let (item, _) = pq
+            .get_mut(&Person {
                 id: 1,
                 name: "a".to_string(),
                 phone: 39281048279,
-        }).unwrap();
+            })
+            .unwrap();
         item.name.push('g');
 
         let (item_min, priority_min) = pq.pop_min().unwrap();
-        assert_eq!(item_min,
-                Person {
-                    id: 1,
-                    // name is not used for checking equality
-                    name: "f".to_string(),
-                    phone: 39281048279
-                }
+        assert_eq!(
+            item_min,
+            Person {
+                id: 1,
+                // name is not used for checking equality
+                name: "f".to_string(),
+                phone: 39281048279
+            }
         );
         assert_eq!(1, priority_min);
         assert_eq!("ag", item_min.name);
-        
+
         println!("{:?}", pq);
         assert_eq!(pq.len(), 5);
     }
