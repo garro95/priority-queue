@@ -37,12 +37,17 @@ mod pqueue_tests {
     }
 
     #[test]
-    fn push_len() {
+    fn push_len_clear() {
         let mut pq = PriorityQueue::new();
+        assert_eq!(pq.len(), 0);
         pq.push("a", 1);
         pq.push("b", 2);
         println!("{:?}", pq);
         assert_eq!(pq.len(), 2);
+
+        pq.clear();
+        assert_eq!(pq.len(), 0);
+        assert_eq!(None, pq.pop());
     }
 
     #[test]
@@ -60,6 +65,198 @@ mod pqueue_tests {
         assert_eq!(pq.peek(), Some((&"g", &4)));
         assert_eq!(pq.pop(), Some(("g", 4)));
         assert_eq!(pq.len(), 3);
+    }
+
+    #[test]
+    fn push_pop_if() {
+        let mut pq = PriorityQueue::new();
+        assert_eq!(pq.pop_if(|_, _| true), None);
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 5);
+        pq.push("h", 3);
+        println!("{:?}", pq);
+        assert_eq!(
+            pq.pop_if(|i, p| {
+                assert_eq!(&"f", i);
+                assert_eq!(&7, p);
+                *p = 4;
+                false
+            }),
+            None
+        );
+        assert_eq!(
+            pq.pop_if(|i, p| {
+                assert_eq!(&"g", i);
+                assert_eq!(&5, p);
+                *p = 4;
+                true
+            }),
+            Some(("g", 4))
+        );
+        println!("{:?}", pq);
+        assert_eq!(pq.peek(), Some((&"f", &4)));
+        assert_eq!(pq.pop(), Some(("f", 4)));
+        assert_eq!(pq.len(), 3);
+    }
+
+    #[test]
+    fn peek_get_mut() {
+        use std::hash::{Hash, Hasher};
+
+        #[derive(Debug)]
+        struct Person {
+            id: u32,
+            name: String,
+            phone: u64,
+        }
+
+        impl Hash for Person {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                self.id.hash(state);
+                self.phone.hash(state);
+            }
+        }
+
+        impl PartialEq for Person {
+            fn eq(&self, other: &Self) -> bool {
+                self.id == other.id && self.phone == other.phone
+            }
+        }
+
+        impl Eq for Person {}
+
+        let mut pq = PriorityQueue::new();
+        assert_eq!(pq.peek_mut(), None);
+        pq.push(
+            Person {
+                id: 1,
+                name: "a".to_string(),
+                phone: 39281048279,
+            },
+            1,
+        );
+        pq.push(
+            Person {
+                id: 2,
+                name: "b".to_string(),
+                phone: 23912750234,
+            },
+            2,
+        );
+        pq.push(
+            Person {
+                id: 3,
+                name: "c".to_string(),
+                phone: 1298275802947,
+            },
+            3,
+        );
+        pq.push(
+            Person {
+                id: 4,
+                name: "d".to_string(),
+                phone: 65723012057,
+            },
+            4,
+        );
+        pq.push(
+            Person {
+                id: 5,
+                name: "e".to_string(),
+                phone: 7237569870239,
+            },
+            5,
+        );
+        pq.push(
+            Person {
+                id: 6,
+                name: "f".to_string(),
+                phone: 35756872497,
+            },
+            6,
+        );
+        println!("{:?}", pq);
+
+        let (item, _) = pq.peek_mut().unwrap();
+        item.name.push('g');
+
+        let (item, priority) = pq.pop().unwrap();
+        assert_eq!(
+            item,
+            Person {
+                id: 6,
+                // name is not used for checking equality
+                name: "f".to_string(),
+                phone: 35756872497
+            }
+        );
+        assert_eq!(6, priority);
+        assert_eq!("fg", item.name);
+
+        let (item, _) = pq
+            .get_mut(&Person {
+                id: 4,
+                // name is not used for checking equality
+                name: String::new(),
+                phone: 65723012057,
+            })
+            .unwrap();
+        item.name.push('g');
+
+        let (item, priority) = pq
+            .get(&Person {
+                id: 4,
+                // name is not used for checking equality
+                name: String::new(),
+                phone: 65723012057,
+            })
+            .unwrap();
+        assert_eq!(
+            item,
+            &Person {
+                id: 4,
+                // name is not used for checking equality
+                name: String::new(),
+                phone: 65723012057
+            }
+        );
+        assert_eq!(&4, priority);
+        assert_eq!("dg", item.name);
+
+        println!("{:?}", pq);
+        assert_eq!(pq.len(), 5);
+    }
+
+    #[test]
+    fn append() {
+        let mut pq1 = PriorityQueue::new();
+        let mut pq2 = PriorityQueue::new();
+
+        pq1.push("a", 9);
+        pq1.push("b", 8);
+        pq1.push("c", 7);
+        pq1.push("d", 6);
+        pq1.push("e", 5);
+        pq1.push("f", 4);
+        pq1.push("g", 10);
+        pq1.push("k", 11);
+        pq1.push("d", 20);
+
+        pq2.push("h", 2);
+        pq2.push("x", 18);
+        pq2.push("v", 28);
+        pq2.push("y", 0);
+        pq2.push("z", 21);
+
+        pq1.append(&mut pq2);
+
+        let expected = [
+            "v", "z", "d", "x", "k", "g", "a", "b", "c", "e", "f", "h", "y",
+        ];
+        let v = pq1.into_sorted_vec();
+        assert_eq!(expected, v.as_slice());
     }
 
     #[test]
@@ -102,6 +299,27 @@ mod pqueue_tests {
 
         pq.push_increase("Processor", 6);
         assert_eq!(pq.peek(), Some((&"Processor", &6)));
+    }
+
+    #[test]
+    fn push_decrease() {
+        let mut pq = PriorityQueue::new();
+        pq.push("Processor", 1);
+        pq.push("Mainboard", 2);
+        pq.push("RAM", 5);
+        pq.push("GPU", 4);
+        pq.push("Disk", 3);
+
+        let processor_priority = |pq: &PriorityQueue<&str, i32>| *pq.get("Processor").unwrap().1;
+
+        pq.push_decrease("Processor", 3);
+        assert_eq!(processor_priority(&pq), 1);
+
+        pq.push_decrease("Processor", 0);
+        assert_eq!(processor_priority(&pq), 0);
+
+        pq.push_decrease("Processor", 6);
+        assert_eq!(pq.peek(), Some((&"RAM", &5)));
     }
 
     #[test]
@@ -220,6 +438,19 @@ mod pqueue_tests {
         let mut pq: PriorityQueue<_, _> = PriorityQueue::from(v);
         assert_eq!(pq.pop(), Some(("f", 7)));
         assert_eq!(pq.len(), 2);
+    }
+
+    #[test]
+    fn into_vec() {
+        let v = vec![("a", 1), ("b", 2), ("f", 7)];
+        let pq: PriorityQueue<_, _> = PriorityQueue::from(v);
+
+        let mut v = pq.into_vec();
+
+        v.sort_unstable();
+
+        assert!(v.iter().enumerate().all(|(i, x)| &["a", "b", "f"][i] == x));
+        assert_eq!(v.len(), 3);
     }
 
     #[test]
