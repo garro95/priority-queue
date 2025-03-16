@@ -786,12 +786,11 @@ mod doublepq_tests {
         assert_eq!(pq.pop_max(), Some(("b", 20)));
 
         /*
-        As expected, this does not compile
+        // As expected, this does not compile
         let iter_mut = pq.iter_mut();
-        iter_mut.for_each(|(_, p)| {*p += 2});
 
-        assert_eq!(pq.pop_max(), Some(("f", 9)));
-        */
+        assert_eq!(pq.pop_max(), Some(("a", 21)));
+        iter_mut.for_each(|(_, p)| {*p += 2}); */
     }
 
     #[test]
@@ -929,15 +928,12 @@ mod doublepq_tests {
             Some((Animal::new("bird".to_string(), true, false), -11))
         );
 
-
-
         /*
-        As expected, this does not compile
-        let iter_mut = pq.iter_mut();
-        iter_mut.for_each(|(_, p)| {*p += 2});
+        // As expected, this does not compile
+        let extract_if = pq.extract_if(|i, p| { i.can_fly });
 
-        assert_eq!(pq.pop_max(), Some(("f", 9)));
-        */
+        assert_eq!(pq.pop_max(), None);
+        extract_if.for_each(|(_, p)| println!("{:?}", p)); */
     }
 
     #[test]

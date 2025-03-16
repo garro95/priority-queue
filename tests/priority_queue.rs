@@ -675,9 +675,9 @@ mod pqueue_tests {
         /*
         As expected, this does not compile
         let iter_mut = pq.iter_mut();
-        iter_mut.for_each(|(_, p)| {*p += 2});
 
         assert_eq!(pq.pop(), Some(("f", 9)));
+        iter_mut.for_each(|(_, p)| {*p += 2});
         */
     }
 
