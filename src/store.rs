@@ -276,23 +276,23 @@ impl<I, P, H> Store<I, P, H> {
         // swap_remove the head
         let head: Index = self.heap.swap_remove(position.0);
         self.size -= 1;
-        // swap remove the old heap head from the qp
-        if self.size == position.0 {
-            self.qp.swap_remove(head.0);
-            if let Some(i) = self.qp.get(head.0) {
-                unsafe {
-                    *self.heap.get_unchecked_mut(i.0) = head;
-                }
+
+        // Fix indexes and swap remove the old heap head from the qp
+        if position.0 < self.size {
+            // SAFETY: position validity checked on the previous line.
+            // Indexes still point to valid qp items because we didn't
+            // remove anything from qp yet
+            unsafe {
+                *self
+                    .qp
+                    .get_unchecked_mut(self.heap.get_unchecked(position.0).0) = position;
             }
-            return self.map.swap_remove_index(head.0);
-        }
-        unsafe {
-            *self
-                .qp
-                .get_unchecked_mut(self.heap.get_unchecked(position.0).0) = position;
         }
         self.qp.swap_remove(head.0);
         if head.0 < self.size {
+            // SAFETY: head validity checked on the previous line.
+            // All positions point to valid heap items because we already
+            // updated the qp.
             unsafe {
                 *self.heap.get_unchecked_mut(self.qp.get_unchecked(head.0).0) = head;
             }
