@@ -132,6 +132,7 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.3.0 Implement retain and retain_mut
 * 2.2.2 Fix a bug in the heapify_up implementation for DoublePriorityQueue
 * 2.2.1 Fix docs.rs build
 * 2.2.0 Implement `pop_if`. Documentation Improvements
