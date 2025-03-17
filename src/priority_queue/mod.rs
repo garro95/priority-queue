@@ -331,6 +331,39 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    /// Retains only the elements specified by the `predicate`.
+    ///
+    /// In other words, remove all elements e for which `predicate(&i, &p)` returns `false`.
+    /// The elements are visited in arbitrary order.
+    pub fn retain<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&I, &P) -> bool,
+    {
+        self.store.retain(predicate);
+        self.heap_build();
+    }
+
+    /// Retains only the elements specified by the `predicate`.
+    ///
+    /// In other words, remove all elements e for which `predicate(&mut i, &mut p)` returns `false`.
+    /// The elements are visited in arbitrary order.
+    ///
+    /// The `predicate` receives mutable references to both the item and
+    /// the priority.
+    ///
+    /// It's a logical error to change the item in a way
+    /// that changes the result of `Hash` or `Eq`.
+    ///
+    /// The `predicate` can change the priority. If the element is retained,
+    /// it will have the updated one.
+    pub fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut I, &mut P) -> bool,
+    {
+        self.store.retain_mut(predicate);
+        self.heap_build();
+    }
+
     /// Removes the item with the greatest priority from
     /// the priority queue if the `predicate` returns `true`.
     ///

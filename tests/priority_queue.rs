@@ -682,6 +682,85 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn retain() {
+        #[derive(Hash, PartialEq, Eq, Debug)]
+        struct Animal {
+            name: String,
+            can_fly: bool,
+            can_swim: bool,
+        }
+
+        impl Animal {
+            pub fn new(name: String, can_fly: bool, can_swim: bool) -> Self {
+                Animal {
+                    name,
+                    can_fly,
+                    can_swim,
+                }
+            }
+        }
+
+        let mut pq = PriorityQueue::new();
+        pq.push(Animal::new("dog".to_string(), false, true), 1);
+        pq.push(Animal::new("cat".to_string(), false, false), 2);
+        pq.push(Animal::new("bird".to_string(), true, false), 7);
+        pq.push(Animal::new("fish".to_string(), false, true), 4);
+        pq.push(Animal::new("cow".to_string(), false, false), 3);
+
+        pq.retain(|i, _| i.can_swim);
+
+        assert_eq!(
+            pq.pop(),
+            Some((Animal::new("fish".to_string(), false, true), 4))
+        );
+        assert_eq!(
+            pq.pop(),
+            Some((Animal::new("dog".to_string(), false, true), 1))
+        );
+    }
+
+    #[test]
+    fn retain_mut() {
+        #[derive(Hash, PartialEq, Eq, Debug)]
+        struct Animal {
+            name: String,
+            can_fly: bool,
+            can_swim: bool,
+        }
+
+        impl Animal {
+            pub fn new(name: String, can_fly: bool, can_swim: bool) -> Self {
+                Animal {
+                    name,
+                    can_fly,
+                    can_swim,
+                }
+            }
+        }
+
+        let mut pq = PriorityQueue::new();
+        pq.push(Animal::new("dog".to_string(), false, true), 1);
+        pq.push(Animal::new("cat".to_string(), false, false), 2);
+        pq.push(Animal::new("bird".to_string(), true, false), 7);
+        pq.push(Animal::new("fish".to_string(), false, true), 4);
+        pq.push(Animal::new("cow".to_string(), false, false), 3);
+
+        pq.retain_mut(|i, p| {
+            *p += 10;
+            i.can_swim
+        });
+
+        assert_eq!(
+            pq.pop(),
+            Some((Animal::new("fish".to_string(), false, true), 14))
+        );
+        assert_eq!(
+            pq.pop(),
+            Some((Animal::new("dog".to_string(), false, true), 11))
+        );
+    }
+
+    #[test]
     fn into_sorted_iter() {
         let mut pq = PriorityQueue::new();
         pq.push("a", 1);

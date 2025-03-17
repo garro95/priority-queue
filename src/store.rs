@@ -318,6 +318,25 @@ where
     I: Hash + Eq,
     H: BuildHasher,
 {
+    pub fn retain<F>(&mut self, mut predicate: F)
+    where
+        F: FnMut(&I, &P) -> bool,
+    {
+        self.retain_mut(|i, p| predicate(&*i, &*p));
+    }
+
+    pub fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut I, &mut P) -> bool,
+    {
+        self.map.retain2(predicate);
+        if self.map.len() != self.size {
+            self.size = self.map.len();
+            self.heap = (0..self.size).into_iter().map(|i| Index(i)).collect();
+            self.qp = (0..self.size).into_iter().map(|p| Position(p)).collect();
+        }
+    }
+
     /// If the predicate returns true for the element in position `position`,
     /// remove it and swap it with the last element keeping a consistent
     /// state.
