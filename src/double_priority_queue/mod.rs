@@ -34,9 +34,9 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
-use crate::TryReserveError;
 use crate::core_iterators::*;
 use crate::store::{Index, Position, Store};
+use crate::TryReserveError;
 use iterators::*;
 
 use std::borrow::Borrow;

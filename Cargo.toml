@@ -9,8 +9,7 @@ readme = "README.md"
 keywords = ["priority", "queue", "heap"]
 categories = ["data-structures", "algorithms"]
 license = "LGPL-3.0-or-later OR MPL-2.0"
-edition = "2024"
-rust-version = "1.85"
+edition = "2021"
 
 [build-dependencies]
 autocfg = "1"
