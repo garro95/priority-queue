@@ -2,6 +2,7 @@
 [![crate](https://img.shields.io/crates/v/priority-queue.svg)](https://crates.io/crates/priority-queue)
 [![Build](https://github.com/garro95/priority-queue/actions/workflows/build.yml/badge.svg)](https://github.com/garro95/priority-queue/actions/workflows/build.yml)
 [![Test](https://github.com/garro95/priority-queue/actions/workflows/test.yml/badge.svg)](https://github.com/garro95/priority-queue/actions/workflows/test.yml)
+![MSRV](https://img.shields.io/crates/msrv/priority-queue)
 
 This crate implements a Priority Queue with a function to change the priority of an object.
 Priority and items are stored in an `IndexMap` and the queue is implemented as a Heap of indexes.

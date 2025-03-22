@@ -35,9 +35,9 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
-use crate::TryReserveError;
 use crate::core_iterators::*;
 use crate::store::{Index, Position, Store};
+use crate::TryReserveError;
 use iterators::*;
 
 use std::borrow::Borrow;
@@ -486,7 +486,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).is_none_or(|p| priority > *p) {
+        if self.get_priority(&item).map_or(true, |p| priority > *p) {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -524,7 +524,7 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).is_none_or(|p| priority < *p) {
+        if self.get_priority(&item).map_or(true, |p| priority < *p) {
             self.push(item, priority)
         } else {
             Some(priority)
