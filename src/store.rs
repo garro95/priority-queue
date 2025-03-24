@@ -30,8 +30,8 @@ use std::vec::Vec;
 
 // an improvement in terms of complexity would be to use a bare HashMap
 // as vec instead of the IndexMap
-use crate::TryReserveError;
 use crate::core_iterators::*;
+use crate::TryReserveError;
 
 use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
@@ -332,8 +332,8 @@ where
         self.map.retain2(predicate);
         if self.map.len() != self.size {
             self.size = self.map.len();
-            self.heap = (0..self.size).into_iter().map(|i| Index(i)).collect();
-            self.qp = (0..self.size).into_iter().map(|p| Position(p)).collect();
+            self.heap = (0..self.size).map(Index).collect();
+            self.qp = (0..self.size).map(Position).collect();
         }
     }
 

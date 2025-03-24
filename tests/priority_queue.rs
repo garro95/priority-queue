@@ -854,7 +854,7 @@ mod pqueue_tests {
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_basics {
     use priority_queue::PriorityQueue;
-    use serde_test::{Token, assert_tokens};
+    use serde_test::{assert_tokens, Token};
     #[test]
     fn serde_empty() {
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();

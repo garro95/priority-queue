@@ -34,3 +34,11 @@ jobs:
         with:
           components: miri
       - run: cargo miri test
+
+  msrv-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-msrv
+      - run: cargo msrv verify --all-features
