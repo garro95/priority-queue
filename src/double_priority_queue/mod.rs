@@ -454,6 +454,29 @@ where
         self.heap_build();
     }
 
+    /// Returns an `Iterator` removing from the queue the `(item, priority)`
+    /// pairs for which the `predicate` returns `true`, in arbitraty order.
+    ///
+    /// The `predicate` receives mutable references to both the item and
+    /// the priority.
+    ///
+    /// It's a logical error to change the item in a way
+    /// that changes the result of `Hash` or `Eq`.
+    ///
+    /// The `predicate` can change the priority. If it returns `true`, the
+    /// extracted pair will have the updated priority, otherwise, the
+    /// heap structural property will be restored once the iterator is `Drop`ped.
+    ///
+    /// # Example
+    /// ```
+    /// ```
+    pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
+    where
+        F: FnMut(&mut I, &mut P) -> bool,
+    {
+        ExtractIf::new(self, predicate)
+    }
+
     /// Removes the item with the lowest priority from
     /// the priority queue if the predicate returns `true`.
     ///

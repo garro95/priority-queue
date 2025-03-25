@@ -267,6 +267,41 @@ impl<I, P, H> Store<I, P, H> {
         self.heap.swap(a.0, b.0);
     }
 
+    /// Remove and return the element at index `idx`
+    /// and swap it with the last element keeping a consistent
+    /// state.
+    ///
+    /// Computes in **O(1)** time (average)
+    pub fn swap_remove_index(&mut self, idx: Index) -> Option<(I, P)> {
+        // swap_remove the position from the qp
+        let position = self.qp.swap_remove(idx.0);
+        self.size -= 1;
+
+        if idx.0 < self.size {
+            // SAFETY: head validity checked on the previous line.
+            // All positions point to valid heap items because we already
+            // updated the qp.
+            unsafe {
+                *self.heap.get_unchecked_mut(self.qp.get_unchecked(idx.0).0) = idx;
+            }
+        }
+        self.heap.swap_remove(position.0);
+        // Fix indexes and swap remove the old heap head from the qp
+        if position.0 < self.size {
+            // SAFETY: position validity checked on the previous line.
+            // Indexes still point to valid qp items because we didn't
+            // remove anything from qp yet
+            unsafe {
+                *self
+                    .qp
+                    .get_unchecked_mut(self.heap.get_unchecked(position.0).0) = position;
+            }
+        }
+
+        // swap remove from the map and return to the client
+        self.map.swap_remove_index(idx.0)
+    }
+
     /// Remove and return the element in position `position`
     /// and swap it with the last element keeping a consistent
     /// state.

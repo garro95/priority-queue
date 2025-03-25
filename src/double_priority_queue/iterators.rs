@@ -40,6 +40,89 @@ use std::iter::*;
 
 use crate::DoublePriorityQueue;
 
+use super::Index;
+
+/// An `Iterator` in arbitrary order which uses a `predicate` to determine if
+/// an element should be removed from the `DoublePriorityQueue`.
+///
+/// It can be obtained calling the [`extract_if`](DoublePriorityQueue::extract_if) method.
+///
+/// The `predicate` has mutable access to the `(item, priority)` pairs.
+///
+/// It can update the priorities of the elements in the queue and the items
+/// in a way that does not change the result of any of `hash` or `eq`.
+///
+/// When the iterator goes out of scope, the heap is rebuilt to restore the
+/// structural properties.
+#[cfg(feature = "std")]
+pub struct ExtractIf<'a, I: 'a, P: 'a, F, H: 'a = RandomState>
+where
+    P: Ord,
+{
+    pq: &'a mut DoublePriorityQueue<I, P, H>,
+    predicate: F,
+    idx: Index,
+}
+
+#[cfg(not(feature = "std"))]
+pub struct ExtractIf<'a, I: 'a, P: 'a, F, H: 'a>
+where
+    P: Ord,
+{
+    pq: &'a mut DoublePriorityQueue<I, P, H>,
+    predicate: F,
+    idx: Index,
+}
+
+impl<'a, I: 'a, P: 'a, F, H: 'a> ExtractIf<'a, I, P, F, H>
+where
+    P: Ord,
+{
+    pub(crate) fn new(pq: &'a mut DoublePriorityQueue<I, P, H>, predicate: F) -> Self {
+        ExtractIf {
+            pq,
+            predicate,
+            idx: Index(0),
+        }
+    }
+}
+
+impl<'a, I: 'a, P: 'a, F, H: 'a> Iterator for ExtractIf<'a, I, P, F, H>
+where
+    P: Ord,
+    F: FnMut(&mut I, &mut P) -> bool,
+    H: BuildHasher,
+{
+    type Item = (I, P);
+    fn next(&mut self) -> Option<Self::Item> {
+        use indexmap::map::MutableKeys;
+
+        loop {
+            let r: Option<bool> = self
+                .pq
+                .store
+                .map
+                .get_index_mut2(self.idx.0)
+                .map(|(i, p)| (self.predicate)(i, p));
+
+            match r {
+                Some(true) => return self.pq.store.swap_remove_index(self.idx),
+                Some(false) => self.idx.0 += 1,
+                None => return None,
+            }
+        }
+    }
+}
+
+impl<'a, I: 'a, P: 'a, F, H: 'a> Drop for ExtractIf<'a, I, P, F, H>
+where
+    P: Ord,
+{
+    fn drop(&mut self) {
+        self.pq.heap_build();
+    }
+}
+
 /// A mutable iterator over the couples `(item, priority)` of the `DoublePriorityQueue`
 /// in arbitrary order.
 ///
