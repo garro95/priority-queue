@@ -786,12 +786,11 @@ mod doublepq_tests {
         assert_eq!(pq.pop_max(), Some(("b", 20)));
 
         /*
-        As expected, this does not compile
+        // As expected, this does not compile
         let iter_mut = pq.iter_mut();
-        iter_mut.for_each(|(_, p)| {*p += 2});
 
-        assert_eq!(pq.pop_max(), Some(("f", 9)));
-        */
+        assert_eq!(pq.pop_max(), Some(("a", 21)));
+        iter_mut.for_each(|(_, p)| {*p += 2}); */
     }
 
     #[test]
@@ -819,7 +818,6 @@ mod doublepq_tests {
         pq.push(Animal::new("bird".to_string(), true, false), 7);
         pq.push(Animal::new("fish".to_string(), false, true), 4);
         pq.push(Animal::new("cow".to_string(), false, false), 3);
-
         pq.retain(|i, _| i.can_swim);
 
         assert_eq!(
@@ -871,6 +869,71 @@ mod doublepq_tests {
             pq.pop_max(),
             Some((Animal::new("dog".to_string(), false, true), 11))
         );
+    }
+
+    #[test]
+    fn extract_if() {
+        #[derive(Hash, PartialEq, Eq, Debug)]
+        struct Animal {
+            name: String,
+            can_fly: bool,
+            can_swim: bool,
+        }
+
+        impl Animal {
+            pub fn new(name: String, can_fly: bool, can_swim: bool) -> Self {
+                Animal {
+                    name,
+                    can_fly,
+                    can_swim,
+                }
+            }
+        }
+
+        let mut pq = DoublePriorityQueue::new();
+        pq.push(Animal::new("dog".to_string(), false, true), 1);
+        pq.push(Animal::new("cat".to_string(), false, false), 2);
+        pq.push(Animal::new("bird".to_string(), true, false), 7);
+        pq.push(Animal::new("fish".to_string(), false, true), 4);
+        pq.push(Animal::new("cow".to_string(), false, false), 3);
+
+        let swimming_animals: Vec<(Animal, i32)> = pq
+            .extract_if(|i, p| {
+                if i.can_fly {
+                    *p -= 18;
+                    return false;
+                }
+
+                i.can_swim
+            })
+            .collect();
+
+        assert_eq!(
+            swimming_animals,
+            [
+                (Animal::new("dog".to_string(), false, true), 1),
+                (Animal::new("fish".to_string(), false, true), 4)
+            ]
+        );
+        assert_eq!(
+            pq.pop_max(),
+            Some((Animal::new("cow".to_string(), false, false), 3))
+        );
+        assert_eq!(
+            pq.pop_max(),
+            Some((Animal::new("cat".to_string(), false, false), 2))
+        );
+        assert_eq!(
+            pq.pop_max(),
+            Some((Animal::new("bird".to_string(), true, false), -11))
+        );
+
+        /*
+        // As expected, this does not compile
+        let extract_if = pq.extract_if(|i, p| { i.can_fly });
+
+        assert_eq!(pq.pop_max(), None);
+        extract_if.for_each(|(_, p)| println!("{:?}", p)); */
     }
 
     #[test]
