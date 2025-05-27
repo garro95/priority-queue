@@ -133,6 +133,7 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.4.0 Implement `extract_if`.
 * 2.3.1 Declare rust-version in Crate manifest: [#65](https://github.com/garro95/priority-queue/pull/65). Thanks to [aborgna-q](https://github.com/aborgna-q)
 * 2.3.0 Implement retain and retain_mut
 * 2.2.2 Fix a bug in the heapify_up implementation for DoublePriorityQueue
