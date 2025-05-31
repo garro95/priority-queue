@@ -376,6 +376,23 @@ where
     /// The `predicate` can change the priority. If it returns `true`, the
     /// extracted pair will have the updated priority, otherwise, the
     /// heap structural property will be restored once the iterator is `Drop`ped.
+    ///
+    /// # Example
+    /// ```
+    /// # use priority_queue::PriorityQueue;
+    /// let mut pq = PriorityQueue::new();
+    ///
+    /// pq.push("Apples", 5);
+    /// pq.push("Bananas", 10);
+    ///
+    /// assert_eq!(pq.extract_if(|i, p| {
+    ///   *p = 15;
+    ///   i == &"Apples"
+    /// }).collect::<Vec<_>>(), vec![("Apples", 15)]);
+    ///
+    /// assert_eq!(pq.peek(), Some((&"Bananas", &15)));
+    /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
+    /// ```
     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
     where
         F: FnMut(&mut I, &mut P) -> bool,
@@ -403,12 +420,15 @@ where
     /// ```
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
+    ///
     /// pq.push("Apples", 5);
     /// pq.push("Bananas", 10);
+    ///
     /// assert_eq!(pq.pop_if(|i, p| {
     ///   *p = 3;
     ///   false
     /// }), None);
+    ///
     /// assert_eq!(pq.pop(), Some(("Apples", 5)));
     /// ```
     pub fn pop_if<F>(&mut self, predicate: F) -> Option<(I, P)>

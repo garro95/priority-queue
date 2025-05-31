@@ -469,6 +469,19 @@ where
     ///
     /// # Example
     /// ```
+    /// # use priority_queue::DoublePriorityQueue;
+    /// let mut pq = DoublePriorityQueue::new();
+    ///
+    /// pq.push("Apples", 5);
+    /// pq.push("Bananas", 10);
+    ///
+    /// assert_eq!(pq.extract_if(|i, p| {
+    ///   *p = 15;
+    ///   i == &"Apples"
+    /// }).collect::<Vec<_>>(), vec![("Apples", 15)]);
+    ///
+    /// assert_eq!(pq.peek_min(), Some((&"Bananas", &15)));
+    /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
     /// ```
     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
     where
@@ -497,12 +510,15 @@ where
     /// ```
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
+    ///
     /// pq.push("Apples", 5);
     /// pq.push("Bananas", 10);
+    ///
     /// assert_eq!(pq.pop_min_if(|i, p| {
     ///   *p = 15;
     ///   false
     /// }), None);
+    ///
     /// assert_eq!(pq.pop_min(), Some(("Bananas", 10)));
     /// ```
     pub fn pop_min_if<F>(&mut self, f: F) -> Option<(I, P)>
