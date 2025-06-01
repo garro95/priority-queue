@@ -102,6 +102,23 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn contains() {
+        let mut pq = PriorityQueue::new();
+        assert!(!pq.contains("a"));
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 5);
+        pq.push("h", 3);
+
+        assert!(pq.contains("f"));
+
+        pq.pop();
+
+        assert!(!pq.contains("f"));
+    }
+
+    #[test]
     fn peek_get_mut() {
         use std::hash::{Hash, Hasher};
 

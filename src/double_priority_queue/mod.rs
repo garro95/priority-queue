@@ -760,6 +760,17 @@ where
         self.store.get_priority(item)
     }
 
+    /// Check if the queue contains `item`.
+    ///
+    /// Returns `true` if `item` is in the queue, `false` if it is not.
+    pub fn contains<Q>(&self, item: &Q) -> bool
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash + ?Sized,
+    {
+        self.store.contains(item)
+    }
+
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>

@@ -67,6 +67,23 @@ mod doublepq_tests {
     }
 
     #[test]
+    fn contains() {
+        let mut pq = DoublePriorityQueue::new();
+        assert!(!pq.contains("a"));
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 5);
+        pq.push("h", 3);
+
+        assert!(pq.contains("f"));
+
+        pq.pop_max();
+
+        assert!(!pq.contains("f"));
+    }
+
+    #[test]
     fn pop_if() {
         let mut pq = DoublePriorityQueue::new();
         assert_eq!(pq.pop_min_if(|_, _| true), None);

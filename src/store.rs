@@ -437,6 +437,17 @@ where
         self.map.get(item)
     }
 
+    /// Check if the store contains `item`.
+    ///
+    /// Returns `true` if `item` is in the store, `false` if it is not.
+    pub fn contains<Q>(&self, item: &Q) -> bool
+    where
+        I: Borrow<Q>,
+        Q: Eq + Hash + ?Sized,
+    {
+        self.map.contains_key(item)
+    }
+
     /// Get the couple (item, priority) of an arbitrary element, as reference
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
