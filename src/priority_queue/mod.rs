@@ -36,6 +36,7 @@ pub mod iterators;
 use std::vec::Vec;
 
 use crate::core_iterators::*;
+use crate::store::{left, log2_fast, parent, right};
 use crate::store::{Index, Position, Store};
 use crate::TryReserveError;
 use iterators::*;
@@ -975,27 +976,6 @@ where
     fn eq(&self, other: &PriorityQueue<I, P2, H2>) -> bool {
         self.store == other.store
     }
-}
-
-/// Compute the index of the left child of an item from its index
-#[inline(always)]
-const fn left(i: Position) -> Position {
-    Position((i.0 * 2) + 1)
-}
-/// Compute the index of the right child of an item from its index
-#[inline(always)]
-const fn right(i: Position) -> Position {
-    Position((i.0 * 2) + 2)
-}
-/// Compute the index of the parent element in the heap from its index
-#[inline(always)]
-const fn parent(i: Position) -> Position {
-    Position((i.0 - 1) / 2)
-}
-
-#[inline(always)]
-const fn log2_fast(x: usize) -> usize {
-    (usize::BITS - x.leading_zeros() - 1) as usize
 }
 
 // `rebuild` takes O(len1 + len2) operations
