@@ -772,7 +772,7 @@ where
             self.store.swap(i, largest);
 
             i = largest;
-            let mut largestp = unsafe { self.store.get_priority_from_position(i) };
+            largestp = unsafe { self.store.get_priority_from_position(i) };
             l = left(i);
             if l.0 < self.len() {
                 let childp = unsafe { self.store.get_priority_from_position(l) };
