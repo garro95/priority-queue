@@ -34,8 +34,9 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
+use crate::better_to_rebuild;
 use crate::core_iterators::*;
-use crate::store::{left, level, log2_fast, parent, right};
+use crate::store::{left, level, parent, right};
 use crate::store::{Index, Position, Store};
 use crate::TryReserveError;
 use iterators::*;
@@ -1217,21 +1218,6 @@ where
     fn eq(&self, other: &DoublePriorityQueue<I, P2, H2>) -> bool {
         self.store == other.store
     }
-}
-
-// `rebuild` takes O(len1 + len2) operations
-// and about 2 * (len1 + len2) comparisons in the worst case
-// while `extend` takes O(len2 * log_2(len1)) operations
-// and about 1 * len2 * log_2(len1) comparisons in the worst case,
-// assuming len1 >= len2.
-fn better_to_rebuild(len1: usize, len2: usize) -> bool {
-    // log(1) == 0, so the inequation always falsy
-    // log(0) is inapplicable and produces panic
-    if len1 <= 1 {
-        return false;
-    }
-
-    2 * (len1 + len2) < len2 * log2_fast(len1)
 }
 
 #[cfg(feature = "serde")]
