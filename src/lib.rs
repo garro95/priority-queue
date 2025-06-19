@@ -119,6 +119,7 @@ mod store;
 
 pub use crate::double_priority_queue::DoublePriorityQueue;
 pub use crate::priority_queue::PriorityQueue;
+use crate::store::log2_fast;
 
 use indexmap::TryReserveError as IndexMapTryReserveError;
 use std::collections::TryReserveError as StdTryReserveError;
@@ -160,4 +161,19 @@ impl From<IndexMapTryReserveError> for TryReserveError {
             kind: IndexMap(source),
         }
     }
+}
+
+// `rebuild` takes O(len1 + len2) operations
+// and about 2 * (len1 + len2) comparisons in the worst case
+// while `extend` takes O(len2 * log_2(len1)) operations
+// and about 1 * len2 * log_2(len1) comparisons in the worst case,
+// assuming len1 >= len2.
+fn better_to_rebuild(len1: usize, len2: usize) -> bool {
+    // log(1) == 0, so the inequation always falsy
+    // log(0) is inapplicable and produces panic
+    if len1 <= 1 {
+        return false;
+    }
+
+    2 * (len1 + len2) < len2 * log2_fast(len1)
 }
