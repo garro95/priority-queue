@@ -71,15 +71,6 @@ pub(crate) struct Store<I, P, H> {
     pub size: usize, // The size of the heap
 }
 
-// do not [derive(Eq)] to loosen up trait requirements for other types and impls
-impl<I, P, H> Eq for Store<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-    H: BuildHasher,
-{
-}
-
 impl<I, P, H> Default for Store<I, P, H>
 where
     I: Hash + Eq,
