@@ -733,13 +733,6 @@ where
 impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
-    I: Hash + Eq,
-{
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
 {
     /**************************************************************************/
     /*                            internal functions                          */
