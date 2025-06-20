@@ -46,9 +46,37 @@ use indexmap::map::{IndexMap, MutableKeys};
 /// The Index of the element in the Map
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct Index(pub usize);
+
 /// The Position of the element in the Heap
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct Position(pub usize);
+
+/// Compute the index of the left child of an item from its index
+#[inline(always)]
+pub(crate) const fn left(i: Position) -> Position {
+    Position((i.0 * 2) + 1)
+}
+/// Compute the index of the right child of an item from its index
+#[inline(always)]
+pub(crate) const fn right(i: Position) -> Position {
+    Position((i.0 * 2) + 2)
+}
+/// Compute the index of the parent element in the heap from its index
+#[inline(always)]
+pub(crate) const fn parent(i: Position) -> Position {
+    Position((i.0 - 1) / 2)
+}
+
+// Compute the level of a node from its index
+#[inline(always)]
+pub(crate) const fn level(i: Position) -> usize {
+    log2_fast(i.0 + 1)
+}
+
+#[inline(always)]
+pub(crate) const fn log2_fast(x: usize) -> usize {
+    (usize::BITS - x.leading_zeros() - 1) as usize
+}
 
 /// Internal storage of PriorityQueue and DoublePriorityQueue
 #[derive(Clone)]
@@ -69,15 +97,6 @@ pub(crate) struct Store<I, P, H> {
     pub qp: Vec<Position>,      // Performs the translation from the index
     // of the map to the index of the heap
     pub size: usize, // The size of the heap
-}
-
-// do not [derive(Eq)] to loosen up trait requirements for other types and impls
-impl<I, P, H> Eq for Store<I, P, H>
-where
-    I: Hash + Eq,
-    P: Ord,
-    H: BuildHasher,
-{
 }
 
 impl<I, P, H> Default for Store<I, P, H>

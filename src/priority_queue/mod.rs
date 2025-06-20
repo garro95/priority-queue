@@ -35,7 +35,9 @@ pub mod iterators;
 #[cfg(not(feature = "std"))]
 use std::vec::Vec;
 
+use crate::better_to_rebuild;
 use crate::core_iterators::*;
+use crate::store::{left, parent, right};
 use crate::store::{Index, Position, Store};
 use crate::TryReserveError;
 use iterators::*;
@@ -733,13 +735,6 @@ where
 impl<I, P, H> PriorityQueue<I, P, H>
 where
     P: Ord,
-    I: Hash + Eq,
-{
-}
-
-impl<I, P, H> PriorityQueue<I, P, H>
-where
-    P: Ord,
 {
     /**************************************************************************/
     /*                            internal functions                          */
@@ -772,7 +767,7 @@ where
             self.store.swap(i, largest);
 
             i = largest;
-            let mut largestp = unsafe { self.store.get_priority_from_position(i) };
+            largestp = unsafe { self.store.get_priority_from_position(i) };
             l = left(i);
             if l.0 < self.len() {
                 let childp = unsafe { self.store.get_priority_from_position(l) };
@@ -975,42 +970,6 @@ where
     fn eq(&self, other: &PriorityQueue<I, P2, H2>) -> bool {
         self.store == other.store
     }
-}
-
-/// Compute the index of the left child of an item from its index
-#[inline(always)]
-const fn left(i: Position) -> Position {
-    Position((i.0 * 2) + 1)
-}
-/// Compute the index of the right child of an item from its index
-#[inline(always)]
-const fn right(i: Position) -> Position {
-    Position((i.0 * 2) + 2)
-}
-/// Compute the index of the parent element in the heap from its index
-#[inline(always)]
-const fn parent(i: Position) -> Position {
-    Position((i.0 - 1) / 2)
-}
-
-#[inline(always)]
-const fn log2_fast(x: usize) -> usize {
-    (usize::BITS - x.leading_zeros() - 1) as usize
-}
-
-// `rebuild` takes O(len1 + len2) operations
-// and about 2 * (len1 + len2) comparisons in the worst case
-// while `extend` takes O(len2 * log_2(len1)) operations
-// and about 1 * len2 * log_2(len1) comparisons in the worst case,
-// assuming len1 >= len2.
-fn better_to_rebuild(len1: usize, len2: usize) -> bool {
-    // log(1) == 0, so the inequation always falsy
-    // log(0) is inapplicable and produces panic
-    if len1 <= 1 {
-        return false;
-    }
-
-    2 * (len1 + len2) < len2 * log2_fast(len1)
 }
 
 #[cfg(feature = "serde")]
