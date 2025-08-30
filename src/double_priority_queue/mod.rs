@@ -39,8 +39,8 @@ use crate::core_iterators::*;
 use crate::store::{left, level, parent, right};
 use crate::store::{Index, Position, Store};
 use crate::TryReserveError;
-use iterators::*;
 use equivalent::Equivalent;
+use iterators::*;
 
 use std::cmp::{Eq, Ord};
 #[cfg(feature = "std")]

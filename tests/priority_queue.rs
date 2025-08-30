@@ -934,7 +934,7 @@ mod pqueue_tests {
     #[test]
     fn equivalent_blanket_implementation() {
         let mut pq = PriorityQueue::new();
-        
+
         // Push with owned String
         pq.push("Alice".to_string(), 10);
         pq.push("Bob".to_string(), 20);
@@ -974,8 +974,8 @@ mod pqueue_tests {
 
     #[test]
     fn equivalent_custom_implementation() {
-        use std::hash::Hash;
         use equivalent::Equivalent;
+        use std::hash::Hash;
 
         #[derive(Debug, PartialEq, Eq, Hash)]
         struct Person {
@@ -998,19 +998,39 @@ mod pqueue_tests {
         }
 
         let mut pq = PriorityQueue::new();
-        
+
         // Create test persons
-        let alice = Person { id: 1, name: "Alice".to_string(), age: 30 };
-        let bob = Person { id: 2, name: "Bob".to_string(), age: 25 };
+        let alice = Person {
+            id: 1,
+            name: "Alice".to_string(),
+            age: 30,
+        };
+        let bob = Person {
+            id: 2,
+            name: "Bob".to_string(),
+            age: 25,
+        };
 
         // Push persons into queue
         pq.push(alice, 100);
         pq.push(bob, 200);
 
         // Create PersonView instances for querying
-        let alice_view = PersonView { id: 1, name: "Alice", age: 30 };
-        let bob_view = PersonView { id: 2, name: "Bob", age: 25 };
-        let charlie_view = PersonView { id: 3, name: "Charlie", age: 35 };
+        let alice_view = PersonView {
+            id: 1,
+            name: "Alice",
+            age: 30,
+        };
+        let bob_view = PersonView {
+            id: 2,
+            name: "Bob",
+            age: 25,
+        };
+        let charlie_view = PersonView {
+            id: 3,
+            name: "Charlie",
+            age: 35,
+        };
 
         // Test get_priority with PersonView
         assert_eq!(pq.get_priority(&alice_view), Some(&100));
