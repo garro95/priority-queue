@@ -32,8 +32,8 @@ use std::vec::Vec;
 // as vec instead of the IndexMap
 use crate::core_iterators::*;
 use crate::TryReserveError;
+use equivalent::Equivalent;
 
-use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
 #[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
@@ -420,8 +420,7 @@ where
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q>(&mut self, item: &Q, mut new_priority: P) -> Option<(P, Position)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         let Store { map, qp, .. } = self;
         map.get_full_mut(item).map(|(index, _, p)| {
@@ -436,8 +435,7 @@ where
     /// The operation is performed in **O(log(N))** time (worst case).
     pub fn change_priority_by<Q, F>(&mut self, item: &Q, priority_setter: F) -> Option<Position>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
         F: FnOnce(&mut P),
     {
         let Store { map, qp, .. } = self;
@@ -450,8 +448,7 @@ where
     /// Get the priority of an item, or `None`, if the item is not in the queue
     pub fn get_priority<Q>(&self, item: &Q) -> Option<&P>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.map.get(item)
     }
@@ -461,8 +458,7 @@ where
     /// Returns `true` if `item` is in the store, `false` if it is not.
     pub fn contains<Q>(&self, item: &Q) -> bool
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.map.contains_key(item)
     }
@@ -471,8 +467,7 @@ where
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.map.get_full(item).map(|(_, k, v)| (k, v))
     }
@@ -488,16 +483,14 @@ where
     /// `change_priority_by`.
     pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.map.get_full_mut2(item).map(|(_, k, v)| (k, &*v))
     }
 
     pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P, Position)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.map.swap_remove_full(item).map(|(i, item, priority)| {
             let i = Index(i);
