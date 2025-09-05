@@ -930,6 +930,145 @@ mod pqueue_tests {
 
         assert_eq!(pq.pop(), Some(('b', 5)));
     }
+
+    #[test]
+    fn equivalent_blanket_implementation() {
+        let mut pq = PriorityQueue::new();
+
+        // Push with owned String
+        pq.push("Alice".to_string(), 10);
+        pq.push("Bob".to_string(), 20);
+
+        // Test get_priority with &str (uses String's blanket Equivalent impl)
+        assert_eq!(pq.get_priority("Alice"), Some(&10));
+        assert_eq!(pq.get_priority("Bob"), Some(&20));
+        assert_eq!(pq.get_priority("Charlie"), None);
+
+        // Test contains with &str
+        assert!(pq.contains("Alice"));
+        assert!(pq.contains("Bob"));
+        assert!(!pq.contains("Charlie"));
+
+        // Test change_priority with &str
+        assert_eq!(pq.change_priority("Alice", 25), Some(10));
+        assert_eq!(pq.get_priority("Alice"), Some(&25));
+
+        // Test change_priority_by with &str
+        assert!(pq.change_priority_by("Alice", |p| *p += 5));
+        assert_eq!(pq.get_priority("Alice"), Some(&30));
+
+        // Test get with &str
+        let (item, priority) = pq.get("Bob").unwrap();
+        assert_eq!(item, "Bob");
+        assert_eq!(*priority, 20);
+
+        // Test get_mut with &str
+        let (item_mut, priority) = pq.get_mut("Bob").unwrap();
+        assert_eq!(item_mut, "Bob");
+        assert_eq!(*priority, 20);
+
+        // Test remove with &str
+        assert_eq!(pq.remove("Bob"), Some(("Bob".to_string(), 20)));
+        assert!(!pq.contains("Bob"));
+    }
+
+    #[test]
+    fn equivalent_custom_implementation() {
+        use equivalent::Equivalent;
+        use std::hash::Hash;
+
+        #[derive(Debug, PartialEq, Eq, Hash)]
+        struct Person {
+            id: u32,
+            name: String,
+            age: u16,
+        }
+
+        #[derive(Debug, PartialEq, Eq, Hash)]
+        struct PersonView<'a> {
+            id: u32,
+            name: &'a str,
+            age: u16,
+        }
+
+        impl<'a> Equivalent<Person> for PersonView<'a> {
+            fn equivalent(&self, key: &Person) -> bool {
+                self.id == key.id && self.name == key.name && self.age == key.age
+            }
+        }
+
+        let mut pq = PriorityQueue::new();
+
+        // Create test persons
+        let alice = Person {
+            id: 1,
+            name: "Alice".to_string(),
+            age: 30,
+        };
+        let bob = Person {
+            id: 2,
+            name: "Bob".to_string(),
+            age: 25,
+        };
+
+        // Push persons into queue
+        pq.push(alice, 100);
+        pq.push(bob, 200);
+
+        // Create PersonView instances for querying
+        let alice_view = PersonView {
+            id: 1,
+            name: "Alice",
+            age: 30,
+        };
+        let bob_view = PersonView {
+            id: 2,
+            name: "Bob",
+            age: 25,
+        };
+        let charlie_view = PersonView {
+            id: 3,
+            name: "Charlie",
+            age: 35,
+        };
+
+        // Test get_priority with PersonView
+        assert_eq!(pq.get_priority(&alice_view), Some(&100));
+        assert_eq!(pq.get_priority(&bob_view), Some(&200));
+        assert_eq!(pq.get_priority(&charlie_view), None);
+
+        // Test contains with PersonView
+        assert!(pq.contains(&alice_view));
+        assert!(pq.contains(&bob_view));
+        assert!(!pq.contains(&charlie_view));
+
+        // Test change_priority with PersonView
+        assert_eq!(pq.change_priority(&alice_view, 300), Some(100));
+        assert_eq!(pq.get_priority(&alice_view), Some(&300));
+
+        // Test change_priority_by with PersonView
+        assert!(pq.change_priority_by(&alice_view, |p| *p += 50));
+        assert_eq!(pq.get_priority(&alice_view), Some(&350));
+
+        // Test get with PersonView
+        let (person, priority) = pq.get(&bob_view).unwrap();
+        assert_eq!(person.name, "Bob");
+        assert_eq!(*priority, 200);
+
+        // Test get_mut with PersonView
+        let (person_mut, priority) = pq.get_mut(&bob_view).unwrap();
+        assert_eq!(person_mut.name, "Bob");
+        assert_eq!(*priority, 200);
+
+        // Test remove with PersonView
+        let removed = pq.remove(&bob_view);
+        assert!(removed.is_some());
+        let (removed_person, removed_priority) = removed.unwrap();
+        assert_eq!(removed_person.id, 2);
+        assert_eq!(removed_person.name, "Bob");
+        assert_eq!(removed_priority, 200);
+        assert!(!pq.contains(&bob_view));
+    }
 }
 
 #[cfg(all(feature = "serde", test))]

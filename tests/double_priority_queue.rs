@@ -1058,6 +1058,145 @@ mod doublepq_tests {
     }
 
     #[test]
+    fn equivalent_blanket_implementation() {
+        let mut dpq = DoublePriorityQueue::new();
+
+        // Push with owned String
+        dpq.push("Alice".to_string(), 10);
+        dpq.push("Bob".to_string(), 20);
+
+        // Test get_priority with &str (uses String's blanket Equivalent impl)
+        assert_eq!(dpq.get_priority("Alice"), Some(&10));
+        assert_eq!(dpq.get_priority("Bob"), Some(&20));
+        assert_eq!(dpq.get_priority("Charlie"), None);
+
+        // Test contains with &str
+        assert!(dpq.contains("Alice"));
+        assert!(dpq.contains("Bob"));
+        assert!(!dpq.contains("Charlie"));
+
+        // Test change_priority with &str
+        assert_eq!(dpq.change_priority("Alice", 25), Some(10));
+        assert_eq!(dpq.get_priority("Alice"), Some(&25));
+
+        // Test change_priority_by with &str
+        assert!(dpq.change_priority_by("Alice", |p| *p += 5));
+        assert_eq!(dpq.get_priority("Alice"), Some(&30));
+
+        // Test get with &str
+        let (item, priority) = dpq.get("Bob").unwrap();
+        assert_eq!(item, "Bob");
+        assert_eq!(*priority, 20);
+
+        // Test get_mut with &str
+        let (item_mut, priority) = dpq.get_mut("Bob").unwrap();
+        assert_eq!(item_mut, "Bob");
+        assert_eq!(*priority, 20);
+
+        // Test remove with &str
+        assert_eq!(dpq.remove("Bob"), Some(("Bob".to_string(), 20)));
+        assert!(!dpq.contains("Bob"));
+    }
+
+    #[test]
+    fn equivalent_custom_implementation() {
+        use equivalent::Equivalent;
+        use std::hash::Hash;
+
+        #[derive(Debug, PartialEq, Eq, Hash)]
+        struct Person {
+            id: u32,
+            name: String,
+            age: u16,
+        }
+
+        #[derive(Debug, PartialEq, Eq, Hash)]
+        struct PersonView<'a> {
+            id: u32,
+            name: &'a str,
+            age: u16,
+        }
+
+        impl<'a> Equivalent<Person> for PersonView<'a> {
+            fn equivalent(&self, key: &Person) -> bool {
+                self.id == key.id && self.name == key.name && self.age == key.age
+            }
+        }
+
+        let mut dpq = DoublePriorityQueue::new();
+
+        // Create test persons
+        let alice = Person {
+            id: 1,
+            name: "Alice".to_string(),
+            age: 30,
+        };
+        let bob = Person {
+            id: 2,
+            name: "Bob".to_string(),
+            age: 25,
+        };
+
+        // Push persons into queue
+        dpq.push(alice, 100);
+        dpq.push(bob, 200);
+
+        // Create PersonView instances for querying
+        let alice_view = PersonView {
+            id: 1,
+            name: "Alice",
+            age: 30,
+        };
+        let bob_view = PersonView {
+            id: 2,
+            name: "Bob",
+            age: 25,
+        };
+        let charlie_view = PersonView {
+            id: 3,
+            name: "Charlie",
+            age: 35,
+        };
+
+        // Test get_priority with PersonView
+        assert_eq!(dpq.get_priority(&alice_view), Some(&100));
+        assert_eq!(dpq.get_priority(&bob_view), Some(&200));
+        assert_eq!(dpq.get_priority(&charlie_view), None);
+
+        // Test contains with PersonView
+        assert!(dpq.contains(&alice_view));
+        assert!(dpq.contains(&bob_view));
+        assert!(!dpq.contains(&charlie_view));
+
+        // Test change_priority with PersonView
+        assert_eq!(dpq.change_priority(&alice_view, 300), Some(100));
+        assert_eq!(dpq.get_priority(&alice_view), Some(&300));
+
+        // Test change_priority_by with PersonView
+        assert!(dpq.change_priority_by(&alice_view, |p| *p += 50));
+        assert_eq!(dpq.get_priority(&alice_view), Some(&350));
+
+        // Test get with PersonView
+        let (person, priority) = dpq.get(&bob_view).unwrap();
+        assert_eq!(person.name, "Bob");
+        assert_eq!(*priority, 200);
+
+        // Test get_mut with PersonView
+        let (person_mut, priority) = dpq.get_mut(&bob_view).unwrap();
+        assert_eq!(person_mut.name, "Bob");
+        assert_eq!(*priority, 200);
+
+        // Test remove with PersonView
+        let removed = dpq.remove(&bob_view);
+        assert!(removed.is_some());
+        let (removed_person, removed_priority) = removed.unwrap();
+        assert_eq!(removed_person.id, 2);
+        assert_eq!(removed_person.name, "Bob");
+        assert_eq!(removed_priority, 200);
+        assert!(!dpq.contains(&bob_view));
+    }
+
+    #[test]
     fn user_test() {
         use priority_queue::PriorityQueue;
         use std::cmp::Reverse;

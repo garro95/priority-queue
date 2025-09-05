@@ -40,9 +40,9 @@ use crate::core_iterators::*;
 use crate::store::{left, parent, right};
 use crate::store::{Index, Position, Store};
 use crate::TryReserveError;
+use equivalent::Equivalent;
 use iterators::*;
 
-use std::borrow::Borrow;
 use std::cmp::{Eq, Ord};
 #[cfg(feature = "std")]
 use std::collections::hash_map::RandomState;
@@ -596,8 +596,7 @@ where
     /// The operation is performed in **O(log(N))** time.
     pub fn change_priority<Q>(&mut self, item: &Q, new_priority: P) -> Option<P>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store
             .change_priority(item, new_priority)
@@ -618,8 +617,7 @@ where
     /// The operation is performed in **O(log(N))** time (worst case).
     pub fn change_priority_by<Q, F>(&mut self, item: &Q, priority_setter: F) -> bool
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
         F: FnOnce(&mut P),
     {
         self.store
@@ -633,8 +631,7 @@ where
     /// Get the priority of an item, or `None`, if the item is not in the queue
     pub fn get_priority<Q>(&self, item: &Q) -> Option<&P>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store.get_priority(item)
     }
@@ -644,8 +641,7 @@ where
     /// Returns `true` if `item` is in the queue, `false` if it is not.
     pub fn contains<Q>(&self, item: &Q) -> bool
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store.contains(item)
     }
@@ -654,8 +650,7 @@ where
     /// or `None` if the item is not in the queue.
     pub fn get<Q>(&self, item: &Q) -> Option<(&I, &P)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store.get(item)
     }
@@ -672,8 +667,7 @@ where
     /// [`change_priority_by`](PriorityQueue::change_priority_by).
     pub fn get_mut<Q>(&mut self, item: &Q) -> Option<(&mut I, &P)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store.get_mut(item)
     }
@@ -709,8 +703,7 @@ where
     /// The operation is performed in **O(log(N))** time (worst case).
     pub fn remove<Q>(&mut self, item: &Q) -> Option<(I, P)>
     where
-        I: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: ?Sized + Equivalent<I> + Hash,
     {
         self.store.remove(item).map(|(item, priority, pos)| {
             if pos.0 < self.len() {
