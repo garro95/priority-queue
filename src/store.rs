@@ -134,8 +134,13 @@ where
     H: BuildHasher,
 {
     /// Creates an empty `Store` with the specified hasher
-    pub fn with_hasher(hash_builder: H) -> Self {
-        Self::with_capacity_and_hasher(0, hash_builder)
+    pub const fn with_hasher(hash_builder: H) -> Self {
+        Self {
+            map: IndexMap::with_hasher(hash_builder),
+            heap: Vec::new(),
+            qp: Vec::new(),
+            size: 0,
+        }
     }
 
     /// Creates an empty `Store` with the specified capacity and hasher

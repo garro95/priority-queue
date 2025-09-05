@@ -153,8 +153,10 @@ where
     H: BuildHasher,
 {
     /// Creates an empty `PriorityQueue` with the specified hasher
-    pub fn with_hasher(hash_builder: H) -> Self {
-        Self::with_capacity_and_hasher(0, hash_builder)
+    pub const fn with_hasher(hash_builder: H) -> Self {
+        Self {
+            store: Store::with_hasher(hash_builder),
+        }
     }
 
     /// Creates an empty `PriorityQueue` with the specified capacity and hasher
