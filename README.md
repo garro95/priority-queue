@@ -133,6 +133,7 @@ All contribution shall be under a license compatible with the GNU LGPL version 3
 
 ## Changes
 
+* 2.6.0 Add equivalent trait support for flexible key lookups: [#74](https://github.com/garro95/priority-queue/pull/74). Convert `with_hasher` to const function: [#73](https://github.com/garro95/priority-queue/pull/73). Thanks to [liwenjieQu](https://github.com/liwenjieQu) and [AsakuraMizu](https://github.com/AsakuraMizu)
 * 2.5.0 Implement `contains`.
 * 2.4.1 Documentation improvements: add examples for `extract_if`
 * 2.4.0 Implement `extract_if`.
