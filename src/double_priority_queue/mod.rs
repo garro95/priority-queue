@@ -473,6 +473,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     ///
@@ -486,6 +487,7 @@ where
     ///
     /// assert_eq!(pq.peek_min(), Some((&"Bananas", &15)));
     /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
+    /// # }
     /// ```
     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
     where
@@ -512,6 +514,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     ///
@@ -524,6 +527,7 @@ where
     /// }), None);
     ///
     /// assert_eq!(pq.pop_min(), Some(("Bananas", 10)));
+    /// # }
     /// ```
     pub fn pop_min_if<F>(&mut self, f: F) -> Option<(I, P)>
     where
@@ -554,6 +558,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     /// pq.push("Apples", 5);
@@ -563,6 +568,7 @@ where
     ///   false
     /// }), None);
     /// assert_eq!(pq.pop_max(), Some(("Apples", 5)));
+    /// # }
     /// ```
     pub fn pop_max_if<F>(&mut self, f: F) -> Option<(I, P)>
     where
@@ -583,6 +589,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     /// assert_eq!(pq.push("Apples", 5), None);
@@ -591,6 +598,7 @@ where
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
     /// assert_eq!(pq.push("Apples", 4), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -641,6 +649,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     /// assert_eq!(pq.push_increase("Apples", 5), None);
@@ -651,6 +660,7 @@ where
     /// // priority is returned.
     /// assert_eq!(pq.push_increase("Apples", 4), Some(4));
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -679,6 +689,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     /// assert_eq!(pq.push_decrease("Apples", 5), None);
@@ -689,6 +700,7 @@ where
     /// // priority is returned.
     /// assert_eq!(pq.push_decrease("Apples", 6), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -708,6 +720,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::DoublePriorityQueue;
     /// let mut pq = DoublePriorityQueue::new();
     /// assert_eq!(pq.change_priority("Apples", 5), None);
@@ -716,6 +729,7 @@ where
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
     /// assert_eq!(pq.change_priority("Apples", 4), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// The item is found in **O(1)** thanks to the hash table.

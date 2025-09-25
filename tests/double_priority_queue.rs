@@ -25,7 +25,7 @@
  *  obtain one at http://mozilla.org/MPL/2.0/.
  *
  */
-
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod doublepq_tests {
     pub use priority_queue::DoublePriorityQueue;

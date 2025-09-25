@@ -26,6 +26,7 @@
  *
  */
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod pqueue_tests {
     pub use priority_queue::PriorityQueue;

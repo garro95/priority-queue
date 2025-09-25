@@ -62,6 +62,7 @@ use std::mem::replace;
 ///
 /// # Example
 /// ```rust
+/// # #[cfg(feature = "std")] {
 /// use priority_queue::PriorityQueue;
 ///
 /// let mut pq = PriorityQueue::new();
@@ -79,6 +80,7 @@ use std::mem::replace;
 /// for (item, _) in pq.into_sorted_iter() {
 ///     println!("{}", item);
 /// }
+/// # }
 /// ```
 #[derive(Clone, Debug)]
 #[cfg(feature = "std")]
@@ -383,6 +385,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     ///
@@ -396,6 +399,7 @@ where
     ///
     /// assert_eq!(pq.peek(), Some((&"Bananas", &15)));
     /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
+    /// # }
     /// ```
     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
     where
@@ -422,6 +426,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     ///
@@ -434,6 +439,7 @@ where
     /// }), None);
     ///
     /// assert_eq!(pq.pop(), Some(("Apples", 5)));
+    /// # }
     /// ```
     pub fn pop_if<F>(&mut self, predicate: F) -> Option<(I, P)>
     where
@@ -458,6 +464,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     /// assert_eq!(pq.push("Apples", 5), None);
@@ -466,6 +473,7 @@ where
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
     /// assert_eq!(pq.push("Apples", 4), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -515,6 +523,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     /// assert_eq!(pq.push_increase("Apples", 5), None);
@@ -525,6 +534,7 @@ where
     /// // priority is returned.
     /// assert_eq!(pq.push_increase("Apples", 4), Some(4));
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -553,6 +563,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     /// assert_eq!(pq.push_decrease("Apples", 5), None);
@@ -563,6 +574,7 @@ where
     /// // priority is returned.
     /// assert_eq!(pq.push_decrease("Apples", 6), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// Computes in **O(log(N))** time.
@@ -582,6 +594,7 @@ where
     ///
     /// # Example
     /// ```
+    /// # #[cfg(feature = "std")] {
     /// # use priority_queue::PriorityQueue;
     /// let mut pq = PriorityQueue::new();
     /// assert_eq!(pq.change_priority("Apples", 5), None);
@@ -590,6 +603,7 @@ where
     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
     /// assert_eq!(pq.change_priority("Apples", 4), Some(6));
     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
+    /// # }
     /// ```
     ///
     /// The item is found in **O(1)** thanks to the hash table.
