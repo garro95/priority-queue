@@ -54,6 +54,7 @@
 //!
 //! # Examples
 //! ```rust
+//! # #[cfg(feature = "std")] {
 //! use priority_queue::PriorityQueue;
 //!
 //! let mut pq = PriorityQueue::new();
@@ -71,10 +72,12 @@
 //! for (item, _) in pq.into_sorted_iter() {
 //!     println!("{}", item); // Will print Bananas, Strawberries, Apples
 //! }
+//! # }
 //! ```
 //!
 //! ## Reverse ordering
 //! ```rust
+//! # #[cfg(feature = "std")] {
 //! use priority_queue::PriorityQueue;
 //! use std::cmp::Reverse;
 //!
@@ -90,6 +93,7 @@
 //! for (item, _) in pq.into_sorted_iter() {
 //!     println!("{}", item); // Will print Apples, Bananas, Strawberries
 //! }
+//! # }
 //! ```
 //!
 //! # Crate features
