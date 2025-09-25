@@ -27,6 +27,7 @@ hashbrown = "0.14"
 [features]
 default = ["std"]
 std = ["indexmap/std"]
+serde = ["std", "dep:serde"]
 benchmarks = []
 
 [workspace]
