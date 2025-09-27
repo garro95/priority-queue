@@ -692,10 +692,11 @@ where
 mod serde {
     use crate::store::{Index, Position, Store};
 
-    use std::cmp::{Eq, Ord};
+    use core::cmp::{Eq, Ord};
+    use core::hash::{BuildHasher, Hash};
+    use core::marker::PhantomData;
+    #[cfg(feature = "std")]
     use std::collections::hash_map::RandomState;
-    use std::hash::{BuildHasher, Hash};
-    use std::marker::PhantomData;
 
     use serde::ser::{Serialize, SerializeSeq, Serializer};
 
@@ -733,6 +734,7 @@ mod serde {
         }
     }
 
+    #[cfg(feature = "std")]
     struct StoreVisitor<I, P, H = RandomState>
     where
         I: Hash + Eq,
@@ -740,6 +742,16 @@ mod serde {
     {
         marker: PhantomData<Store<I, P, H>>,
     }
+
+    #[cfg(not(feature = "std"))]
+    struct StoreVisitor<I, P, H>
+    where
+        I: Hash + Eq,
+        P: Ord,
+    {
+        marker: PhantomData<Store<I, P, H>>,
+    }
+
     impl<'de, I, P, H> Visitor<'de> for StoreVisitor<I, P, H>
     where
         I: Hash + Eq + Deserialize<'de>,
@@ -748,7 +760,7 @@ mod serde {
     {
         type Value = Store<I, P, H>;
 
-        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
             write!(formatter, "A priority queue")
         }
 
