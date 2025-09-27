@@ -161,7 +161,7 @@ where
 impl<I, P, H> Store<I, P, H> {
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter(&self) -> Iter<I, P> {
+    pub fn iter(&self) -> Iter<'_, I, P> {
         Iter {
             iter: self.map.iter(),
         }

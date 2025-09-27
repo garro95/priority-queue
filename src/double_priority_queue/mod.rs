@@ -192,13 +192,13 @@ impl<I, P, H> DoublePriorityQueue<I, P, H> {
 
     /// Returns an iterator in arbitrary order over the
     /// (item, priority) elements in the queue
-    pub fn iter(&self) -> Iter<I, P> {
+    pub fn iter(&self) -> Iter<'_, I, P> {
         self.store.iter()
     }
 
     /// Clears the PriorityQueue, returning an iterator over the removed elements in arbitrary order.
     /// If the iterator is dropped before being fully consumed, it drops the remaining elements in arbitrary order.
-    pub fn drain(&mut self) -> Drain<I, P> {
+    pub fn drain(&mut self) -> Drain<'_, I, P> {
         self.store.drain()
     }
 
@@ -289,7 +289,7 @@ where
     /// will be rebuilt once the `IterMut` goes out of scope. It would be
     /// rebuilt even if no priority value would have been modified, but the
     /// procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> IterMut<I, P, H> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, I, P, H> {
         IterMut::new(self)
     }
 
@@ -489,7 +489,7 @@ where
     /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
     /// # }
     /// ```
-    pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
+    pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<'_, I, P, F, H>
     where
         F: FnMut(&mut I, &mut P) -> bool,
     {
