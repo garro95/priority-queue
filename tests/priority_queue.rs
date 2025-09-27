@@ -1076,16 +1076,29 @@ mod pqueue_tests {
 mod serde_tests_basics {
     use priority_queue::PriorityQueue;
     use serde_test::{assert_tokens, Token};
+
+    #[cfg(not(feature = "std"))]
+    use core::hash::BuildHasherDefault;
+    #[cfg(not(feature = "std"))]
+    use twox_hash::XxHash64;
+
     #[test]
     fn serde_empty() {
+        #[cfg(feature = "std")]
         let pq: PriorityQueue<String, i32> = PriorityQueue::new();
+        #[cfg(not(feature = "std"))]
+        let pq: PriorityQueue<String, i32, BuildHasherDefault<XxHash64>> = PriorityQueue::default();
 
         assert_tokens(&pq, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
     }
 
     #[test]
     fn serde() {
+        #[cfg(feature = "std")]
         let mut pq = PriorityQueue::new();
+        #[cfg(not(feature = "std"))]
+        let mut pq: PriorityQueue<&str, i32, BuildHasherDefault<XxHash64>> =
+            PriorityQueue::default();
 
         pq.push("a", 1);
         pq.push("b", 2);
@@ -1127,11 +1140,16 @@ mod serde_tests_basics {
 //thanks to ckaran
 #[cfg(all(feature = "serde", test))]
 mod serde_tests_custom_structs {
+    use core::cmp::{Ord, Ordering, PartialOrd};
+    use core::default::Default;
+    use core::time::Duration;
     use priority_queue::PriorityQueue;
-    use std::cmp::{Ord, Ordering, PartialOrd};
-    use std::default::Default;
-    use std::time::Duration;
     use uuid::Uuid;
+
+    #[cfg(not(feature = "std"))]
+    use core::hash::BuildHasherDefault;
+    #[cfg(not(feature = "std"))]
+    use twox_hash::XxHash64;
 
     use serde::{Deserialize, Serialize};
 
@@ -1226,9 +1244,12 @@ mod serde_tests_custom_structs {
     fn test1() {
         println!("test1()");
 
+        #[cfg(feature = "std")]
         type PqType = PriorityQueue<i32, i32>;
+        #[cfg(not(feature = "std"))]
+        type PqType = PriorityQueue<i32, i32, BuildHasherDefault<XxHash64>>;
 
-        let mut pq: PqType = PriorityQueue::new();
+        let mut pq: PqType = PriorityQueue::default();
         pq.push(0, 0);
         pq.push(1, 1);
 
@@ -1245,9 +1266,12 @@ mod serde_tests_custom_structs {
     fn test2() {
         println!("\n\ntest2()");
 
+        #[cfg(feature = "std")]
         type PqType = PriorityQueue<i32, EventComparables>;
+        #[cfg(not(feature = "std"))]
+        type PqType = PriorityQueue<i32, EventComparables, BuildHasherDefault<XxHash64>>;
 
-        let mut pq: PqType = PriorityQueue::new();
+        let mut pq: PqType = PriorityQueue::default();
         pq.push(0, Default::default()); // Uuids will be different
         pq.push(1, Default::default());
 
@@ -1304,9 +1328,13 @@ mod serde_tests_custom_structs {
         assert_eq!(ec2, deserialized);
 
         {
+            #[cfg(feature = "std")]
             type PqType = PriorityQueue<ConcreteEvent1, EventComparables>;
+            #[cfg(not(feature = "std"))]
+            type PqType =
+                PriorityQueue<ConcreteEvent1, EventComparables, BuildHasherDefault<XxHash64>>;
 
-            let mut pq: PqType = PriorityQueue::new();
+            let mut pq: PqType = PriorityQueue::default();
             pq.push(ce1, ec1);
             pq.push(ce2, ec2);
 

@@ -984,8 +984,8 @@ where
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 mod serde {
-    use std::cmp::{Eq, Ord};
-    use std::hash::{BuildHasher, Hash};
+    use core::cmp::{Eq, Ord};
+    use core::hash::{BuildHasher, Hash};
 
     use serde::de::{Deserialize, Deserializer};
     use serde::ser::{Serialize, Serializer};
