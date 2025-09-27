@@ -17,21 +17,36 @@ jobs:
       matrix:
         include:
           - rust: stable
+            features:
+          - rust: stable
             features: std
           - rust: stable
             features: serde
+          - rust: stable
+            features: std,serde
           - rust: beta
             features:
+          - rust: beta
+            features: std
+          - rust: beta
+            features: serde
+          - rust: beta
+            features: std,serde
           - rust: nightly
             features:
-
+          - rust: nightly
+            features: std
+          - rust: nightly
+            features: serde
+          - rust: nightly
+            features: std,serde
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
     - name: Build
-      run: cargo build --verbose --features "${{ matrix.features }}"
+      run: cargo build --verbose --no-default-features --features "${{ matrix.features }}"
 
   nostd_build:
     runs-on: ubuntu-latest
