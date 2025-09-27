@@ -67,4 +67,4 @@ jobs:
       with:
         toolchain: nightly
     - name: Docs.rs
-      run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features
+      run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly rustdoc --all-features
