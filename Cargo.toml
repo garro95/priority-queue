@@ -27,7 +27,7 @@ twox-hash = { version = "1.5", default-features = false }
 
 [features]
 default = ["std"]
-std = ["indexmap/std", "serde/std"]
+std = ["indexmap/std", "serde?/std"]
 benchmarks = []
 
 [workspace]
