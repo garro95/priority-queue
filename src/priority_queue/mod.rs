@@ -26,7 +26,7 @@
  *
  */
 
-//! This module contains the [`PriorityQueue`] type and the related iterators.
+//! Contains the [`PriorityQueue`] type and the related iterators.
 //!
 //! See the type level documentation for more details and examples.
 

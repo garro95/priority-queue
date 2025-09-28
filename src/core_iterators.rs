@@ -25,8 +25,8 @@
  *  obtain one at http://mozilla.org/MPL/2.0/.
  *
  */
-//! This module defines iterator types that are used with
-//! both the [`PriorityQueue`](super::PriorityQueue) and the [`DoublePriorityQueue`](super::DoublePriorityQueue)
+//! Defines iterator types that are used with both the [`PriorityQueue`](super::PriorityQueue)
+//! and the [`DoublePriorityQueue`](super::DoublePriorityQueue)
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 

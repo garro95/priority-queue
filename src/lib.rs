@@ -102,7 +102,7 @@
 //!   with the standard hasher `RandomState` using the `new` and `with_capacity`
 //!   static methods.
 //!   This feature is **enabled by default** and can be disabled when compiling
-//!   for no_std targets.
+//!   for no_std targets with cargo option `--no-default-features`.
 //! * **serde** - Enables serialization/deserialization using serde
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]

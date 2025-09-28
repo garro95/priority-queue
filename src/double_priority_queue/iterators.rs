@@ -25,7 +25,7 @@
  *  obtain one at http://mozilla.org/MPL/2.0/.
  *
  */
-//! This module defines iterator types that are used only with the [`DoublePriorityQueue`]
+//! Defines iterator types that are used only with the [`DoublePriorityQueue`]
 //!
 //! Usually you don't need to explicitly `use` any of the types declared here.
 

@@ -25,7 +25,7 @@
  *  obtain one at http://mozilla.org/MPL/2.0/.
  *
  */
-//! This module contains the [`DoublePriorityQueue`] type and the related iterators.
+//! Contains the [`DoublePriorityQueue`] type and the related iterators.
 //!
 //! See the type level documentation for more details and examples.
 
