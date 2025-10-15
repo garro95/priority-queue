@@ -751,7 +751,7 @@ mod pqueue_tests {
         assert_eq!(into_iter.len(), 5);
         assert_eq!(into_iter.next(), Some(("a", 1)));
         assert_eq!(into_iter.next_back(), Some(("h", 3)));
-        
+
         /*
         As expected, this does not compile
         assert_eq!(pq.pop(), Some(("b", 20)));
