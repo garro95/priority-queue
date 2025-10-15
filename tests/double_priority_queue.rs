@@ -782,7 +782,9 @@ mod doublepq_tests {
         pq.push("b", 2);
         pq.push("f", 7);
 
-        assert_eq!(pq.iter().count(), 3);
+        let iter = pq.iter();
+        assert_eq!(iter.size_hint(), (3, Some(3)));
+        assert_eq!(iter.count(), 3);
     }
 
     #[test]
@@ -794,7 +796,11 @@ mod doublepq_tests {
         pq.push("g", 4);
         pq.push("h", 3);
 
-        for (i, p) in &mut pq {
+        let iter = pq.iter_mut();
+        assert_eq!(iter.size_hint(), (5, Some(5)));
+        assert_eq!(iter.len(), 5);
+
+        for (i, p) in iter {
             if *i < "f" {
                 *p += 18;
             }
@@ -802,12 +808,27 @@ mod doublepq_tests {
 
         assert_eq!(pq.pop_max(), Some(("b", 20)));
 
+        assert_eq!(pq.iter_mut().rev().count(), 4);
+
         /*
         // As expected, this does not compile
         let iter_mut = pq.iter_mut();
 
         assert_eq!(pq.pop_max(), Some(("a", 21)));
         iter_mut.for_each(|(_, p)| {*p += 2}); */
+    }
+
+    #[test]
+    fn iter_mut_next_back() {
+        let mut pq = DoublePriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 4);
+        pq.push("h", 3);
+
+        let mut iter = pq.iter_mut();
+        assert_eq!(iter.next_back(), Some((&mut "h", &mut 3)));
     }
 
     #[test]

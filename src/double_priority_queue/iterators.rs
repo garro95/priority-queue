@@ -141,6 +141,7 @@ where
 {
     pq: &'a mut DoublePriorityQueue<I, P, H>,
     pos: usize,
+    pos_back: usize,
 }
 
 #[cfg(not(feature = "std"))]
@@ -150,6 +151,7 @@ where
 {
     pq: &'a mut DoublePriorityQueue<I, P, H>,
     pos: usize,
+    pos_back: usize,
 }
 
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
@@ -157,7 +159,12 @@ where
     P: Ord,
 {
     pub(crate) fn new(pq: &'a mut DoublePriorityQueue<I, P, H>) -> Self {
-        IterMut { pq, pos: 0 }
+        let pos_back = pq.len();
+        IterMut {
+            pq,
+            pos: 0,
+            pos_back,
+        }
     }
 }
 
@@ -169,6 +176,9 @@ where
     type Item = (&'a mut I, &'a mut P);
     fn next(&mut self) -> Option<Self::Item> {
         use indexmap::map::MutableKeys;
+        if self.pos == self.pos_back {
+            return None;
+        }
         let r: Option<(&'a mut I, &'a mut P)> = self
             .pq
             .store
@@ -179,6 +189,11 @@ where
         self.pos += 1;
         r
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.pos_back - self.pos;
+        (len, Some(len))
+    }
 }
 
 impl<'a, I: 'a, P: 'a, H: 'a> DoubleEndedIterator for IterMut<'a, I, P, H>
@@ -188,15 +203,16 @@ where
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         use indexmap::map::MutableKeys;
-        let r: Option<(&'a mut I, &'a mut P)> = self
-            .pq
+        if self.pos == self.pos_back {
+            return None;
+        }
+        self.pos_back -= 1;
+        self.pq
             .store
             .map
-            .get_index_mut2(self.pos)
+            .get_index_mut2(self.pos_back)
             .map(|(i, p)| (i as *mut I, p as *mut P))
-            .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) });
-        self.pos -= 1;
-        r
+            .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) })
     }
 }
 
@@ -205,9 +221,6 @@ where
     P: Ord,
     H: BuildHasher,
 {
-    fn len(&self) -> usize {
-        self.pq.len()
-    }
 }
 
 impl<I, P, H> FusedIterator for IterMut<'_, I, P, H>
@@ -258,6 +271,10 @@ where
     fn next(&mut self) -> Option<(I, P)> {
         self.pq.pop_min()
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.pq.len();
+        (len, Some(len))
+    }
 }
 
 impl<I, P, H> DoubleEndedIterator for IntoSortedIter<I, P, H>
@@ -269,13 +286,6 @@ where
     }
 }
 
-impl<I, P, H> ExactSizeIterator for IntoSortedIter<I, P, H>
-where
-    P: Ord,
-{
-    fn len(&self) -> usize {
-        self.pq.len()
-    }
-}
+impl<I, P, H> ExactSizeIterator for IntoSortedIter<I, P, H> where P: Ord {}
 
 impl<I, P, H> FusedIterator for IntoSortedIter<I, P, H> where P: Ord {}

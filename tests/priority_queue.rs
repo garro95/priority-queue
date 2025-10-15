@@ -586,7 +586,15 @@ mod pqueue_tests {
         }
 
         let previous_capacity = queue.capacity();
-        queue.drain();
+
+        {
+            let mut drain = queue.drain();
+
+            assert_eq!(drain.size_hint(), (7, Some(7)));
+            assert_eq!(drain.len(), 7);
+            assert_eq!(drain.next(), Some((0, 0)));
+            assert_eq!(drain.next_back(), Some((6, 6)));
+        }
 
         assert_eq!(queue.len(), 0);
         assert_eq!(queue.capacity(), previous_capacity);
@@ -670,7 +678,24 @@ mod pqueue_tests {
         pq.push("b", 2);
         pq.push("f", 7);
 
-        assert_eq!(pq.iter().count(), 3);
+        let iter = pq.iter();
+        let size_hint = iter.size_hint();
+        assert_eq!(Some(size_hint.0), size_hint.1);
+        assert_eq!(size_hint.0, iter.len());
+        assert_eq!(iter.count(), 3);
+    }
+
+    #[test]
+    fn iter_reverse() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        assert_eq!(
+            pq.iter().rev().collect::<Vec<_>>(),
+            vec![(&"f", &7), (&"b", &2), (&"a", &1)]
+        );
     }
 
     #[test]
@@ -700,6 +725,40 @@ mod pqueue_tests {
     }
 
     #[test]
+    fn iter_mut_reverse() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+
+        assert_eq!(
+            pq.iter_mut().rev().collect::<Vec<_>>(),
+            vec![(&mut "f", &mut 7), (&mut "b", &mut 2), (&mut "a", &mut 1)]
+        );
+    }
+
+    #[test]
+    fn into_iter() {
+        let mut pq = PriorityQueue::new();
+        pq.push("a", 1);
+        pq.push("b", 2);
+        pq.push("f", 7);
+        pq.push("g", 4);
+        pq.push("h", 3);
+
+        let mut into_iter = pq.into_iter();
+        assert_eq!(into_iter.size_hint(), (5, Some(5)));
+        assert_eq!(into_iter.len(), 5);
+        assert_eq!(into_iter.next(), Some(("a", 1)));
+        assert_eq!(into_iter.next_back(), Some(("h", 3)));
+        
+        /*
+        As expected, this does not compile
+        assert_eq!(pq.pop(), Some(("b", 20)));
+        */
+    }
+
+    #[test]
     fn extract_if() {
         #[derive(Hash, PartialEq, Eq, Debug)]
         struct Animal {
@@ -724,16 +783,17 @@ mod pqueue_tests {
         pq.push(Animal::new("bird".to_string(), true, false), 7);
         pq.push(Animal::new("fish".to_string(), false, true), 4);
         pq.push(Animal::new("cow".to_string(), false, false), 3);
-        let swimming_animals: Vec<(Animal, i32)> = pq
-            .extract_if(|i, p| {
-                if i.can_fly {
-                    *p -= 18;
-                    return false;
-                }
 
-                i.can_swim
-            })
-            .collect();
+        let extract_if = pq.extract_if(|i, p| {
+            if i.can_fly {
+                *p -= 18;
+                return false;
+            }
+
+            i.can_swim
+        });
+        assert_eq!(extract_if.size_hint(), (0, Some(5)));
+        let swimming_animals: Vec<(Animal, i32)> = extract_if.collect();
 
         assert_eq!(
             swimming_animals,
@@ -849,8 +909,13 @@ mod pqueue_tests {
         pq.push("b", 2);
         pq.push("f", 7);
 
+        let sorted_iter = pq.into_sorted_iter();
+
+        assert_eq!(sorted_iter.size_hint(), (3, Some(3)));
+        assert_eq!(sorted_iter.len(), 3);
+
         assert_eq!(
-            pq.into_sorted_iter().collect::<Vec<_>>(),
+            sorted_iter.collect::<Vec<_>>(),
             vec!(("f", 7), ("b", 2), ("a", 1))
         );
     }
@@ -864,6 +929,10 @@ mod pqueue_tests {
         assert_eq!(queue.peek().unwrap().0, &"b");
 
         let iter_mut = queue.iter_mut();
+
+        assert_eq!(iter_mut.len(), 2);
+        assert_eq!(iter_mut.size_hint(), (2, Some(2)));
+
         for (k, v) in iter_mut {
             if k == &"a" {
                 *v = 2;
@@ -878,7 +947,11 @@ mod pqueue_tests {
         let mut queue: PriorityQueue<&'static str, i32> = Default::default();
 
         let iter_mut = queue.iter_mut();
-        for (k, v) in iter_mut {
+
+        assert_eq!(iter_mut.len(), 0);
+        assert_eq!(iter_mut.size_hint(), (0, Some(0)));
+
+        for (k, v) in iter_mut.rev() {
             if k == &"a" {
                 *v = 2;
             }

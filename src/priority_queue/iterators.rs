@@ -112,6 +112,10 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.pq.len()))
+    }
 }
 
 impl<'a, I: 'a, P: 'a, F, H: 'a> Drop for ExtractIf<'a, I, P, F, H>
@@ -141,6 +145,7 @@ where
 {
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
+    pos_back: usize,
 }
 
 #[cfg(not(feature = "std"))]
@@ -150,6 +155,7 @@ where
 {
     pq: &'a mut PriorityQueue<I, P, H>,
     pos: usize,
+    pos_back: usize,
 }
 
 impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
@@ -157,7 +163,12 @@ where
     P: Ord,
 {
     pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
-        IterMut { pq, pos: 0 }
+        let pos_back = pq.len();
+        IterMut {
+            pq,
+            pos: 0,
+            pos_back,
+        }
     }
 }
 
@@ -170,6 +181,10 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         use indexmap::map::MutableKeys;
 
+        if self.pos == self.pos_back {
+            return None;
+        }
+
         let r: Option<(&'a mut I, &'a mut P)> = self
             .pq
             .store
@@ -180,6 +195,47 @@ where
         self.pos += 1;
         r
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.pos_back - self.pos;
+        (len, Some(len))
+    }
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> DoubleEndedIterator for IterMut<'a, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        use indexmap::map::MutableKeys;
+
+        if self.pos == self.pos_back {
+            return None;
+        }
+
+        self.pos_back -= 1;
+        self.pq
+            .store
+            .map
+            .get_index_mut2(self.pos_back)
+            .map(|(i, p)| (i as *mut I, p as *mut P))
+            .map(|(i, p)| unsafe { (i.as_mut().unwrap(), p.as_mut().unwrap()) })
+    }
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> ExactSizeIterator for IterMut<'a, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
+}
+
+impl<'a, I: 'a, P: 'a, H: 'a> FusedIterator for IterMut<'a, I, P, H>
+where
+    P: Ord,
+    H: BuildHasher,
+{
 }
 
 impl<'a, I: 'a, P: 'a, H: 'a> Drop for IterMut<'a, I, P, H>
@@ -213,4 +269,13 @@ where
     fn next(&mut self) -> Option<(I, P)> {
         self.pq.pop()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.pq.len();
+        (len, Some(len))
+    }
 }
+
+impl<I, P, H> ExactSizeIterator for IntoSortedIter<I, P, H> where P: Ord {}
+
+impl<I, P, H> FusedIterator for IntoSortedIter<I, P, H> where P: Ord {}

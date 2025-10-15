@@ -51,6 +51,9 @@ impl<'a, I: 'a, P: 'a> Iterator for Drain<'a, I, P> {
     fn next(&mut self) -> Option<(I, P)> {
         self.iter.next()
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<I, P> DoubleEndedIterator for Drain<'_, I, P> {
@@ -80,6 +83,9 @@ impl<'a, I: 'a, P: 'a> Iterator for Iter<'a, I, P> {
     fn next(&mut self) -> Option<(&'a I, &'a P)> {
         self.iter.next()
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<I, P> DoubleEndedIterator for Iter<'_, I, P> {
@@ -108,6 +114,9 @@ impl<I, P> Iterator for IntoIter<I, P> {
     type Item = (I, P);
     fn next(&mut self) -> Option<(I, P)> {
         self.iter.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 
