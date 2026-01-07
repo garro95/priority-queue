@@ -539,7 +539,10 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority > *p) {
+        if self
+            .get_priority(&item)
+            .map_or(true, |p| priority.cmp(p).is_gt())
+        {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -579,7 +582,10 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority < *p) {
+        if self
+            .get_priority(&item)
+            .map_or(true, |p| priority.cmp(p).is_lt())
+        {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -762,12 +768,16 @@ where
         let mut largestp = unsafe { self.store.get_priority_from_position(i) };
         if l.0 < self.len() {
             let childp = unsafe { self.store.get_priority_from_position(l) };
-            if childp > largestp {
+            if childp.cmp(largestp).is_gt() {
                 largest = l;
                 largestp = childp;
             }
 
-            if r.0 < self.len() && unsafe { self.store.get_priority_from_position(r) } > largestp {
+            if r.0 < self.len()
+                && unsafe { self.store.get_priority_from_position(r) }
+                    .cmp(largestp)
+                    .is_gt()
+            {
                 largest = r;
             }
         }
@@ -780,14 +790,16 @@ where
             l = left(i);
             if l.0 < self.len() {
                 let childp = unsafe { self.store.get_priority_from_position(l) };
-                if childp > largestp {
+                if childp.cmp(largestp).is_gt() {
                     largest = l;
                     largestp = childp;
                 }
 
                 r = right(i);
                 if r.0 < self.len()
-                    && unsafe { self.store.get_priority_from_position(r) } > largestp
+                    && unsafe { self.store.get_priority_from_position(r) }
+                        .cmp(largestp)
+                        .is_gt()
                 {
                     largest = r;
                 }
@@ -802,7 +814,9 @@ where
         let mut parent_position = Position(0);
         while if position.0 > 0 {
             parent_position = parent(position);
-            (unsafe { self.store.get_priority_from_position(parent_position) }) < priority
+            (unsafe { self.store.get_priority_from_position(parent_position) })
+                .cmp(priority)
+                .is_lt()
         } else {
             false
         } {

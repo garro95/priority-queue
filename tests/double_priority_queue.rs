@@ -1275,6 +1275,41 @@ mod doublepq_tests {
             );
         }
     }
+
+    #[test]
+    fn partial_cmp_not_called() {
+        use std::cmp::{Ordering, PartialOrd};
+
+        #[derive(Debug, PartialEq, Eq, Hash, Ord)]
+        struct PanicPartial(i64);
+
+        // This is an invalid implementation of PartialOrd according to
+        // the docs in `std::cmp::PartialOrd`, since Ord is also implemented,
+        // this should always return Some(Ord::cmp(self, other)). Instead this
+        // function panics as a way to ensure that we don't accidently
+        // use PartialOrd::partial_cmp when we should be using Ord::cmp
+        // instead. Enforcing the explicit use of Ord::cmp lets us rely on
+        // the compiler instead of the convention that PartialOrd::partial_cmp
+        // _should_ call Ord::cmp
+        impl PartialOrd for PanicPartial {
+            fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+                panic!("partial_cmp should not be called");
+            }
+        }
+
+        let mut dpq = DoublePriorityQueue::new();
+        dpq.push(0, PanicPartial(100));
+        dpq.push(1, PanicPartial(200));
+        dpq.push(2, PanicPartial(150));
+        dpq.push_increase(2, PanicPartial(300));
+        dpq.push_decrease(2, PanicPartial(0));
+
+        // These asserts are redundant since this behavior is tested elsewhere, we're
+        // mainly just interested in not panicking for this test.
+        assert_eq!(dpq.pop_min(), Some((2, PanicPartial(0))));
+        assert_eq!(dpq.pop_max(), Some((1, PanicPartial(200))));
+        assert_eq!(dpq.pop_min(), Some((0, PanicPartial(100))));
+    }
 }
 
 #[cfg(all(feature = "serde", test))]

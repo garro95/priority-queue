@@ -665,7 +665,10 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_increase(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority > *p) {
+        if self
+            .get_priority(&item)
+            .map_or(true, |p| priority.cmp(p).is_gt())
+        {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -705,7 +708,10 @@ where
     ///
     /// Computes in **O(log(N))** time.
     pub fn push_decrease(&mut self, item: I, priority: P) -> Option<P> {
-        if self.get_priority(&item).map_or(true, |p| priority < *p) {
+        if self
+            .get_priority(&item)
+            .map_or(true, |p| priority.cmp(p).is_lt())
+        {
             self.push(item, priority)
         } else {
             Some(priority)
@@ -901,15 +907,20 @@ where
                 .0;
 
             if unsafe {
-                self.store.get_priority_from_position(i) < self.store.get_priority_from_position(m)
+                self.store
+                    .get_priority_from_position(i)
+                    .cmp(self.store.get_priority_from_position(m))
+                    .is_lt()
             } {
                 self.store.swap(i, m);
                 if i > r {
                     // i is a grandchild of m
                     let p = parent(i);
                     if unsafe {
-                        self.store.get_priority_from_position(i)
-                            > self.store.get_priority_from_position(p)
+                        self.store
+                            .get_priority_from_position(i)
+                            .cmp(self.store.get_priority_from_position(p))
+                            .is_gt()
                     } {
                         self.store.swap(i, p);
                     }
@@ -943,15 +954,20 @@ where
                 .0;
 
             if unsafe {
-                self.store.get_priority_from_position(i) > self.store.get_priority_from_position(m)
+                self.store
+                    .get_priority_from_position(i)
+                    .cmp(self.store.get_priority_from_position(m))
+                    .is_gt()
             } {
                 self.store.swap(i, m);
                 if i > r {
                     // i is a grandchild of m
                     let p = parent(i);
                     if unsafe {
-                        self.store.get_priority_from_position(i)
-                            < self.store.get_priority_from_position(p)
+                        self.store
+                            .get_priority_from_position(i)
+                            .cmp(self.store.get_priority_from_position(p))
+                            .is_lt()
                     } {
                         self.store.swap(i, p);
                     }
@@ -970,7 +986,10 @@ where
             let parent = parent(position);
             let parent_priority = unsafe { self.store.get_priority_from_position(parent) };
             let parent_index = unsafe { *self.store.heap.get_unchecked(parent.0) };
-            position = match (level(position) % 2 == 0, parent_priority < priority) {
+            position = match (
+                level(position) % 2 == 0,
+                parent_priority.cmp(priority).is_lt(),
+            ) {
                 // on a min level and greater then parent
                 (true, true) => {
                     unsafe {
@@ -1008,7 +1027,9 @@ where
         let mut grand_parent = Position(0);
         while if position.0 > 0 && parent(position).0 > 0 {
             grand_parent = parent(parent(position));
-            (unsafe { self.store.get_priority_from_position(grand_parent) }) > priority
+            (unsafe { self.store.get_priority_from_position(grand_parent) })
+                .cmp(priority)
+                .is_gt()
         } else {
             false
         } {
@@ -1027,7 +1048,9 @@ where
         let mut grand_parent = Position(0);
         while if position.0 > 0 && parent(position).0 > 0 {
             grand_parent = parent(parent(position));
-            (unsafe { self.store.get_priority_from_position(grand_parent) }) < priority
+            (unsafe { self.store.get_priority_from_position(grand_parent) })
+                .cmp(priority)
+                .is_lt()
         } else {
             false
         } {
