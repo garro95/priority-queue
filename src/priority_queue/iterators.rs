@@ -158,11 +158,11 @@ where
     pos_back: usize,
 }
 
-impl<'a, I: 'a, P: 'a, H: 'a> IterMut<'a, I, P, H>
+impl<'a: 'b, 'b, I: 'a, P: 'a, H: 'a> IterMut<'b, I, P, H>
 where
     P: Ord,
 {
-    pub(crate) fn new(pq: &'a mut PriorityQueue<I, P, H>) -> Self {
+    pub(crate) fn new(pq: &'b mut PriorityQueue<I, P, H>) -> Self {
         let pos_back = pq.len();
         IterMut {
             pq,
@@ -185,8 +185,7 @@ where
             return None;
         }
 
-        let r: Option<(&'a mut I, &'a mut P)> = self
-            .pq
+        let r: Option<(&mut I, &mut P)> = self.pq
             .store
             .map
             .get_index_mut2(self.pos)

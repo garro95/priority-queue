@@ -293,7 +293,36 @@ where
     ///
     /// It would be rebuilt even if no priority value would have been modified,
     /// but the procedure will not move anything, but just compare the priorities.
-    pub fn iter_mut(&mut self) -> IterMut<'_, I, P, H> {
+    ///
+    /// # SAFETY
+    ///
+    /// Keeping a reference obtained from this iterator after the iterator goes
+    /// out of scope will cause immediate **undefined behavior**.
+    ///
+    /// The following code example will cause undefined behavior:
+    /// ```no_run
+    /// # use priority_queue::PriorityQueue;
+    /// # let mut pq: PriorityQueue<&'static str, i32> = Default::default();
+    /// let vec_of_mut_refs = {
+    ///     let mut iter_mut = unsafe { pq.iter_mut() };
+    ///     iter_mut.collect::<Vec<_>>()
+    /// };
+    ///
+    /// println!("{:?}", vec_of_mut_refs);
+    /// ```
+    ///
+    /// The following code will cause undefined behavior and break the queue:
+    /// ```no_run
+    /// # use priority_queue::PriorityQueue;
+    /// # let mut pq: PriorityQueue<&'static str, i32> = Default::default();
+    /// let (_item, prio) = {
+    ///     let mut iter_mut = unsafe { pq.iter_mut() };
+    ///     iter_mut.next().unwrap()
+    /// };
+    /// 
+    /// *prio = 3;
+    /// ```
+    pub unsafe fn iter_mut(&mut self) -> IterMut<'_, I, P, H> {
         IterMut::new(self)
     }
 

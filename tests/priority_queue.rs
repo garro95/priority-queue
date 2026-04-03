@@ -721,7 +721,9 @@ mod pqueue_tests {
 
         assert_eq!(pq.pop(), Some(("f", 9)));
         iter_mut.for_each(|(_, p)| {*p += 2});
-        */
+         */
+
+        println!("{:?}", pq.peek());
     }
 
     #[test]
@@ -731,10 +733,12 @@ mod pqueue_tests {
         pq.push("b", 2);
         pq.push("f", 7);
 
-        assert_eq!(
-            pq.iter_mut().rev().collect::<Vec<_>>(),
-            vec![(&mut "f", &mut 7), (&mut "b", &mut 2), (&mut "a", &mut 1)]
-        );
+        let mut iter_mut = unsafe { pq.iter_mut() };
+
+        assert_eq!(iter_mut.next_back(), Some((&mut "f", &mut 7)));
+        assert_eq!(iter_mut.next_back(), Some((&mut "b", &mut 2)));
+        assert_eq!(iter_mut.next_back(), Some((&mut "a", &mut 1)));
+        assert_eq!(iter_mut.next_back(), None);
     }
 
     #[test]
@@ -928,7 +932,7 @@ mod pqueue_tests {
         queue.push("b", 1);
         assert_eq!(queue.peek().unwrap().0, &"b");
 
-        let iter_mut = queue.iter_mut();
+        let iter_mut = unsafe { queue.iter_mut() };
 
         assert_eq!(iter_mut.len(), 2);
         assert_eq!(iter_mut.size_hint(), (2, Some(2)));
@@ -946,7 +950,7 @@ mod pqueue_tests {
     fn iter_mut_empty() {
         let mut queue: PriorityQueue<&'static str, i32> = Default::default();
 
-        let iter_mut = queue.iter_mut();
+        let iter_mut = unsafe { queue.iter_mut() };
 
         assert_eq!(iter_mut.len(), 0);
         assert_eq!(iter_mut.size_hint(), (0, Some(0)));

@@ -796,7 +796,7 @@ mod doublepq_tests {
         pq.push("g", 4);
         pq.push("h", 3);
 
-        let iter = pq.iter_mut();
+        let iter = unsafe { pq.iter_mut() };
         assert_eq!(iter.size_hint(), (5, Some(5)));
         assert_eq!(iter.len(), 5);
 
@@ -808,7 +808,7 @@ mod doublepq_tests {
 
         assert_eq!(pq.pop_max(), Some(("b", 20)));
 
-        assert_eq!(pq.iter_mut().rev().count(), 4);
+        assert_eq!(unsafe{pq.iter_mut()}.rev().count(), 4);
 
         /*
         // As expected, this does not compile
@@ -827,7 +827,7 @@ mod doublepq_tests {
         pq.push("g", 4);
         pq.push("h", 3);
 
-        let mut iter = pq.iter_mut();
+        let mut iter = unsafe {pq.iter_mut()};
         assert_eq!(iter.next_back(), Some((&mut "h", &mut 3)));
     }
 
@@ -1008,7 +1008,7 @@ mod doublepq_tests {
         queue.push("b", 1);
         assert_eq!(queue.peek_max().unwrap().0, &"b");
 
-        let iter_mut = queue.iter_mut();
+        let iter_mut = unsafe { queue.iter_mut() };
         for (k, v) in iter_mut {
             if k == &"a" {
                 *v = 2;
@@ -1022,7 +1022,7 @@ mod doublepq_tests {
     fn iter_mut_empty() {
         let mut queue: DoublePriorityQueue<&'static str, i32> = Default::default();
 
-        let iter_mut = queue.iter_mut();
+        let iter_mut = unsafe { queue.iter_mut() };
         for (k, v) in iter_mut {
             if k == &"a" {
                 *v = 2;
