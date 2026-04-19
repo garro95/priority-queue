@@ -185,7 +185,8 @@ where
             return None;
         }
 
-        let r: Option<(&mut I, &mut P)> = self.pq
+        let r: Option<(&mut I, &mut P)> = self
+            .pq
             .store
             .map
             .get_index_mut2(self.pos)

@@ -319,7 +319,7 @@ where
     ///     let mut iter_mut = unsafe { pq.iter_mut() };
     ///     iter_mut.next().unwrap()
     /// };
-    /// 
+    ///
     /// *prio = 3;
     /// ```
     pub unsafe fn iter_mut(&mut self) -> IterMut<'_, I, P, H> {
